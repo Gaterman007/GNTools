@@ -1,0 +1,1 @@
+{"project_Name":"","material_type":null,"safeHeight":15,"width":5,"height":5,"depth":4,"startGCode":"G21 ; set units to millimeters\\nG90 ; Set all axes to absolute\\n","endGCode":"M18\\n","show_Material":true,"materialID":null}

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="../js/jquery-ui.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/Sketchup.css" type="text/css" charset="utf-8" />
+<style>
+table {
+  font-family: "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+.tableInput {
+  font-family: "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  padding: 1px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+</style>
+</head>
+<body class="bg-panel-background">
+	<div class="container" style="margin: 10px;">
+	Drill Bits 
+	
+	<table id="drilbitstbl">
+	 <colgroup>
+       <col span="1" style="width:95px;"></col>
+       <col span="1" style="width:175px;"></col>
+       <col span="1" style="width:55px;"></col>
+       <col span="1" style="width:85px;"></col>
+       <col span="1" style="width:55px;"></col>
+       <col span="1" style="width:55px;"></col>
+       <col span="1" style="width:55px;"></col>
+       <col span="1" style="width:55px;"></col>
+       <col span="1" style="width:55px;"></col>
+       <col span="1" style="width:55px;"></col>
+       <col span="1" style="width:55px;"></col>
+    </colgroup>
+	  <tr>
+		<th>Name</th>
+		<th>Cut Types</th>
+		<th>Cut Diameter</th>
+		<th>Units</th>
+		<th>Cutting Length</th>
+		<th>Drill Size</th>
+		<th>Shank Height</th>
+		<th>Shank Diam</th>
+		<th>Shoulder Lenght</th>
+		<th>Number of Flutes</th>
+		<th>Cutting</th>
+	  </tr>
+	</table>
+	</div>
+	<div>
+		<div style="float: left; margin: 10px">
+			<button id="left" class="ui-button ui-widget ui-corner-all"></button>
+			<input id="rowSelected" class="def-cnc-input">
+			<button id="right" class="ui-button ui-widget ui-corner-all"></button>
+        </div>
+	</div>
+
+	<div class="container" id="ui-footer">
+      <div style="width: 100%; background-color: #e3e3e3; border-top: solid #C5C5C5 1px">
+        <div style="float: left; margin: 10px">
+          <button id="apply" class="ui-button ui-widget ui-corner-all">Load</button>
+		  <button id="save" class="ui-button ui-widget ui-corner-all">Save</button>
+        </div>
+        <div style="float: right; margin: 10px">
+          <button id="cancel" class="ui-button ui-widget ui-corner-all">Cancel</button>
+          <button id="accept" class="ui-button ui-widget ui-corner-all">Ok</button>
+        </div>
+      </div>
+    </div>
+	<script src="../js/external/jquery/jquery.js"></script>
+	<script src="../js/jquery-ui.js"></script>
+	<script>
+	var rowSelected = 0;
+	var rowSelectedData = [];
+	var rowSelectedObj;
+	var tableRefObj;
+	var arrayTBSize = [95,155,55,85,55,55,55,55,55,55,55];
+
+	$(document).ready(function(){
+		$( "#rowSelected" ).spinner( "value", rowSelected );
+		sketchup.ready();
+	});
+
+	$('#rowSelected').spinner({
+		step: 1,
+		stop: function( event, ui ) {
+			rowSelected = $( "#rowSelected" ).spinner( "value" );
+			if (rowSelected > 0 && rowSelected < tableRefObj.rows.length) { 
+				resetRowTableInput(rowSelectedObj)
+				rowSelectedObj = tableRefObj.rows[rowSelected];
+				setRowTableInput(rowSelectedObj);
+				rowSelectedObj.removeAttribute("onclick");
+			} else {
+				if (rowSelected < 1) { 
+					rowSelected = 1;
+					$( "#rowSelected" ).spinner( "value", rowSelected );
+				}
+				if (rowSelected > tableRefObj.rows.length - 1) { 
+					rowSelected = tableRefObj.rows.length - 1;
+					$( "#rowSelected" ).spinner( "value", rowSelected );
+				}
+				return false;
+			}
+			return true;
+		}
+	});
+	
+
+	$( "#apply, #cancel, #accept").button();
+	$( "#apply" ).on( "click", function( event ) {
+		sketchup.apply();
+	} );
+
+	$( "#accept" ).on( "click", function( event ) {
+		sketchup.accept(rowSelected);
+	} );
+
+	$( "#cancel" ).on( "click", function( event ) {
+		sketchup.cancel();
+	} );
+
+	$( "#save" ).on( "click", function( event ) {
+		sketchup.save();
+	} );
+
+	$( "#left" ).button({
+		icon: " ui-icon-circle-arrow-w"
+	});
+
+	$( "#left" ).on( "click", function( event ) {
+		if (rowSelected - 1 > 0) {
+			rowSelected = rowSelected - 1;
+			$( "#rowSelected" ).spinner( "value", rowSelected );
+			resetRowTableInput(rowSelectedObj)
+			rowSelectedObj = tableRefObj.rows[rowSelected];
+			setRowTableInput(rowSelectedObj);
+			rowSelectedObj.removeAttribute("onclick");
+		}
+	} );
+
+	$( "#right" ).button({
+		icon: " ui-icon-circle-arrow-e"
+	});
+	$( "#right" ).on( "click", function( event ) {
+		if (rowSelected + 1 < tableRefObj.rows.length) {
+			rowSelected = rowSelected + 1;
+			$( "#rowSelected" ).spinner( "value", rowSelected );
+			resetRowTableInput(rowSelectedObj)
+			rowSelectedObj = tableRefObj.rows[rowSelected];
+			setRowTableInput(rowSelectedObj);
+			rowSelectedObj.removeAttribute("onclick");
+		}
+	} );
+
+	function changeInput(inputObj) {
+		inputNameArray = inputObj.id.split("_");
+		col = inputNameArray[1];
+		colNo = parseInt(col);
+		rowSelectedData[colNo] = inputObj.value
+		getRowData();
+		sketchup.changeValue(obj,rowSelected);
+	}
+
+	function setRowTableInput(x){
+		rowSelectedData = [];
+		for (var c = 0, m = x.cells.length; c < m; c++) {
+			rowSelectedData.push(x.cells[c].innerHTML);
+		}
+		for (var c = 0, m = x.cells.length; c < m; c++) {
+			if (c == 1) {
+				x.cells[c].innerHTML = '<select name="methodType" id="methodType" style = "width: 100% !important;"><option value="Up" style="font-size: 10px !important;">Up</option><option value="Down">Down</option><option value="Compression">Compression</option></select>';
+				$( "#methodType" ).selectmenu({
+					change: function( event, data ) {
+						rowSelectedData[1] = data.item.value;
+						getRowData();
+						sketchup.changeValue(obj,rowSelected);
+						return true;
+					}
+				});
+				$( "#methodType" ).val(rowSelectedData[1]);
+				$( "#methodType" ).selectmenu("refresh");
+				$( "#methodType" ).selectmenu("option","width", 195);
+			} if (c == 3) { 
+				x.cells[c].innerHTML = '<select name="units" id="units" style = "width: 100% !important;"><option value="mm" style="font-size: 10px !important;">mm</option><option value="inch">Inch</option>';
+				$( "#units" ).selectmenu({
+					change: function( event, data ) {
+						rowSelectedData[3] = data.item.value;
+						getRowData();
+						sketchup.changeValue(obj,rowSelected);
+						return true;
+					}
+				});
+				$( "#units" ).val(rowSelectedData[3]);
+				$( "#units" ).selectmenu("refresh");
+				$( "#units" ).selectmenu("option","width", 85);
+			} else {
+				x.cells[c].innerHTML = "<input id='inputSelected_" + c + "'  padding = '1px' onchange = 'changeInput(this)' size = '1' class='tableInput'>";
+				//x.cells[c].setAttribute("onchange","changeInput(this);");
+				document.getElementById("inputSelected_" + c).value = rowSelectedData[c];
+			}
+		}
+	}
+
+	function resetRowTableInput(x){
+		if (!x.hasAttribute("onclick")) {
+			x.setAttribute("onclick","clickOnTable(this);"); 
+			for (var c = 0, m = x.cells.length; c < m; c++) {
+				x.cells[c].innerHTML = rowSelectedData[c]
+			}		
+		}
+	}
+
+	function clickOnTable(x){
+		resetRowTableInput(rowSelectedObj)
+		rowSelectedObj = x;
+		rowSelected = x.rowIndex;
+		$( "#rowSelected" ).spinner( "value", rowSelected );
+		setRowTableInput(x);
+		x.removeAttribute("onclick");
+	};
+	
+	function isNumeric(str) {
+		if (typeof str != "string") return false // we only process strings!  
+		return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+         !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+	}
+	
+	function getNumeric(str) {
+		if (typeof str != "string") {
+			return(str)
+		} else {
+			if (!isNaN(str) && !isNaN(parseFloat(str))) {
+				return parseFloat(str)
+			}
+		}
+	}
+	
+	function getRowData() {
+		obj.Name = rowSelectedData[0];
+		obj.Cut_Types  = rowSelectedData[1];
+		obj.Cut_Diameter = getNumeric(rowSelectedData[2]);
+		obj.units = rowSelectedData[3];
+		obj.Cutting_Length = getNumeric(rowSelectedData[4]);
+		obj.Drill_Size = getNumeric(rowSelectedData[5]);
+		obj.Shank_Height = getNumeric(rowSelectedData[6]);
+		obj.Shank_Diam = getNumeric(rowSelectedData[7]);
+		obj.Shoulder_Lenght = getNumeric(rowSelectedData[8]);
+		obj.Number_of_Flutes = getNumeric(rowSelectedData[9]);
+		obj.Cutting = getNumeric(rowSelectedData[10]);
+	}
+	
+	function setRowData(rowSelectedObj,obj) {
+		var x = rowSelectedObj.insertCell(-1);
+		x.innerHTML = obj.Name
+		x = rowSelectedObj.insertCell(-1);
+		x.innerHTML = obj.Cut_Types
+		x = rowSelectedObj.insertCell(-1);
+		x.innerHTML = obj.Cut_Diameter
+		x = rowSelectedObj.insertCell(-1);
+		x.innerHTML = obj.units
+		x = rowSelectedObj.insertCell(-1);
+		x.innerHTML = obj.Cutting_Length
+		x = rowSelectedObj.insertCell(-1);
+		x.innerHTML = obj.Drill_Size
+		x = rowSelectedObj.insertCell(-1);
+		x.innerHTML = obj.Shank_Height
+		x = rowSelectedObj.insertCell(-1);
+		x.innerHTML = obj.Shank_Diam
+		x = rowSelectedObj.insertCell(-1);
+		x.innerHTML = obj.Shoulder_Lenght
+		x = rowSelectedObj.insertCell(-1);
+		x.innerHTML = obj.Number_of_Flutes
+		x = rowSelectedObj.insertCell(-1);
+		x.innerHTML = obj.Cutting;
+		rowSelected = rowSelectedObj.rowIndex;
+		$( "#rowSelected" ).spinner( "value", rowSelected );
+	}
+	
+	function  addRowToTable(datajson) {
+		obj = JSON.parse(datajson);
+		tableRefObj = document.getElementById('drilbitstbl');
+		var tbodyRef = tableRefObj.getElementsByTagName('tbody')[0];
+		rowSelectedObj = tableRefObj.insertRow(tableRefObj.rows.length);
+		rowSelectedObj.setAttribute("onclick","clickOnTable(this);"); 
+		setRowData(rowSelectedObj,obj);
+	};
+
+	function delRowsTable(datajson) {
+		tableRefObj = document.getElementById('drilbitstbl');
+		var tbodyRef = tableRefObj.getElementsByTagName('tbody')[0];
+		while(tableRefObj.rows.length > 1) {
+			tableRefObj.deleteRow(1);
+		}
+
+	};
+	
+	</script>
+</body>
+</html>

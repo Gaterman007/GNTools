@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="../vendor/modus/modus.min.css" rel="stylesheet">
+  <script src="../vendor/modus/jquery.js"></script>
+  <script src="../vendor/modus/bootstrap.bundle.min.js"></script>
+  <script src="../vendor/vue.js"></script>
+  <link href="../js/jquery-ui.css" rel="stylesheet">
+  <style>
+    .container {
+      padding-top: 15px;
+    }
+    /* Fix footer position to bottom */
+    #ui-footer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 15px;
+    }
+    /* Override somewhat arbitrary bottom button bottom spacing set by modus */
+    .row {
+      padding-bottom: 0 !important;
+    }
+    /* Define a 128x128 preview square */
+    .preview {
+      position: relative;
+      display: inline-block;
+      width: 128px;
+      height: 128px;
+      font-size: 0px;
+      background: url('../images/transparent.png');
+      overflow: hidden;
+    }
+    .preview span {
+      display: inline-block;
+      width: 50%;
+      height: 100%;
+    }
+    .preview img {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 100%;
+      /* Center element */
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+    }
+    /* Prevent word wrapping between "~", number and unit in lengths */
+    .length {
+      white-space: nowrap;
+    }
+    /* Fine tune input field sizes */
+    #ui-material .input-group-text {
+      width: 60px;
+    }
+    #ui-material .jumbotron {
+      font-size: .75rem;
+      max-width: 128px;
+    }
+    #ui-rgba {
+      max-width: 128px;
+    }
+  </style>
+</head>
+<body class="bg-panel-background">
+
+  <div id="app" class="container">
+	<input id="spinner">
+
+    <p><label>Name: <input v-model="name"></label></p>
+    <p><label>Pokes: <input v-model.number="num_pokes"></label></p>
+    <p><button v-on:click="poke">Poke {{ name }}!</button></p>
+    <p><button v-on:click="say_something">Greet</button></p>
+    <div class="container" id="ui-footer">
+      <div class="row py-2">
+        <div class="col-4">
+          <button type="button" class="btn btn-outline-primary" v-on:click="apply">Apply</button>
+        </div>
+        <div class="col-8 text-right">
+          <button type="button" class="btn btn-outline-primary" v-on:click="cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" v-on:click="accept">Ok</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/external/jquery/jquery.js"></script>
+  <script src="../js/jquery-ui.js"></script>
+  <script>
+	$( "#spinner" ).spinner();
+    var app = new Vue({
+      el: '#app',
+      data: {
+        name: 'Thom',
+        num_pokes: 3,
+      },
+      methods: {
+        poke: function() {
+          sketchup.poke(this.name, this.num_pokes);
+        },
+        say_something: function() {
+          sketchup.say("Hello " + this.name);
+          sketchup.say("How are you?");
+        },
+		apply: function() {
+          sketchup.apply();
+        },
+        accept: function() {
+          sketchup.accept();
+        },
+        cancel: function() {
+          sketchup.cancel();
+        },
+      }
+    });
+	export default {
+	data() {
+		return {
+			selected: ''
+		}
+	  }
+	}
+  </script>
+
+</body>
+</html>
