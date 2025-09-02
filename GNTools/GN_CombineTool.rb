@@ -222,6 +222,7 @@ module GNTools
 								if groupMethod == valueMethod
  								  pathObj = GNTools.pathObjList[ent.persistent_id]
 								  pathObj[valueName] = value
+								  pathObj.changed()
 								end
 							}
 						end

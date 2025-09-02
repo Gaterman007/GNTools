@@ -18,6 +18,11 @@ module GNTools
 		
 		attr_accessor :startGCode
 		attr_accessor :endGCode
+		attr_accessor :safeZoneHeight
+		attr_accessor :safeZoneDepth
+		attr_accessor :safeZoneWidth
+		
+		
 		attr_accessor :materialObjet
 		attr_accessor :show_Material
 		attr_accessor :LengthPrecision
@@ -42,6 +47,11 @@ module GNTools
 			@material_width = 2
 			@material_thickness = 3
 			@material_depth = 4
+			@safeZoneHeight = 20
+			@safeZoneDepth = 170
+			@safeZoneWidth = 120
+			
+			
 			@startGCode = "G21 ;Set units to millimeters\\nG90 ;Absolute Positioning\\nG92 X0 Y0;Set Postion X to 0 Y to 0"
 			@endGCode = "G90"
 			@show_Material = false
@@ -92,6 +102,9 @@ module GNTools
 			group_Material.set_attribute( DefautDictName,"startGCode", @startGCode )
 			group_Material.set_attribute( DefautDictName,"endGCode", @endGCode )
 			group_Material.set_attribute( DefautDictName,"show_Material", @show_Material )
+			group_Material.set_attribute( DefautDictName,"safeZoneHeight", @safeZoneHeight )
+			group_Material.set_attribute( DefautDictName,"safeZoneDepth", @safeZoneDepth )
+			group_Material.set_attribute( DefautDictName,"safeZoneWidth", @safeZoneWidth )
 			if @show_Material && (@materialObjet != nil)
 			  group_Material.set_attribute( DefautDictName,"materialID", @materialObjet.persistent_id )
 			else
@@ -145,6 +158,9 @@ module GNTools
 				else
 					@materialObjet = nil
 				end
+				@safeZoneHeight = group_Material.get_attribute( DefautDictName,"safeZoneHeight")
+				@safeZoneDepth =  group_Material.get_attribute( DefautDictName,"safeZoneDepth")
+				@safeZoneWidth =  group_Material.get_attribute( DefautDictName,"safeZoneWidth")
 				return true
 			end
 			return false
@@ -160,6 +176,9 @@ module GNTools
 				'depth' => @material_depth,
 				'startGCode' => @startGCode,
 				'endGCode' => @endGCode,
+				'safeZoneHeight' => @safeZoneHeight,
+				'safeZoneDepth' => @safeZoneDepth,
+				'safeZoneWidth' => @safeZoneWidth,
 				'show_Material' => @show_Material,
 				'materialID' => @materialObjetID
 			})
@@ -179,6 +198,9 @@ module GNTools
 			@material_depth = hash["depth"]
 			@startGCode = hash["startGCode"]
 			@endGCode = hash["endGCode"]
+			@safeZoneHeight = hash["safeZoneHeight"]
+			@safeZoneDepth = hash["safeZoneDepth"]
+			@safeZoneWidth = hash["safeZoneWidth"]
 			@show_Material = hash["show_Material"]
 			@materialObjetID = hash["materialID"]
 		end
@@ -193,6 +215,9 @@ module GNTools
 			"depth" => @material_depth,
 			"startGCode" => @startGCode,
 			"endGCode" => @endGCode,
+			"safeZoneHeight" => @safeZoneHeight,
+			"safeZoneDepth" => @safeZoneDepth,
+			"safeZoneWidth" => @safeZoneWidth,
 			"show_Material" => @show_Material,
 			"materialID" => @materialObjetID
 			}
@@ -209,6 +234,7 @@ module GNTools
 				
 		# initialize the default data
 		def self.set_defaults
+			@@def_CNCData.initCNCData
 			# Vérifier s'il existe déjà un Group avec notre identifiant
 			group_Material = Sketchup.active_model.entities.grep(Sketchup::Group).find { |cp| cp.attribute_dictionaries && cp.attribute_dictionaries["DEFCNCDataTest"] }			
 			if group_Material
@@ -238,6 +264,7 @@ module GNTools
 		def show_dialog
 			if @dialog && @dialog.visible?
 				self.update_dialog
+				@dialog.set_size(840, 800)
 				@dialog.bring_to_front
 			else
 				# Attach content and callbacks when showing the dialog,
@@ -304,6 +331,7 @@ module GNTools
 					end
 					nil
 				}
+				@dialog.set_size(840, 800)
 				@dialog.show
 			end
 		end
@@ -363,18 +391,18 @@ module GNTools
 		end
 		
 		def create_dialog
-			html_file = File.join(__dir__, 'html', 'CNC_Material.html') # Use external HTML
+			html_file = File.join(__dir__, 'html', 'CNC_Params.html') # Use external HTML
 			options = {
 			  :dialog_title => "Material Settings",
 			  :resizable => true,
-			  :width => 250,
-			  :height => 250,
+			  :width => 840,
+			  :height => 800,
 			  :preferences_key => "example.htmldialog.materialinspector",
 			  :style => UI::HtmlDialog::STYLE_UTILITY  # New feature!
 			}
 			dialog = UI::HtmlDialog.new(options)
 			dialog.set_file(html_file) # Can be set here.
-			dialog.center # New feature!
+#			dialog.center # New feature!
 #			dialog.set_can_close { false }
 			dialog
 		end

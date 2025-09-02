@@ -1,93 +1,278 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <link href="../js/jquery-ui.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/Sketchup.css" type="text/css" charset="utf-8" />
+	<link href="../js/jquery-ui.css" rel="stylesheet">
+	<link rel="stylesheet" href="../css/Sketchup.css" type="text/css" charset="utf-8" />
+	<style>
+		.cnc-section {
+		  background-color: #f9f9f9;
+		  border: 1px solid #ccc;
+		  border-radius: 8px;
+		  padding: 15px;
+		  margin: 20px auto;
+		  width: 100%; /* prend toute la largeur disponible du conteneur */
+		  font-family: monospace;
+		  box-sizing: border-box;
+		  overflow-x: auto; /* ajoute une barre de défilement horizontale si besoin */
+		}
+		
+		.cnc-section pre {
+		  white-space: pre-wrap;       /* wrap automatique du texte */
+		  word-break: break-word;      /* permet le retour à la ligne même au milieu d'un mot long */
+		  overflow-x: auto;            /* défilement horizontal si vraiment nécessaire */
+		  max-width: 100%;             /* évite que le contenu dépasse */
+		}		
+		h2 {
+		  font-family: sans-serif;
+		  color: #333;
+		}
+		html, body {
+		  height: 100%;
+		  margin: 0;
+		}
+
+		body {
+		  display: flex;
+		  flex-direction: column;
+		}
+
+		#main-container {
+		  display: flex;
+		  flex-direction: column;
+		  flex: 1;
+		  overflow: hidden;
+		}
+
+		#tabs {
+		  flex: 1;
+		  overflow: auto;
+		}
+		#ui-footer {
+		  background-color: #e3e3e3;
+		  border-top: solid #C5C5C5 1px;
+		  padding: 10px;
+		  display: flex;
+		  justify-content: space-between;
+		}
+	</style>
 </head>
-<body class="bg-panel-background" style="height: 130px; width: 460px;">
+<body class="bg-panel-background" style = "height: 100%;">
+  <div id="main-container">
 	<div id="tabs">
 		<ul>
 			<li><a href="#tabs-1">GCode</a></li>
-			<li><a href="#tabs-2">tab3</a></li>
+			<li><a href="#tabs-2">SafeZone</a></li>
+			<li><a href="#tabs-3">Lexique</a></li>
+			<li><a href="#tabs-4">Specs G Codes</a></li>
 		</ul>
 		<div id="tabs-1">
-			<div class="container"  style="margin-bottom: 10px;">
+			<div class="container"  style="margin: 10px;">
 				<label>Project Name: <input id="projectName" class="def-cnc-input" style="width: 360px"></label>
 			</div>
 			<div class="container" style="margin: 10px;">
-				<label>Start of GCode:<br> <textarea id="startGCode" style="height: 119px; width: 400px;"></textarea></label>
+				<label>Start of GCode:<br> <textarea id="startGCode" style="height: 199px; width: 100%;"></textarea></label>
 			</div>
 			<div class="container" style="margin: 10px;">
-				<label>End of GCode:<br> <textarea id="endGCode" style="height: 119px; width: 400px;"></textarea></label>
+				<label>End of GCode:<br> <textarea id="endGCode" style="height: 199px; width: 100%;"></textarea></label>
 			</div>
 		</div>
 		<div id="tabs-2">
-		<pre class="ui-widget-content ui-corner-all" style="white-space: pre-wrap; padding: 10px;">Feedrate (Speed):           This setting determines how fast the tool moves along a path. It's typically measured in units per minute
-                            (e.g., inches per minute or millimeters per minute). The optimal feedrate depends on the material, tool, and desired finish.
-Spindle Speed:              The spindle speed controls the rotation of the cutting tool. It's usually measured in RPM (revolutions per minute).
-                            The correct spindle speed depends on the material being cut and the type of tool used.
-Cutting Depth:              This setting specifies how deep the tool should cut into the material in a single pass. It's important to balance cutting
-                            depth with feedrate to avoid excessive tool wear or damage.
-Tool Selection:             Choose the appropriate cutting tool for the material and type of machining operation
-                            (e.g., end mill, drill bit, router bit, etc.). Tools come in various shapes and sizes for specific tasks.
-Tool Path:                  Define the tool path or tool trajectory that the CNC machine should follow. This can be generated using CAM
-                            (Computer-Aided Manufacturing) software or manually programmed using G-code.
-Workpiece Material:         Specify the material you are machining (e.g., wood, metal, plastic). Different materials require different cutting parameters and tooling.
-Coolant or Lubrication:     Depending on the material and machining process, you may need to use coolant or lubrication to reduce friction, heat, and tool wear.
-Clamping and Workholding:   Ensure that the workpiece is securely clamped or held in place to prevent movement during machining.
-Safety Measures:            Follow safety guidelines, including wearing appropriate personal protective equipment (PPE) and setting up machine safeguards.
-Tool Changes:               Plan for tool changes if your job requires multiple tools. The CNC machine may have an automatic tool changer.
-Tool Offset:                Calibrate or set tool offsets to ensure accurate machining. This compensates for any variations in tool length.
-Cutting Strategy:           Choose the appropriate cutting strategy, such as contouring, pocketing, drilling, or engraving, depending on your job requirements.
-G-code Programming:         Write or generate G-code (the machine's language) to control the CNC machine's movements. CAM software can assist with this.
-Zero Points:                Establish workpiece zero points or reference positions to define the machine's starting point.
-Dust and Chip Collection:   Implement a dust and chip collection system to keep the workspace clean and prevent debris from interfering with the machining process.
-		</pre>
-		<pre class="ui-widget-content ui-corner-all" style="white-space: pre-wrap; padding: 10px;">
-		Tool Diameter:              The diameter of the cutting tool is crucial for accurate machining.
-                            It's used for toolpath calculations and toolpath offsets.
-Tool Length:                Knowing the tool's length is important for determining how far the 
-                            tool can reach and whether it will clear the workpiece and fixtures.
-Tool Geometry:              Different tools have different geometries, such as the number of flutes
-                            on an end mill, which affects cutting performance.
-Tool Wear Compensation:     Some CNC machines have the capability to adjust toolpaths to compensate for
-                            tool wear, ensuring consistent results throughout a job.
-Tool Life Management:       Monitoring tool life and replacing tools when necessary to maintain quality
-                            and efficiency.
-Tool Spindle Connection:    The type of connection used to attach the tool to the spindle, such as a 
-                            collet or a toolholder.
-Tool Cooling:               Controlling the temperature of the cutting tool to prevent overheating, 
-                            which can lead to tool wear and workpiece damage.
-Workpiece Orientation:      Specifying the orientation of the workpiece (e.g., horizontal or vertical)
-                            and any necessary rotations or tilting of the workpiece.
-Coordinate System:          Defining the coordinate system used for machining, including whether it's 
-                            based on the machine's origin or a workpiece-specific origin.
-Toolpath Optimization:      Optimizing toolpaths for efficient material removal, minimizing tool changes,
-                            and reducing machining time.
-Rapid Traverse Rate:        The maximum speed at which the machine can move between machining operations.
-                            Rapid traverse rates are typically higher than cutting feedrates.
-Corner Rounding:            Configuring how the machine handles sharp corners to prevent tool breakage 
-                            and produce smoother cuts.
-Material Thickness:         Specifying the thickness of the material being machined, which can affect
-                            cutting depths and toolpath calculations.
-Dwell Time:                 Pausing at specific points in the machining process for tasks like tool
-                            changes, tool inspection, or material handling.
-Workpiece Surface Finish:   Setting parameters for achieving the desired surface finish, which may 
-                            involve toolpath strategies and tool selection.
-Gantry or Machine Type:     For CNC routers and large-scale machines, configuring the gantry type 
-                            (e.g., bridge, portal) and related parameters.
-Probing and Measurement:    Implementing probing routines for tool calibration, workpiece measurement,
-                            and alignment.
-Collision Detection:        Using software or sensors to detect and prevent collisions between the tool,
-                            workpiece, and machine components.
-Chip Evacuation:            Managing the removal of chips and debris from the machining area to prevent
-                            interference with the cutting process.
-Tool Change Sequence:       Configuring the sequence and order of tool changes in multi-tool operations.
-		</pre>
+			<div class="container"   style="margin: 10px;">
+				<label>Height: (z)<input id="safeZoneHeight" inputmode="numeric" class="def-cnc-input" style="width: 200px; text-align: right; padding: 5px;"></label>
+			</div>
+			<div class="container"  style="margin: 10px;">
+				<label>Depth:  (y)<input id="safeZoneDepth" inputmode="numeric" class="def-cnc-input" style="width: 200px; text-align: right;  padding: 5px;"></label>
+			</div>
+			<div class="container"  style="margin: 10px;">
+				<label>Width:  (x)<input id="safeZoneWidth" inputmode="numeric" class="def-cnc-input" style="width: 200px; text-align: right;  padding: 5px;"></label>
+			</div>		
+		</div> 
+		<div id="tabs-3">
+			<div class="container"  style="margin: 10px;">
+				<section class="cnc-section">
+					<h2>Paramètres CNC - Partie 1</h2>
+					<pre>
+Feedrate (Speed):
+	This setting determines how fast the tool moves along a path. It's typically measured in units per minute
+    (e.g., inches per minute or millimeters per minute). The optimal feedrate depends on the material, tool, and desired finish.
+
+Spindle Speed:
+	The spindle speed controls the rotation of the cutting tool. It's usually measured in RPM (revolutions per minute).
+    The correct spindle speed depends on the material being cut and the type of tool used.
+
+Cutting Depth:
+	This setting specifies how deep the tool should cut into the material in a single pass. It's important to balance cutting
+    depth with feedrate to avoid excessive tool wear or damage.
+
+Tool Selection:
+	Choose the appropriate cutting tool for the material and type of machining operation
+    (e.g., end mill, drill bit, router bit, etc.). Tools come in various shapes and sizes for specific tasks.
+
+Tool Path:
+	Define the tool path or tool trajectory that the CNC machine should follow. This can be generated using CAM
+    (Computer-Aided Manufacturing) software or manually programmed using G-code.
+
+Workpiece Material:
+	Specify the material you are machining (e.g., wood, metal, plastic). Different materials require different cutting parameters and tooling.
+
+Coolant or Lubrication:
+	Depending on the material and machining process, you may need to use coolant or lubrication to reduce friction, heat, and tool wear.
+
+Clamping and Workholding:
+	Ensure that the workpiece is securely clamped or held in place to prevent movement during machining.
+
+Safety Measures:
+	Follow safety guidelines, including wearing appropriate personal protective equipment (PPE) and setting up machine safeguards.
+
+Tool Changes:
+	Plan for tool changes if your job requires multiple tools. The CNC machine may have an automatic tool changer.
+
+Tool Offset:
+	Calibrate or set tool offsets to ensure accurate machining. This compensates for any variations in tool length.
+
+Cutting Strategy:
+	Choose the appropriate cutting strategy, such as contouring, pocketing, drilling, or engraving, depending on your job requirements.
+
+G-code Programming:
+	Write or generate G-code (the machine's language) to control the CNC machine's movements. CAM software can assist with this.
+
+Zero Points:
+	Establish workpiece zero points or reference positions to define the machine's starting point.
+
+Dust and Chip Collection:
+	Implement a dust and chip collection system to keep the workspace clean and prevent debris from interfering with the machining process.
+					</pre>
+				</section>
+
+				<section class="cnc-section">
+					<h2>Paramètres CNC - Partie 2</h2>
+					<pre>
+Tool Diameter:
+	The diameter of the cutting tool is crucial for accurate machining. It's used for toolpath calculations and toolpath offsets.
+
+Tool Length:
+	Knowing the tool's length is important for determining how far the tool can reach and whether it will clear the workpiece and fixtures.
+
+Tool Geometry:
+	Different tools have different geometries, such as the number of flutes on an end mill, which affects cutting performance.
+
+Tool Wear Compensation:
+	Some CNC machines have the capability to adjust toolpaths to compensate for tool wear, ensuring consistent results throughout a job.
+
+Tool Life Management:
+	Monitoring tool life and replacing tools when necessary to maintain quality and efficiency.
+
+Tool Spindle Connection:
+	The type of connection used to attach the tool to the spindle, such as a collet or a toolholder.
+
+Tool Cooling:
+	Controlling the temperature of the cutting tool to prevent overheating, which can lead to tool wear and workpiece damage.
+
+Workpiece Orientation:
+	Specifying the orientation of the workpiece (e.g., horizontal or vertical) and any necessary rotations or tilting of the workpiece.
+
+Coordinate System:
+	Defining the coordinate system used for machining, including whether it's based on the machine's origin or a workpiece-specific origin.
+
+Toolpath Optimization:
+	Optimizing toolpaths for efficient material removal, minimizing tool changes, and reducing machining time.
+
+Rapid Traverse Rate:
+	The maximum speed at which the machine can move between machining operations. Rapid traverse rates are typically higher than cutting feedrates.
+
+Corner Rounding:
+	Configuring how the machine handles sharp corners to prevent tool breakage and produce smoother cuts.
+
+Material Thickness:
+	Specifying the thickness of the material being machined, which can affect cutting depths and toolpath calculations.
+
+Dwell Time:
+	Pausing at specific points in the machining process for tasks like tool changes, tool inspection, or material handling.
+
+Workpiece Surface Finish:
+	Setting parameters for achieving the desired surface finish, which may involve toolpath strategies and tool selection.
+
+Gantry or Machine Type:
+	For CNC routers and large-scale machines, configuring the gantry type (e.g., bridge, portal) and related parameters.
+
+Probing and Measurement:
+	Implementing probing routines for tool calibration, workpiece measurement, and alignment.
+
+Collision Detection:
+	Using software or sensors to detect and prevent collisions between the tool, workpiece, and machine components.
+
+Chip Evacuation:
+	Managing the removal of chips and debris from the machining area to prevent interference with the cutting process.
+
+Tool Change Sequence:
+	Configuring the sequence and order of tool changes in multi-tool operations.
+					</pre>
+				</section>
+			</div>
 		</div>
+		<div id="tabs-4">
+			<div class="container"  style="margin: 10px;">
+				<section class="cnc-section">
+				<ul>
+				  <li><strong>G0-G1</strong>: Mouvement linéaire. Ces commandes ajoutent un mouvement linéaire à la file d'attente, à effectuer après tous les mouvements précédents.</li>
+				  <li><strong>G2-G3</strong>: Mouvement d'arc ou de cercle. Ces commandes ajoutent un mouvement d'arc ou de cercle à la file d'attente.</li>
+				  <li><strong>G4</strong>: Pause (Dwell). Cette commande interrompt le planificateur pendant une durée spécifiée.</li>
+				  <li><strong>G5</strong>: Spline cubique Bézier. Permet de réaliser un mouvement basé sur une spline cubique Bézier avec des destinations XYE et des offsets IJPQ.</li>
+				  <li><strong>G6</strong>: Mouvement direct du moteur pas à pas. Effectue un mouvement direct, sans interpolation, non cinématique et synchronisé.</li>
+				  <li><strong>G10</strong>: Rétraction. Cette commande permet de rétracter le filament.</li>
+				  <li><strong>G11</strong>: Récupération. Cette commande permet de récupérer le filament après une rétraction.</li>
+				  <li><strong>G12</strong>: Nettoyage de la buse. Effectue la procédure de nettoyage de la buse.</li>
+				  <li><strong>G17-G19</strong>: Plans de travail CNC. Ces commandes sélectionnent le plan de travail CNC.</li>
+				  <li><strong>G20</strong>: Unités en pouces. Définit les unités de mesure sur pouces.</li>
+				  <li><strong>G21</strong>: Unités en millimètres. Définit les unités de mesure sur millimètres.</li>
+				  <li><strong>G26</strong>: Motif de validation de maillage. Teste le maillage et effectue des ajustements si nécessaire.</li>
+				  <li><strong>G27</strong>: Garer la tête d'impression. Cette commande permet de garer la tête d'impression actuelle.</li>
+				  <li><strong>G28</strong>: Réinitialisation automatique. Ramène automatiquement les axes à leur position d'origine.</li>
+				  <li><strong>G29</strong>: Nivellement du lit. Cette commande sonde le lit et active la compensation de nivellement.</li>
+				  <li><strong>G30</strong>: Sonde unique Z. Effectue une sonde du lit à la position XY actuelle.</li>
+				  <li><strong>G31</strong>: Rangement du traîneau. Permet de ranger le traîneau de sonde.</li>
+				  <li><strong>G80</strong>: Annuler le mode de mouvement actuel. Cette commande annule le mode de mouvement en cours.</li>
+				  <li><strong>G90</strong>: Positionnement absolu. Définit le mode de positionnement sur absolu.</li>
+				  <li><strong>G91</strong>: Positionnement relatif. Définit le mode de positionnement sur relatif.</li>
+				  <li><strong>G92</strong>: Définir la position. Définit la position actuelle des axes.</li>
+				  <li><strong>M0-M1</strong>: Unconditional stop</li>
+				  <li><strong>M3</strong>: Spindle CW / Laser On</li>
+				  <li><strong>M4</strong>: Spindle CCW / Laser On</li>
+				  <li><strong>M5</strong>: Spindle / Laser Off</li>
+				  <li><strong>M7-M9</strong>: Coolant Controls</li>
+				  <li><strong>M10-M11</strong>: Vacuum / Blower Control</li>
+				  <li><strong>M16</strong>: Expected Printer Check</li>
+				  <li><strong>M17</strong>: Enable Steppers</li>
+				  <li><strong>M18-M84</strong>: Disable steppers</li>
+				  <li><strong>M20</strong>: List SD Card</li>
+				  <li><strong>M21</strong>: Init SD card</li>
+				  <li><strong>M22</strong>: Release SD card</li>
+				  <li><strong>M23</strong>: Select SD file</li>
+				  <li><strong>M24</strong>: Start or Resume SD print</li>
+				  <li><strong>M25</strong>: Pause SD print</li>
+				  <li><strong>M26</strong>: Set SD position</li>
+				  <li><strong>M27</strong>: Report SD print status</li>
+				  <li><strong>M28</strong>: Start SD write</li>
+				  <li><strong>M29</strong>: Stop SD write</li>
+				  <li><strong>M30</strong>: Delete SD file</li>
+				  <li><strong>M31</strong>: Report Print Time</li>
+				  <li><strong>M32</strong>: Select and Start</li>
+				  <li><strong>M33</strong>: Get Long Path</li>
+				  <li><strong>M34</strong>: SDCard Sorting</li>
+				  <li><strong>M106</strong>: Set Fan Speed</li>
+				  <li><strong>M107</strong>: Fan Off</li>
+				  <li><strong>M114</strong>: Get Current Position</li>
+				  <li><strong>M119</strong>: Endstop States</li>
+				  <li><strong>M120</strong>: Enable Endstops</li>
+				  <li><strong>M121</strong>: Disable Endstops</li>				  
+				  <li><strong>M211</strong>: Software Endstops</li>				  
+				</ul>
+				</section>
+			</div>
+		</div>
+
 	</div>
 	<div class="container" id="ui-footer">
-	  <div style="width: 100%; background-color: #e3e3e3; border-top: solid #C5C5C5 1px">
 		<div style="float: left; margin: 10px">
 		  <button id="apply" class="ui-button ui-widget ui-corner-all">Set As Default</button>
 		  <button id="reset" class="ui-button ui-widget ui-corner-all">Reset</button>
@@ -97,6 +282,7 @@ Tool Change Sequence:       Configuring the sequence and order of tool changes i
 		  <button id="accept" class="ui-button ui-widget ui-corner-all">Ok</button>
 		</div>
 	</div>
+  </div>
   <script src="../js/external/jquery/jquery.js"></script>
   <script src="../js/jquery-ui.js"></script>
   <script>
@@ -104,42 +290,47 @@ Tool Change Sequence:       Configuring the sequence and order of tool changes i
 	
 	$(document).ready(function(){
 		sketchup.ready();
+		updateTabsHeight(); // Initialiser la hauteur correcte des tabs
+	});
+	
+	// Mettre à jour la hauteur de #tabs en fonction de la hauteur du footer
+	function updateTabsHeight() {
+		const footerHeight = $('#ui-footer').outerHeight(); // Hauteur du footer
+		$('#tabs').css('max-height', 'calc(100vh - ' + footerHeight + 'px)');
+	}
+	
+	// Recalculer la hauteur des tabs à chaque redimensionnement de la fenêtre
+	$(window).resize(function() {
+		updateTabsHeight();
 	});
 	
 	$( function() {
 		$( "#tabs" ).tabs();
 	} );
-	$( "#safeHeight" ).spinner({
+	$( "#safeZoneHeight" ).spinner({
 		step: 0.01,
 		stop: function( event, ui ) {
-			obj.safeHeight = $("#safeHeight").spinner("value");
-			sketchup.newValue("safeHeight",obj);
+			obj.safeZoneHeight = $("#safeZoneHeight").spinner("value");
+			sketchup.newValue("safeZoneHeight",obj);
 			return true;
 		},
 		change: function(event, ui) { // Quand la valeur change (même par clavier)
-		    obj.safeHeight = $("#safeHeight").spinner("value");
-			sketchup.newValue("safeHeight",obj);
+		    obj.safeZoneHeight = $("#safeZoneHeight").spinner("value");
+			sketchup.newValue("safeZoneHeight",obj);
 		}
 	});
-	$( "#material_type" ).selectmenu({
-		change: function( event, data ) {
-			obj.material_type = data.item.value;
-			sketchup.newValue("material_type",obj);
-			return true;
-       }
-     });
-	$( "#Depth" ).spinner({
+	$( "#safeZoneDepth" ).spinner({
 		step: 0.01,
 		stop: function( event, ui ) {
-			obj.depth = $( "#Depth" ).spinner( "value" );
-			sketchup.newValue("depth",obj);
+			obj.safeZoneDepth = $( "#safeZoneDepth" ).spinner( "value" );
+			sketchup.newValue("safeZoneDepth",obj);
 			return true;
 		},
 		change: function(event, ui) { // Quand la valeur change (même par clavier)
-			console.log("Depth")
-			console.log(obj.depth)
-			obj.depth = $( "#Depth" ).spinner( "value" );
-			sketchup.newValue("depth",obj);
+//			console.log("safeZoneDepth")
+//			console.log(obj.safeZoneDepth)
+			obj.safeZoneDepth = $( "#safeZoneDepth" ).spinner( "value" );
+			sketchup.newValue("safeZoneDepth",obj);
 			return true;
 		}
 	});
@@ -158,31 +349,20 @@ Tool Change Sequence:       Configuring the sequence and order of tool changes i
 		}
 	});
 
-	$( "#Width" ).spinner({
+	$( "#safeZoneWidth" ).spinner({
 		step: 0.01,
 		stop: function( event, ui ) {
-			obj.width = $( "#Width" ).spinner( "value" );
-			sketchup.newValue("width",obj);
+			obj.safeZoneWidth = $( "#safeZoneWidth" ).spinner( "value" );
+			sketchup.newValue("safeZoneWidth",obj);
 			return true;
 		},
 		change: function(event, ui) { // Quand la valeur change (même par clavier)
-			obj.width = $( "#Width" ).spinner( "value" );
-			sketchup.newValue("width",obj);
+			obj.safeZoneWidth = $( "#safeZoneWidth" ).spinner( "value" );
+			sketchup.newValue("safeZoneWidth",obj);
 			return true;
 		}
 	});
-	
-	$('#show_Material').checkboxradio();
-	$('#show_Material').click(function() {
-		obj.show_Material = true
-		if ($(this).is(':checked')) {
-			obj.show_Material = true
-		} else {
-			obj.show_Material = false
-		}
-		sketchup.newValue("show_Material",obj);
-	});
-	
+		
 	$( "#apply, #cancel, #accept, #reset #showResult").button();
 	$( "#apply" ).on( "click", function( event ) {
 		obj.startGCode = $( "#startGCode" ).val();
@@ -229,17 +409,16 @@ Tool Change Sequence:       Configuring the sequence and order of tool changes i
 		console.log(datajson)
 		obj = JSON.parse(datajson);
 		$( "#projectName").val(obj.project_Name);
-		$( "#safeHeight" ).spinner( "value", obj.safeHeight );
-		$( "#Depth" ).spinner( "value", obj.depth );
-		$( "#Thickness" ).spinner( "value", obj.height );
-		$( "#Width" ).spinner( "value", obj.width );
-		$( "#material_type" ).val(obj.material_type);
-		$( "#material_type" ).selectmenu("refresh");
+		$( "#safeZoneHeight" ).spinner( "value", obj.safeZoneHeight );
+		$( "#safeZoneDepth" ).spinner( "value", obj.safeZoneDepth );
+		$( "#safeZoneWidth" ).spinner( "value", obj.safeZoneWidth );
 		$( "#startGCode").val(obj.startGCode);
 		$( "#endGCode").val(obj.endGCode);
-		$('#show_Material').prop( "checked", obj.show_Material );
-		$('#show_Material').checkboxradio( "refresh" );
 	};
+	
+	// Initialiser la hauteur de #tabs dès que le DOM est prêt
+	updateTabsHeight();
+
 	</script>
 
 </body>

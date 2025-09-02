@@ -251,9 +251,10 @@ module GNTools
 			def onChangeEntity(entity)
 				if @group.valid?
 #					puts "PathObjObserver.onChangeEntity #{@group} #{@path_obj.pathName}"
-					@path_obj.changed()
+#					@path_obj.changed()
 #				else # va passer par onEraseEntity
 #					puts "PathObjObserver.onChangeEntity deleted #{@group} #{@path_obj.pathName}"
+					nil
 				end
 			end
 

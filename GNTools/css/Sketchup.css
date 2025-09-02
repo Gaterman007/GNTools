@@ -14,7 +14,7 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 15px;
+  bottom: 0px;
   color: #e72b3d;
 }
 /* Override somewhat arbitrary bottom button bottom spacing set by modus */

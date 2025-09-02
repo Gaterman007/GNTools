@@ -21,5 +21,17 @@
 "Modi Path":"Modifier un Chemin",
 "Show Result":"Montré Resultat",
 "createPocket":"Add un Chemin d une Forme",
-"Add Material":"Add un Materiel"
+"Add Material":"Add un Materiel",
+"Aucun modèle actif": "Aucun modèle actif",
+"🔄 Génération G-Code pour %{count} outil(s)...": "🔄 Génération G-Code pour %{count} outil(s)...",
+"⚠ Drill bit non trouvé: %{name}": "⚠ Foret non trouvé : %{name}",
+"✓ G-Code généré: %{lines} lignes en %{time}s": "✓ G-Code généré : %{lines} lignes en %{time}s",
+"Erreur lors de la génération G-Code: %{error}": "Erreur lors de la génération G-Code : %{error}",
+"OUTIL": "OUTIL",
+"Diamètre": "Diamètre",
+"Type": "Type",
+"Fichier": "Fichier",
+"Généré le": "Généré le",
+"Par": "Par",
+"Choisir un dossier de sauvegarde": "Choisir un dossier de sauvegarde"
 }

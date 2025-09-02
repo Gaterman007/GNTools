@@ -1,1 +1,1 @@
-{"project_Name":"","material_type":null,"safeHeight":15,"width":5,"height":5,"depth":4,"startGCode":"G21 ; set units to millimeters\\nG90 ; Set all axes to absolute\\n","endGCode":"M18\\n","show_Material":true,"materialID":null}
+{"project_Name":null,"material_type":"Acrylic","safeHeight":6,"width":2,"height":3,"depth":4,"startGCode":"G21 ;Set units to millimeters\\nG90 ;Absolute Positioning\\nG92 X0 Y0;Set Postion X to 0 Y to 0","endGCode":"G90","safeZoneHeight":20,"safeZoneDepth":170,"safeZoneWidth":120,"show_Material":false,"materialID":null}
