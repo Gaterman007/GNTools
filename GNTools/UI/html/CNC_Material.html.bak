@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="../js/jquery-ui.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/Sketchup.css" type="text/css" charset="utf-8" />
+</head>
+<body class="bg-panel-background">
+
+	<div class="container" style ="margin = 5px;">
+	<select name="material_type" id="material_type" class = "def-cnc-input">
+		<option value="Acrylic">Acrylic</option>
+		<option value="Aluminum">Aluminum</option>
+		<option value="Birch_Plywood">Birch Plywood</option>
+		<option value="Cherry_Plywood">Cherry Plywood</option>
+	</select>
+	</div>
+	<div class="container">
+		<label>Safe Height: <input id="safeHeight" class="def-cnc-input" style="width: 100px;"></label>
+	</div>
+	<div class="container">
+		<label>Depth: <input id="Depth" class="def-cnc-input" style="width: 100px;" readonly></label>
+	</div>
+	<div class="container">
+		<label>Thickness: <input id="Thickness" class="def-cnc-input" style="width: 100px;" readonly></label>
+	</div>
+	<div class="container">
+		<label>Width: <input id="Width" class="def-cnc-input" style="width: 100px;" readonly></label>
+	</div>
+	<div class="container" id="ui-footer">
+	  <div style="width: 100%; background-color: #e3e3e3; border-top: solid #C5C5C5 1px">
+		<div style="float: left; margin: 10px">
+		  <button id="reset" class="ui-button ui-widget ui-corner-all">Reset</button>
+		</div>
+		<div style="float: right; margin: 10px">
+		  <button id="cancel" class="ui-button ui-widget ui-corner-all">Cancel</button>
+		  <button id="accept" class="ui-button ui-widget ui-corner-all">Ok</button>
+		</div>
+	</div>
+  <script src="../js/external/jquery/jquery.js"></script>
+  <script src="../js/jquery-ui.js"></script>
+  <script>
+	var obj;
+	
+	$(document).ready(function(){
+		sketchup.ready();
+	});
+	
+	$( "#safeHeight" ).spinner({
+		step: 0.01,
+		stop: function( event, ui ) {
+			obj.safeHeight = $("#safeHeight").spinner("value");
+			sketchup.newValue("safeHeight",obj);
+			return true;
+		},
+		change: function(event, ui) { // Quand la valeur change (même par clavier)
+		    obj.safeHeight = $("#safeHeight").spinner("value");
+			sketchup.newValue("safeHeight",obj);
+		}
+	});
+	$( "#material_type" ).selectmenu({
+		change: function( event, data ) {
+			obj.material_type = data.item.value;
+			sketchup.newValue("material_type",obj);
+			return true;
+       }
+     });
+		
+	$( "#apply, #cancel, #accept, #reset #addMaterial").button();
+	$( "#apply" ).on( "click", function( event ) {
+		sketchup.apply(obj);
+	} );
+
+	$( "#accept" ).on( "click", function( event ) {
+		sketchup.accept(obj);
+	} );
+	
+	$( "#reset" ).on( "click", function( event ) {
+		sketchup.reset(obj);
+	} );
+
+	$( "#cancel" ).on( "click", function( event ) {
+		sketchup.cancel();
+	} );
+		
+	function updateDialog(datajson) {
+		console.log(datajson)
+		obj = JSON.parse(datajson);
+		$( "#safeHeight" ).spinner( "value", obj.safeHeight );
+		$( "#Depth" ).val(obj.depth);
+		$( "#Thickness" ).val(obj.height);
+		$( "#Width" ).val(obj.width);
+		$( "#material_type" ).val(obj.material_type);
+		$( "#material_type" ).selectmenu("refresh");
+	};
+	</script>
+
+</body>
+</html>

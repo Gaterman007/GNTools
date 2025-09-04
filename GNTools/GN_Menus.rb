@@ -9,8 +9,8 @@ require 'fiddle'
 require 'fiddle/import'
 require 'fiddle/types'
 require 'sketchup.rb'
-require 'GNTools/GN_CombineTool.rb'
-require 'GNTools/GN_materialTool.rb'
+require File.join(GNTools::PATH_TOOLS, "GN_CombineTool.rb")
+require File.join(GNTools::PATH_TOOLS, "GN_materialTool.rb")
 
 module GNTools
 
@@ -21,7 +21,6 @@ module GNTools
 		attr_accessor :cmd_Add_Material
 		attr_accessor :cmdCNCTools
 		attr_accessor :cmdCreatePath
-		attr_accessor :cmdMaterial
 		attr_accessor :cmdparamGCode
 		attr_accessor :cmdGCode
         attr_accessor :cmdDemoMat
@@ -37,7 +36,7 @@ module GNTools
 			# Command Menu addition de material
 			#---------------------------------
 			@cmd_Add_Material = UI::Command.new(GNTools.traduire('Add Material')) {
-				self.activate_Material
+				@dialogMaterial = GNTools::MaterialDialog.new(nil)
 			}
 
 			@cmd_Add_Material.set_validation_proc {
@@ -52,7 +51,12 @@ module GNTools
 				end
 			}
 			#		MF_ENABLED, MF_DISABLED, MF_CHECKED, MF_UNCHECKED, or MF_GRAYED
-		
+#			@cmdMaterial = UI::Command.new("Material") {GNTools::activate_Material}
+			@cmd_Add_Material.small_icon = File.join(GNTools::PATH_IMAGES,"PlayCncLarge.png")
+			@cmd_Add_Material.large_icon = File.join(GNTools::PATH_IMAGES,"PlayCncSmall.png")
+			@cmd_Add_Material.tooltip = "Add Material"
+			@cmd_Add_Material.status_bar_text = "Add Material"
+			@cmd_Add_Material.menu_text = "Add Material"		
 			
 			@cmdCNCTools = UI::Command.new("AddPath") {GNTools::activate_CreateTool}
 			@cmdCNCTools.small_icon = File.join(GNTools::PATH_IMAGES,"HoleSmallPlus.png")
@@ -90,12 +94,7 @@ module GNTools
 #				MF_GRAYED
 #			  end
 			}
-			@cmdMaterial = UI::Command.new("Material") {GNTools::activate_Material}
-			@cmdMaterial.small_icon = File.join(GNTools::PATH_IMAGES,"PlayCncLarge.png")
-			@cmdMaterial.large_icon = File.join(GNTools::PATH_IMAGES,"PlayCncSmall.png")
-			@cmdMaterial.tooltip = "Add Material"
-			@cmdMaterial.status_bar_text = "Add Material"
-			@cmdMaterial.menu_text = "Add Material"
+
 
 			@cmdparamGCode = UI::Command.new("GCode") {GNTools::activate_defaultCNCTool}
 			@cmdparamGCode.small_icon = File.join(GNTools::PATH_IMAGES,"MaterialParamSmall.png")
@@ -104,7 +103,7 @@ module GNTools
 			@cmdparamGCode.status_bar_text = "Parameters GCode"
 			@cmdparamGCode.menu_text = "Parameters GCode"
 
-			@cmdGCode = UI::Command.new("GCode") {GNTools::activate_SaveGCode}
+			@cmdGCode = UI::Command.new("GCode") {GCodeGenerate.SaveAs}
 			@cmdGCode.small_icon = File.join(GNTools::PATH_IMAGES,"GcodeSmall.png")
 			@cmdGCode.large_icon = File.join(GNTools::PATH_IMAGES,"GcodeLarge.png")
 			@cmdGCode.tooltip = "Generate GCode"
@@ -230,10 +229,6 @@ module GNTools
 	def self.activate_Material
 		@dialogMaterial = GNTools::MaterialDialog.new(nil)
 	end
-	
-	def self.activate_SaveGCode
-		GCodeGenerate.SaveAs
-	end
 
 	def self.activate_defaultCNCTool
 		Sketchup.active_model.select_tool(@@defaultCNCTool)
@@ -270,4 +265,25 @@ module GNTools
 			self.reload 
 		}
 	end
+	
+    def self.reload()
+        original_verbose = $VERBOSE
+        $VERBOSE = nil
+        # GN_ToolSet file (this)
+        load 'GNTools.rb'
+        SKETCHUP_CONSOLE.clear
+        if defined?(PATH) && File.exist?(PATH)
+            x = Dir.glob(File.join(PATH, "**/*.{rb,rbs}")).each { |file|
+                load file
+            }
+            x.length + 1
+        else
+            1
+        end
+		DrillBits.loadFromFile(File.join(PATH, "DrillBits.txt"))
+		initCNCGCode
+		ObserverModule.reload
+    ensure
+        $VERBOSE = original_verbose
+    end
 end

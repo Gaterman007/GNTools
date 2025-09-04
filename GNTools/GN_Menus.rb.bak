@@ -14,10 +14,126 @@ require 'GNTools/GN_materialTool.rb'
 
 module GNTools
 
+
+	class CommandClass
+	
+		attr_accessor :cmd_circle3x3Tool
+		attr_accessor :cmd_Add_Material
+		attr_accessor :cmdCNCTools
+		attr_accessor :cmdCreatePath
+		attr_accessor :cmdMaterial
+		attr_accessor :cmdparamGCode
+		attr_accessor :cmdGCode
+        attr_accessor :cmdDemoMat
+		
+		def initialize
+			@cmd_circle3x3Tool = UI::Command.new(GNTools.traduire("Circle From 3 Points")) { Sketchup.active_model.select_tool Circle3X3DPoints.new }
+			@cmd_circle3x3Tool.tooltip = GNTools.traduire("Circle passing by 3 points.")
+			@cmd_circle3x3Tool.status_bar_text = GNTools.traduire("3 points circle.")
+#        		@cmd_circle3x3Tool.small_icon = File.join(GNTools::PATH_IMAGES, 'Inspector-16.png')
+#        		@cmd_circle3x3Tool.large_icon = File.join(GNTools::PATH_IMAGES, 'Inspector-24.png')
+
+			#---------------------------------
+			# Command Menu addition de material
+			#---------------------------------
+			@cmd_Add_Material = UI::Command.new(GNTools.traduire('Add Material')) {
+				self.activate_Material
+			}
+
+			@cmd_Add_Material.set_validation_proc {
+				model = Sketchup.active_model
+				selection = model.selection
+				groups = selection.grep(Sketchup::Group)
+
+				if groups.count == 1 && groups[0].manifold?
+					MF_ENABLED
+				else
+					MF_GRAYED
+				end
+			}
+			#		MF_ENABLED, MF_DISABLED, MF_CHECKED, MF_UNCHECKED, or MF_GRAYED
+		
+			
+			@cmdCNCTools = UI::Command.new("AddPath") {GNTools::activate_CreateTool}
+			@cmdCNCTools.small_icon = File.join(GNTools::PATH_IMAGES,"HoleSmallPlus.png")
+			@cmdCNCTools.large_icon = File.join(GNTools::PATH_IMAGES,"HoleLargePlus.png")
+			@cmdCNCTools.tooltip = "CNC Add"
+			@cmdCNCTools.status_bar_text = "CNC Add"
+			@cmdCNCTools.menu_text = "CNC Add"
+			@cmdCNCTools.set_validation_proc {
+			  GNTools::ObserverModule.hasCircle = false
+			  GNTools.verifieSelection(Sketchup.active_model.selection)
+#			  if GNTools.materialList.count != 0
+				  if Sketchup.active_model.selection.length != 0 && (GNTools::ObserverModule.hasCircle || GNTools::ObserverModule.hasEdges|| GNTools::ObserverModule.hasFaces)
+					MF_ENABLED
+				  else
+					MF_GRAYED
+				  end
+#			  else
+#				MF_GRAYED
+#			  end
+			}
+			@cmdCreatePath = UI::Command.new("CreatePath") {GNTools::activate_PathTool}
+			@cmdCreatePath.small_icon = File.join(GNTools::PATH_IMAGES,"HoleSmall.png")
+			@cmdCreatePath.large_icon = File.join(GNTools::PATH_IMAGES,"HoleLarge.png")
+			@cmdCreatePath.tooltip = "CNC Tool"
+			@cmdCreatePath.status_bar_text = "CNC Tool"
+			@cmdCreatePath.menu_text = "CNC Tool"
+			@cmdCreatePath.set_validation_proc {
+#			  if GNTools.materialList.count != 0
+				if Sketchup.active_model.selection.length == 0 # && GNTools::ObserverModule.allEdges
+					MF_GRAYED
+				else
+					MF_ENABLED
+				end
+#			  else
+#				MF_GRAYED
+#			  end
+			}
+			@cmdMaterial = UI::Command.new("Material") {GNTools::activate_Material}
+			@cmdMaterial.small_icon = File.join(GNTools::PATH_IMAGES,"PlayCncLarge.png")
+			@cmdMaterial.large_icon = File.join(GNTools::PATH_IMAGES,"PlayCncSmall.png")
+			@cmdMaterial.tooltip = "Add Material"
+			@cmdMaterial.status_bar_text = "Add Material"
+			@cmdMaterial.menu_text = "Add Material"
+
+			@cmdparamGCode = UI::Command.new("GCode") {GNTools::activate_defaultCNCTool}
+			@cmdparamGCode.small_icon = File.join(GNTools::PATH_IMAGES,"MaterialParamSmall.png")
+			@cmdparamGCode.large_icon = File.join(GNTools::PATH_IMAGES,"MaterialParam.png")
+			@cmdparamGCode.tooltip = "Parameters GCode"
+			@cmdparamGCode.status_bar_text = "Parameters GCode"
+			@cmdparamGCode.menu_text = "Parameters GCode"
+
+			@cmdGCode = UI::Command.new("GCode") {GNTools::activate_SaveGCode}
+			@cmdGCode.small_icon = File.join(GNTools::PATH_IMAGES,"GcodeSmall.png")
+			@cmdGCode.large_icon = File.join(GNTools::PATH_IMAGES,"GcodeLarge.png")
+			@cmdGCode.tooltip = "Generate GCode"
+			@cmdGCode.status_bar_text = "Generate GCode"
+			@cmdGCode.menu_text = "Generate GCode"
+
+        
+			@cmdDemoMat = UI::Command.new("DemoMateriel") {GNTools::activate_defaultCNCTool}
+			@cmdDemoMat.small_icon = File.join(GNTools::PATH_IMAGES,"DemoMaterielSmall.png")
+			@cmdDemoMat.large_icon = File.join(GNTools::PATH_IMAGES,"DemoMaterielLarge.png")
+			@cmdDemoMat.tooltip = "Generate Demo"
+			@cmdDemoMat.status_bar_text = "Generate Demo"
+			@cmdDemoMat.menu_text = "Generate Demo"
+
+
+
+		end	# initialize
+	end		# class
+
+
 	@@combineTool = Paths::CombineTool.new()
 	@@defaultCNCTool = GNTools::DefaultCNCTool.new()
 	@@activeToolID = nil
-	@@materialTool = GNTools::MaterialTool.new()
+	@@commandClass = GNTools::CommandClass.new()
+
+
+	def self.commandClass
+		@@commandClass
+	end
 
 	def self.combineTool
 		@@combineTool
@@ -29,10 +145,6 @@ module GNTools
 
 	def self.activeToolID=(value)
 		@@activeToolID = value
-	end
-
-	def self.materialTool
-		@@materialTool
 	end
 	
     def self.getCursorPos
@@ -107,7 +219,7 @@ module GNTools
 		if faces.count > 0
 			hash = {}
 			defaultPocketData.to_Hash(hash)
-			Sketchup.active_model.start_operation(traduire('createPocket'), true)
+			Sketchup.active_model.start_operation(GNTools.traduire('createPocket'), true)
 			GNTools::Paths::Pocket.Create(faces,hash)
 			Sketchup.active_model.commit_operation
 		end
@@ -116,7 +228,7 @@ module GNTools
 	end
 	
 	def self.activate_Material
-		Sketchup.active_model.tools.push_tool(GNTools::materialTool)
+		@dialogMaterial = GNTools::MaterialDialog.new(nil)
 	end
 	
 	def self.activate_SaveGCode
@@ -135,45 +247,27 @@ module GNTools
 	def self.create_Menus
 	    plugins_menu = UI.menu('Plugins')
 
-
-		submenu = plugins_menu.add_submenu(traduire("CNC Menu"))
-		
-		submenu.add_item(traduire('Add Material')) {
-			self.activate_Material
-		}
-		
-		submenu.add_item(traduire('Material Default')) {
+		submenu = plugins_menu.add_submenu(GNTools.traduire("CNC Menu"))
+		submenu.add_item(GNTools::commandClass.cmd_Add_Material)
+		submenu.add_item(GNTools.traduire('Material Default')) {
 			self.activate_defaultCNCTool
 		}
-
-		submenu.add_item(traduire('DrillBits')) {
+		submenu.add_item(GNTools.traduire('DrillBits')) {
 			GNTools::DrillBits.show
 		}
-		submenu.add_item(traduire('GCode Generate')) {
+		submenu.add_item(GNTools.traduire('GCode Generate')) {
 			self.activate_GCodeGenerate
 		}
-
-		submenu.add_item(traduire('Save GCode to File')) {
+		submenu.add_item(GNTools.traduire('Save GCode to File')) {
 			self.activate_SaveGCode
 		}
-
-		
-		plugins_menu.add_item(traduire('Construction Line')) {
+		plugins_menu.add_item(GNTools.traduire('Construction Line')) {
 			self.activate_line_tool
 		}
-		cmd_circle3x3Tool = UI::Command.new(traduire("Circle From 3 Points")) { Sketchup.active_model.select_tool Circle3X3DPoints.new }
-        cmd_circle3x3Tool.tooltip = traduire("Circle passing by 3 points.")
-        cmd_circle3x3Tool.status_bar_text = traduire("3 points circle.")
-#        cmd_circle3x3Tool.small_icon = File.join(GNTools::PATH_IMAGES, 'Inspector-16.png')
-#        cmd_circle3x3Tool.large_icon = File.join(GNTools::PATH_IMAGES, 'Inspector-24.png')
-		plugins_menu.add_item(cmd_circle3x3Tool)
-		
-		
-		plugins_menu.add_item(traduire("Reload GNTools")){
+		plugins_menu.add_item(GNTools::commandClass.cmd_circle3x3Tool)
+        plugins_menu.add_item(GNTools::commandClass.cmdDemoMat)
+		plugins_menu.add_item(GNTools.traduire("Reload GNTools")){
 			self.reload 
 		}
-
-		
 	end
-	
 end

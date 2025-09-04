@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> Test html Dialog
+</title>
+</head>
+<h2>Draw a Box from a HtmlDialog</h2>
+<script>
+function sendDataToSketchUp() {
+	var user_input1 = document.getElementById('id1');
+	var user_input2 = document.getElementById('id2');
+	var user_input3 = document.getElementById('id3');
+	sketchup.getUserInput(user_input1.value, user_input2.value, user_input3.value)
+}
+</script>
+<body>
+<p>An example using SketchUp Ruby HtmlDialog</p>
+<form>
+	length: <input id='id1' type='number' name='length' value=50 required><br>
+	breadth: <input id='id2' type='number' name='breadth' value=75 required><br>
+	depth: <input id='id3' type='number' name='depth' value=25 required>
+</form>
+<button onclick='sendDataToSketchUp()'>Draw Box</button>
+</body>
+</html>
