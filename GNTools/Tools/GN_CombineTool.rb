@@ -105,7 +105,7 @@ module GNTools
 					
 			def initialize()
 				@methodTypeCombineChoices = {'Hole' => ['Inside','Outside','Pocket'],'StraitCut' => ['Ramp','Multipass','Plunge'],'Pocket' => ['Inside','Outside','Pocket'] }
-				@title = "Tools Settings"
+				@title = "Tools Paths Settings"
 				@tabValue = 0
 				@newhash = createHashTable()
 				@modiHash = {}

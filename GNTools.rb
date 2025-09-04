@@ -21,6 +21,9 @@ module GNTools
 		version:  "0.2.1".freeze
 	}.freeze
 
+	SKETCHUP_CONSOLE.show
+
+
     # Resource paths
     file = File.join(Sketchup.find_support_file('Plugins'),'GNTools.rb').dup
     file.force_encoding("UTF-8") if file.respond_to?(:force_encoding)
@@ -33,11 +36,12 @@ module GNTools
     PATH_HTML    = File.join(PATH_UI, "html").freeze
 
 require File.join(PATH_TOOLS, "GN_Translation.rb")
+	self.load_translation()
 require File.join(PATH, "GN_Menus.rb")
 require File.join(PATH, "GN_Toolbars.rb")
 
 
-	self.load_translation()
+
 
 
 
@@ -62,6 +66,5 @@ require File.join(PATH, "GN_Toolbars.rb")
 	self.initCNCGCode    
 
 
-#	SKETCHUP_CONSOLE.show
 
 end

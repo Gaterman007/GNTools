@@ -38,9 +38,9 @@ module GNTools
       @drawn = false
 
       # This sets the label for the VCB
-      Sketchup::set_status_text traduire("Length"), SB_VCB_LABEL
+      Sketchup::set_status_text GNTools.traduire("Length"), SB_VCB_LABEL
       
-      self.reset(nil)
+      self.reset(Sketchup.active_model.active_view)
     end
 
     # deactivate is called when the tool is deactivated because
@@ -126,7 +126,7 @@ module GNTools
         @ip1.pick view, x, y
         if( @ip1.valid? )
           @state = 1
-          Sketchup::set_status_text traduire("Select second point on circle."), SB_PROMPT
+          Sketchup::set_status_text GNTools.traduire("Select second point on circle."), SB_PROMPT
           @xdown = x
           @ydown = y
         end
@@ -135,7 +135,7 @@ module GNTools
         @ip2.pick view, x, y
         if( @ip2.valid? )
           @state = 2
-          Sketchup::set_status_text traduire("Select third and last point on circle."), SB_PROMPT
+          Sketchup::set_status_text GNTools.traduire("Select third and last point on circle."), SB_PROMPT
           @xdown = x
           @ydown = y
         end
@@ -231,9 +231,8 @@ module GNTools
     def reset(view)
       # This variable keeps track of which point we are currently getting
       @state = 0
-      
       # Display a prompt on the status bar
-      Sketchup::set_status_text(traduire("Select first end"), SB_PROMPT)
+      Sketchup::set_status_text(GNTools.traduire("Select first end"), SB_PROMPT)
       
       # clear the InputPoints
       @ip1.clear

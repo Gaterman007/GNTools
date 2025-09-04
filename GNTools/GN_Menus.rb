@@ -31,7 +31,7 @@ module GNTools
 			@cmd_circle3x3Tool.status_bar_text = GNTools.traduire("3 points circle.")
 #        		@cmd_circle3x3Tool.small_icon = File.join(GNTools::PATH_IMAGES, 'Inspector-16.png')
 #        		@cmd_circle3x3Tool.large_icon = File.join(GNTools::PATH_IMAGES, 'Inspector-24.png')
-
+			@cmd_circle3x3Tool.menu_text = GNTools.traduire("Circle From 3 Points")
 			#---------------------------------
 			# Command Menu addition de material
 			#---------------------------------
@@ -61,9 +61,9 @@ module GNTools
 			@cmdCNCTools = UI::Command.new("AddPath") {GNTools::activate_CreateTool}
 			@cmdCNCTools.small_icon = File.join(GNTools::PATH_IMAGES,"HoleSmallPlus.png")
 			@cmdCNCTools.large_icon = File.join(GNTools::PATH_IMAGES,"HoleLargePlus.png")
-			@cmdCNCTools.tooltip = "CNC Add"
-			@cmdCNCTools.status_bar_text = "CNC Add"
-			@cmdCNCTools.menu_text = "CNC Add"
+			@cmdCNCTools.tooltip = "Add tool Path"
+			@cmdCNCTools.status_bar_text = "Add tool Path"
+			@cmdCNCTools.menu_text = "Add tool Path"
 			@cmdCNCTools.set_validation_proc {
 			  GNTools::ObserverModule.hasCircle = false
 			  GNTools.verifieSelection(Sketchup.active_model.selection)
@@ -80,9 +80,9 @@ module GNTools
 			@cmdCreatePath = UI::Command.new("CreatePath") {GNTools::activate_PathTool}
 			@cmdCreatePath.small_icon = File.join(GNTools::PATH_IMAGES,"HoleSmall.png")
 			@cmdCreatePath.large_icon = File.join(GNTools::PATH_IMAGES,"HoleLarge.png")
-			@cmdCreatePath.tooltip = "CNC Tool"
-			@cmdCreatePath.status_bar_text = "CNC Tool"
-			@cmdCreatePath.menu_text = "CNC Tool"
+			@cmdCreatePath.tooltip = "CNC Tool Path"
+			@cmdCreatePath.status_bar_text = "CNC Tool Path"
+			@cmdCreatePath.menu_text = "CNC Tool Path"
 			@cmdCreatePath.set_validation_proc {
 #			  if GNTools.materialList.count != 0
 				if Sketchup.active_model.selection.length == 0 # && GNTools::ObserverModule.allEdges
@@ -96,7 +96,7 @@ module GNTools
 			}
 
 
-			@cmdparamGCode = UI::Command.new("GCode") {GNTools::activate_defaultCNCTool}
+			@cmdparamGCode = UI::Command.new("GCode") {Sketchup.active_model.select_tool(GNTools.defaultCNCTool)}
 			@cmdparamGCode.small_icon = File.join(GNTools::PATH_IMAGES,"MaterialParamSmall.png")
 			@cmdparamGCode.large_icon = File.join(GNTools::PATH_IMAGES,"MaterialParam.png")
 			@cmdparamGCode.tooltip = "Parameters GCode"
@@ -111,27 +111,33 @@ module GNTools
 			@cmdGCode.menu_text = "Generate GCode"
 
         
-			@cmdDemoMat = UI::Command.new("DemoMateriel") {GNTools::activate_defaultCNCTool}
+			@cmdDemoMat = UI::Command.new("DemoMateriel") {Sketchup.active_model.select_tool(GNTools.defaultCNCTool)}
 			@cmdDemoMat.small_icon = File.join(GNTools::PATH_IMAGES,"DemoMaterielSmall.png")
 			@cmdDemoMat.large_icon = File.join(GNTools::PATH_IMAGES,"DemoMaterielLarge.png")
-			@cmdDemoMat.tooltip = "Generate Demo"
-			@cmdDemoMat.status_bar_text = "Generate Demo"
-			@cmdDemoMat.menu_text = "Generate Demo"
+			@cmdDemoMat.tooltip = GNTools.traduire("Generate Demo")
+			@cmdDemoMat.status_bar_text = GNTools.traduire("Generate Demo")
+			@cmdDemoMat.menu_text = GNTools.traduire("Generate Demo")
 
 
 
 		end	# initialize
 	end		# class
 
-
-	@@combineTool = Paths::CombineTool.new()
-	@@defaultCNCTool = GNTools::DefaultCNCTool.new()
-	@@activeToolID = nil
-	@@commandClass = GNTools::CommandClass.new()
-
+	# Initialisation unique des singletons
+	unless defined?(@@menu_initialized) && @@menu_initialized
+	  @@combineTool = Paths::CombineTool.new()
+	  @@defaultCNCTool = GNTools::DefaultCNCTool.new()
+	  @@activeToolID = nil
+	  @@commandClass = GNTools::CommandClass.new()
+	  @@menu_initialized    = true
+	end
 
 	def self.commandClass
 		@@commandClass
+	end
+
+	def self.defaultCNCTool
+		@@defaultCNCTool
 	end
 
 	def self.combineTool
@@ -230,11 +236,6 @@ module GNTools
 		@dialogMaterial = GNTools::MaterialDialog.new(nil)
 	end
 
-	def self.activate_defaultCNCTool
-		Sketchup.active_model.select_tool(@@defaultCNCTool)
-	end
-
-
     def self.activate_GCodeGenerate
        GCodeGenerate.generateGCode2
 	end
@@ -244,9 +245,7 @@ module GNTools
 
 		submenu = plugins_menu.add_submenu(GNTools.traduire("CNC Menu"))
 		submenu.add_item(GNTools::commandClass.cmd_Add_Material)
-		submenu.add_item(GNTools.traduire('Material Default')) {
-			self.activate_defaultCNCTool
-		}
+		submenu.add_item(GNTools::commandClass.cmdparamGCode)
 		submenu.add_item(GNTools.traduire('DrillBits')) {
 			GNTools::DrillBits.show
 		}
