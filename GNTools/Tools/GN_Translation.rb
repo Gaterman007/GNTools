@@ -27,9 +27,15 @@ module GNTools
 	end
 	
 	# Charger les traductions
-	def self.traduire(chaine)
-		return @translations[chaine] || chaine
+	def self.traduire(chaine, vars = {})
+	  texte = @translations[chaine] || chaine
+	  begin
+		texte % vars   # interpolation Ruby avec %{clé}
+	  rescue KeyError
+		texte          # si une variable manque, on renvoie tel quel
+	  end
 	end
+
 
 	def self.translations()
 		@translations

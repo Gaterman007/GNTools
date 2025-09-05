@@ -220,6 +220,8 @@ module GNTools
 
 			def createPath()
 				super()
+				positionHole = self.getGlobal()
+				puts positionHole[0].to_mm,positionHole[1].to_mm,positionHole[2].to_mm
 				pathGroup = Sketchup.active_model.entities.add_group()
                 drillbitSize = DrillBits.getDrillBit(@drillBitName).cut_Diameter			# diametre de la drill
 			    drillBitRayon = (drillbitSize/2.0)											# rayon de la drill	
@@ -230,6 +232,7 @@ module GNTools
 				end
 				safeHeight = safeHeight.mm
 				material_thickness = DefaultCNCData.getFromModel("height")						# la hauteur du materiel
+				material_thickness = positionHole[2].to_mm
 				if material_thickness == nil
 					material_thickness = DefaultCNCDialog.def_CNCData.material_thickness
 				end
@@ -237,6 +240,9 @@ module GNTools
 				defaultFeedRate = DefaultCNCData.getFromModel("defaultFeedRate")			# la vitesse par default
                 parent=@pathEntitie.parent
                 groupPos = @pathEntitie.definition.bounds.center
+				
+#				puts positionHole[2]
+
 				construction_point = @pathEntitie.entities.grep(Sketchup::ConstructionPoint)
 				if construction_point
 					globalTransform = GNTools::Paths::TransformPoint.getGlobalTransform(@pathEntitie)

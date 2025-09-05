@@ -28,13 +28,13 @@ module GNTools
   # Initialisation améliorée
   def self.initCNCGCode
     begin
-      puts GNTools.traduire("🔧 Initialisation du générateur G-Code...")
+#      puts GNTools.traduire("🔧 Initialisation du générateur G-Code...")
       
       # Initialiser les données par défaut
       if defined?(DefaultCNCDialog)
         DefaultCNCDialog.set_defaults
-      else
-        puts GNTools.traduire("⚠ DefaultCNCDialog non trouvé")
+#      else
+#        puts GNTools.traduire("⚠ DefaultCNCDialog non trouvé")
       end
       
       # Définir les numéros par défaut
@@ -177,8 +177,7 @@ module GNTools
         end
       end
       
-      puts GNTools.traduire("✓ Prévisualisation: %{count} chemins créés pour %{drill}", 
-                           count: preview_count, drill: drillName)
+      puts GNTools.traduire("✓ Prévisualisation: %{count} chemins créés pour %{drill}", count: preview_count, drill: drillName)
     end
 
     # Substitution des codes avec validation

@@ -24,6 +24,9 @@ module GNTools
 		attr_accessor :cmdparamGCode
 		attr_accessor :cmdGCode
         attr_accessor :cmdDemoMat
+		attr_accessor :cmdSaveGCode
+		attr_accessor :cmdDrillBits
+		attr_accessor :cmdConstructionLine
 		
 		def initialize
 			@cmd_circle3x3Tool = UI::Command.new(GNTools.traduire("Circle From 3 Points")) { Sketchup.active_model.select_tool Circle3X3DPoints.new }
@@ -32,6 +35,7 @@ module GNTools
 #        		@cmd_circle3x3Tool.small_icon = File.join(GNTools::PATH_IMAGES, 'Inspector-16.png')
 #        		@cmd_circle3x3Tool.large_icon = File.join(GNTools::PATH_IMAGES, 'Inspector-24.png')
 			@cmd_circle3x3Tool.menu_text = GNTools.traduire("Circle From 3 Points")
+			
 			#---------------------------------
 			# Command Menu addition de material
 			#---------------------------------
@@ -56,7 +60,9 @@ module GNTools
 			@cmd_Add_Material.large_icon = File.join(GNTools::PATH_IMAGES,"PlayCncSmall.png")
 			@cmd_Add_Material.tooltip = "Add Material"
 			@cmd_Add_Material.status_bar_text = "Add Material"
-			@cmd_Add_Material.menu_text = "Add Material"		
+			@cmd_Add_Material.menu_text = "Add Material"
+			
+			
 			
 			@cmdCNCTools = UI::Command.new("AddPath") {GNTools::activate_CreateTool}
 			@cmdCNCTools.small_icon = File.join(GNTools::PATH_IMAGES,"HoleSmallPlus.png")
@@ -77,6 +83,10 @@ module GNTools
 #				MF_GRAYED
 #			  end
 			}
+			
+			
+			
+			
 			@cmdCreatePath = UI::Command.new("CreatePath") {GNTools::activate_PathTool}
 			@cmdCreatePath.small_icon = File.join(GNTools::PATH_IMAGES,"HoleSmall.png")
 			@cmdCreatePath.large_icon = File.join(GNTools::PATH_IMAGES,"HoleLarge.png")
@@ -103,6 +113,8 @@ module GNTools
 			@cmdparamGCode.status_bar_text = "Parameters GCode"
 			@cmdparamGCode.menu_text = "Parameters GCode"
 
+
+
 			@cmdGCode = UI::Command.new("GCode") {GCodeGenerate.SaveAs}
 			@cmdGCode.small_icon = File.join(GNTools::PATH_IMAGES,"GcodeSmall.png")
 			@cmdGCode.large_icon = File.join(GNTools::PATH_IMAGES,"GcodeLarge.png")
@@ -110,15 +122,32 @@ module GNTools
 			@cmdGCode.status_bar_text = "Generate GCode"
 			@cmdGCode.menu_text = "Generate GCode"
 
+
         
-			@cmdDemoMat = UI::Command.new("DemoMateriel") {Sketchup.active_model.select_tool(GNTools.defaultCNCTool)}
+			@cmdDemoMat = UI::Command.new("DemoMateriel") {
+					Sketchup.active_model.select_tool(GNTools.defaultCNCTool)
+			}
 			@cmdDemoMat.small_icon = File.join(GNTools::PATH_IMAGES,"DemoMaterielSmall.png")
 			@cmdDemoMat.large_icon = File.join(GNTools::PATH_IMAGES,"DemoMaterielLarge.png")
 			@cmdDemoMat.tooltip = GNTools.traduire("Generate Demo")
 			@cmdDemoMat.status_bar_text = GNTools.traduire("Generate Demo")
 			@cmdDemoMat.menu_text = GNTools.traduire("Generate Demo")
 
+			@cmdSaveGCode = UI::Command.new("DemoMateriel") { self.activate_SaveGCode }
+			@cmdSaveGCode.tooltip = GNTools.traduire('Save GCode to File')
+			@cmdSaveGCode.status_bar_text = GNTools.traduire('Save GCode to File')
+			@cmdSaveGCode.menu_text = GNTools.traduire('Save GCode to File')
+			
+			
+			@cmdDrillBits = UI::Command.new("DrillBits")  { GNTools::DrillBits.show }
+			@cmdDrillBits.tooltip = GNTools.traduire('DrillBits')
+			@cmdDrillBits.status_bar_text = GNTools.traduire('DrillBits')
+			@cmdDrillBits.menu_text = GNTools.traduire('DrillBits')
 
+			@cmdConstructionLine = UI::Command.new("Construction_Line")  { Sketchup.active_model.select_tool(LineTool.new) }
+			@cmdConstructionLine.tooltip = GNTools.traduire('Construction Line')
+			@cmdConstructionLine.status_bar_text = GNTools.traduire('Construction Line')
+			@cmdConstructionLine.menu_text = GNTools.traduire('Construction Line')
 
 		end	# initialize
 	end		# class
@@ -180,12 +209,6 @@ module GNTools
 
 		text[0..textsize]
 	end
-	
-	
-    def self.activate_line_tool
-      Sketchup.active_model.select_tool(LineTool.new)
-#	  p self.getWindowName
-    end
     	
 	def self.activate_PathTool
 		Sketchup.active_model.tools.push_tool(GNTools::combineTool)
@@ -237,7 +260,7 @@ module GNTools
 	end
 
     def self.activate_GCodeGenerate
-       GCodeGenerate.generateGCode2
+       GCodeGenerate.generatePreview
 	end
 
 	def self.create_Menus
@@ -246,18 +269,12 @@ module GNTools
 		submenu = plugins_menu.add_submenu(GNTools.traduire("CNC Menu"))
 		submenu.add_item(GNTools::commandClass.cmd_Add_Material)
 		submenu.add_item(GNTools::commandClass.cmdparamGCode)
-		submenu.add_item(GNTools.traduire('DrillBits')) {
-			GNTools::DrillBits.show
-		}
+		submenu.add_item(GNTools::commandClass.cmdDrillBits)
 		submenu.add_item(GNTools.traduire('GCode Generate')) {
 			self.activate_GCodeGenerate
 		}
-		submenu.add_item(GNTools.traduire('Save GCode to File')) {
-			self.activate_SaveGCode
-		}
-		plugins_menu.add_item(GNTools.traduire('Construction Line')) {
-			self.activate_line_tool
-		}
+		submenu.add_item(GNTools::commandClass.cmdSaveGCode)
+		plugins_menu.add_item(GNTools::commandClass.cmdConstructionLine)
 		plugins_menu.add_item(GNTools::commandClass.cmd_circle3x3Tool)
         plugins_menu.add_item(GNTools::commandClass.cmdDemoMat)
 		plugins_menu.add_item(GNTools.traduire("Reload GNTools")){
