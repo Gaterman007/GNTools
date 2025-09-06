@@ -64,7 +64,7 @@ module GNTools
 						vector_verticle = Geom::Vector3d.new 0,0,1
 						edgearray_big = pathEntitie.entities.add_circle positionHole, vector_verticle, self["holesize"].mm / 2.0
 						face_big = pathEntitie.entities.add_face(edgearray_big)
-						edgearray_small  = pathEntitie.entities.add_circle positionHole, vector_verticle, (self["holesize"].mm  - drillbitSize.mm) / 2.0
+						edgearray_small  = pathEntitie.entities.add_circle positionHole, vector_verticle, (self["holesize"].mm  - (drillbitSize.mm * 2.0)) / 2.0
 						# Trouver la face intérieure (celle qui a les arêtes du petit cercle)
 						face_inner = pathEntitie.entities.grep(Sketchup::Face).find { |f| (f.edges - edgearray_small).empty? }
 						# Supprimer la face intérieure si elle existe
@@ -86,7 +86,7 @@ module GNTools
 					if !(self["holesize"].mm == 0.0 || self["depth"].mm == 0.0)
 						drillbitSize = DrillBits.getDrillBit(@drillBitName).cut_Diameter
 						vector_verticle = Geom::Vector3d.new 0,0,1
-						edgearray_big = pathEntitie.entities.add_circle positionHole, vector_verticle, (self["holesize"].mm + drillbitSize.mm) / 2.0
+						edgearray_big = pathEntitie.entities.add_circle positionHole, vector_verticle, (self["holesize"].mm + (drillbitSize.mm * 2.0)) / 2.0
 						face_big = pathEntitie.entities.add_face(edgearray_big)
 						edgearray_small  = pathEntitie.entities.add_circle positionHole, vector_verticle, self["holesize"].mm / 2.0
 						# Trouver la face intérieure (celle qui a les arêtes du petit cercle)
