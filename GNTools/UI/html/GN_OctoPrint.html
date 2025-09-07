@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="../js/jquery-ui.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/Sketchup.css" type="text/css" charset="utf-8" />
+</head>
+<body class="bg-panel-background">
+	<div id="tabs">
+		<ul>
+			<li><a href="#tabs-1" id = "Command">Files</a></li>
+			<li><a href="#tabs-2" id = "GCode">Control</a></li>
+			<li><a href="#tabs-3" id = "Config">Config</a></li>
+		</ul>
+		<div id="tabs-1" style="display: none;">
+			<div class="container"  style="margin: 10px;">
+				<div id="filediv">
+
+				</div>
+				<br>
+				<label>Send: <input id="sendStr" class="def-cnc-input" style="width: 480px"></label>
+				<button id="send" class="ui-button ui-widget ui-corner-all">Send</button>
+			</div>
+		</div>
+		<div id="tabs-2" style="display: none;">
+			<div class="container"  style="margin: 10px;">
+				<img src="../images/senderControl.jpg" usemap="#image-map" alt="senderControl" style="max-width:100%; height:auto;">
+				<map name="image-map">
+				  <!-- Home X -->
+				  <area target="" alt="Bouton 1" title="Bouton 1"
+						href="javascript:alert('Home X cliqué!');"
+						coords="12,3,60,3,60,13,21,52,12,52,12,3" shape="poly">
+
+				  <!-- Home Y -->
+				  <area target="" alt="Bouton 2" title="Bouton 2"
+						href="javascript:alert('Home Y cliqué!');"
+						coords="187,3,237,3,237,52,227,52,187,14,187,3" shape="poly">
+
+
+				  <!-- Home Z -->
+				  <area target="" alt="Bouton 3" title="Bouton 3"
+						href="javascript:alert('Home Z cliqué!');"
+						coords="187,221,187,230,237,230,237,181,230,181,187,221" shape="poly">
+
+				  <!-- Home All -->
+				  <area target="" alt="Bouton 4" title="Bouton 4"
+						href="javascript:alert('Home All cliqué!');"
+						coords="12,230,60,230,60,221,21,181,12,181,12,3" shape="poly">
+
+				  <!-- Z+ 100 -->
+				  <area target="" alt="Bouton 5" title="Bouton 5"
+						href="javascript:alert('Bouton Z+ 100 cliqué!');"
+						coords="260,3,297,3,297,35,260,35,260,3" shape="poly">
+
+				  <!-- Z+ 10 -->
+				  <area target="" alt="Bouton 6" title="Bouton 6"
+						href="javascript:alert('Bouton Z+ 10 cliqué!');"
+						coords="260,35,297,35,297,63,260,63,260,35" shape="poly">
+
+				  <!-- Z+ 1 -->
+				  <area target="" alt="Bouton 7" title="Bouton 7"
+						href="javascript:alert('Bouton Z+ 1 cliqué!');"
+						coords="260,63,297,63,297,88,260,88,260,63" shape="poly">
+
+				  <!-- Z+ .1 -->
+				  <area target="" alt="Bouton 8" title="Bouton 8"
+						href="javascript:alert('Bouton Z+ 0.1 cliqué!');"
+						coords="260,88,297,88,297,106,260,106,260,88" shape="poly">
+
+				  <!-- Z- .1 -->
+				  <area target="" alt="Bouton 9" title="Bouton 9"
+						href="javascript:alert('Bouton Z- 0.1 cliqué!');"
+						coords="260,124,297,124,297,146,260,146,260,124" shape="poly">
+
+				  <!-- Z- 1 -->
+				  <area target="" alt="Bouton 10" title="Bouton 10"
+						href="javascript:alert('Bouton Z- 1 cliqué!');"
+						coords="260,146,297,146,297,170,260,170,260,146" shape="poly">
+
+				  <!-- Z- 10 -->
+				  <area target="" alt="Bouton 11" title="Bouton 11"
+						href="javascript:alert('Bouton Z- 10 cliqué!');"
+						coords="260,170,297,170,297,197,260,197,260,170" shape="poly">
+
+				  <!-- Z- 100 -->
+				  <area target="" alt="Bouton 12" title="Bouton 12"
+						href="javascript:alert('Bouton Z- 100 cliqué!');"
+						coords="260,197,297,197,297,227,260,227,260,3" shape="poly">
+
+
+
+
+				  <!-- X+ 100 -->
+				  <area target="" alt="Bouton 13" title="Bouton 13"
+						href="javascript:alert('Bouton X+ 100 cliqué!');"
+						coords="195,177,214,118,195,56,209,41,237,118,209,190" shape="poly">
+
+				  <!-- X+ 10 -->
+				  <area target="" alt="Bouton 14" title="Bouton 14"
+						href="javascript:alert('Bouton X+ 10 cliqué!');"
+						coords="176,75,195,118,176,160,195,177,214,118,195,56" shape="poly">
+
+				  <!-- X+ 1 -->
+				  <area target="" alt="Bouton 15" title="Bouton 15"
+						href="javascript:alert('Bouton X+ 1 cliqué!');"
+						coords="157,143,170,118,157,93,176,75,195,118,176,160" shape="poly">
+
+
+				  <!-- X+ 0.1 -->
+				  <area target="" alt="Bouton 16" title="Bouton 16"
+						href="javascript:alert('Bouton X+ 0.1 cliqué!');"
+						coords="135,118,157,143,170,118,157,93,135,118" shape="poly">
+
+
+				  <!-- X- 0.1 -->
+				  <area target="" alt="Bouton 17" title="Bouton 17"
+						href="javascript:alert('Bouton X- 0.1 cliqué!');"
+						coords="115,118,90,143,83,118,90,93,115,118" shape="poly">
+
+				  <!-- X- 1 -->
+				  <area target="" alt="Bouton 18" title="Bouton 18"
+						href="javascript:alert('Bouton X- 1 cliqué!');"
+						coords="90,143,83,118,90,93,73,76,57,118,73,160" shape="poly">
+
+				  <!-- X- 10 -->
+				  <area target="" alt="Bouton 19" title="Bouton 19"
+						href="javascript:alert('Bouton X- 10 cliqué!');"
+						coords="73,76,57,118,73,160,56,177,31,118,59,59" shape="poly">
+
+				  <!-- X- 100 -->
+				  <area target="" alt="Bouton 20" title="Bouton 20"
+						href="javascript:alert('Bouton X- 100 cliqué!');"
+						coords="56,177,31,118,59,59,42,42,13,118,42,194" shape="poly">
+
+
+				</map>
+				<br>
+				<label>Send: <input id="sendStr" class="def-cnc-input" style="width: 480px"></label>
+				<button id="send2" class="ui-button ui-widget ui-corner-all">Send</button>
+			</div>
+		</div>
+		<div id="tabs-3" style="display: none;">
+			<div class="container"  style="margin: 10px;">
+				<label>Host: <input id="host" class="def-cnc-input" style="width: 360px"></label>
+			</div>
+		
+			<div class="container" style="margin: 10px;">
+				<label>Api Key:<br> <textarea id="api_key" style="height: 199px; width: 100%;"></textarea></label>
+			</div>
+		</div>	
+	</div>
+
+  <div class="container" id="ui-footer">
+    <div style="width: 100%; background-color: #e3e3e3; border-top: solid #C5C5C5 1px">
+      <div style="float: left; margin: 10px">
+        <button id="setDefault" class="ui-button ui-widget ui-corner-all">Set Default</button>
+      </div>
+      <div style="float: right; margin: 10px">
+        <button id="cancel" class="ui-button ui-widget ui-corner-all">Cancel</button>
+        <button id="accept" class="ui-button ui-widget ui-corner-all">Ok</button>
+      </div>
+    </div>
+  </div>
+  <script src="../js/external/jquery/jquery.js"></script>
+  <script src="../js/jquery-ui.js"></script>
+  <script>
+  	var obj;
+	var files;
+	$(document).ready(function(){
+		sketchup.ready();
+		updateTabsHeight(); // Initialiser la hauteur correcte des tabs
+	});
+	// Mettre à jour la hauteur de #tabs en fonction de la hauteur du footer
+	function updateTabsHeight() {
+		const footerHeight = $('#ui-footer').outerHeight(); // Hauteur du footer
+		$('#tabs').css('max-height', 'calc(100vh - ' + footerHeight + 'px)');
+	}
+	
+	$( "#tabs" ).tabs();
+	$( "#setDefault, #cancel, #accept").button();
+	$( "#setDefault" ).on( "click", function( event ) {
+		sketchup.setDefault(obj);
+	} );
+	$( "#accept" ).on( "click", function( event ) {
+		obj.api_key = $("#api_key").val();
+		obj.host = $("#host").val();
+		sketchup.accept(obj);
+	} );
+	$( "#cancel" ).on( "click", function( event ) {
+		sketchup.cancel();
+	} );
+	$("#host").change(function(){
+	  obj.host = $("#host").val();
+	  sketchup.newValue("host",obj);
+    }); 
+	
+	$("#api_key").change(function(){
+	  obj.api_key = $("#api_key").val();
+	  sketchup.newValue("api_key",obj);
+    }); 
+	
+	function  updateDialog(datajson) {
+		obj =  JSON.parse(datajson);
+		$("#host").val(obj.host);
+		$("#api_key").val(obj.api_key);
+	};
+	function  updateFiles(datafilejson) {
+		files =  JSON.parse(datafilejson);
+		let fileDiv = document.getElementById("filediv");
+		fileDiv.innerHTML = ""; // vider le contenu précédent
+
+		if (!files || files.length === 0) {
+			fileDiv.innerHTML = "<p>Aucun fichier trouvé</p>";
+			return;
+		}
+
+		let ul = document.createElement("ul");
+		files.forEach(file => {
+			let li = document.createElement("li");
+			li.textContent = file.name; // "name" provient du JSON d’OctoPrint
+			ul.appendChild(li);
+		});
+
+		fileDiv.appendChild(ul);		
+	};
+
+	
+  </script>
+</body>
+</html>

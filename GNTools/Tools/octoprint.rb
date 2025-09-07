@@ -3,10 +3,20 @@ require 'uri'
 require 'json'
 module GNTools
 	class OctoPrint
-	#octo = GNTools::OctoPrint.new("w3hB9JoyaOEj07EWqCLUbpjrsPtbYXp7cbkw8MqT_x4")
-	  def initialize(api_key, host = "http://10.0.0.108:5000")
+	  attr_accessor :api_key
+	  attr_accessor :host
+	  
+	  def initialize(api_key = "", host = "")
 		@api_key = api_key
 		@host    = host
+		@filename = File.join(GNTools::PATH, "OctoPrintData.txt")
+		if File.exist? @filename
+			loadFromFile()
+		else
+			@api_key = "w3hB9JoyaOEj07EWqCLUbpjrsPtbYXp7cbkw8MqT_x4"
+			@host = "http://10.0.0.108:5000"
+			saveToFile()
+		end
 	  end
 
 	  # --- 1) Uploader un fichier G-code ---
@@ -203,6 +213,55 @@ module GNTools
 		  puts "Erreur printer_status: #{response.code} #{response.body}"
 		  return nil
 	    end
+	  end
+
+      # --- 9) Lister les fichiers disponibles ---
+      def list_files(location = "local")
+        uri = URI.parse("#{@host}/api/files/#{location}")
+
+        request = Net::HTTP::Get.new(uri.request_uri)
+        request["X-Api-Key"] = @api_key
+
+        http = Net::HTTP.new(uri.host, uri.port)
+        response = http.request(request)
+
+        if response.code == "200"
+          json = JSON.parse(response.body)
+          files = json["files"] || []
+#          puts "Fichiers trouvés (#{location}):"
+#          files.each do |file|
+#            puts "- #{file["name"]} (taille: #{file["size"]} octets)"
+#          end
+          return files
+        else
+          puts "Erreur list_files: #{response.code} #{response.body}"
+          return nil
+        end
+      end
+	  
+	  def toJson
+		JSON.generate({
+				'api_key'  => @api_key,
+				'host' => @host
+			})		
+	  end
+	  
+	  def fromJson(jsonStr)
+		hash = JSON.parse(jsonStr)
+		@api_key = hash["api_key"]
+		@host = hash["host"]
+	  end
+	  
+	  def saveToFile()
+		file = File.open(@filename, "w")
+		file.write(toJson())
+		file.close
+	  end
+		
+	  def loadFromFile()
+		File.foreach(@filename) { |line|
+			fromJson(line)
+		}
 	  end
     end  # class OctoPrint
 end # method GNTools

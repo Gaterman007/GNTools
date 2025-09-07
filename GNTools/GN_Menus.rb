@@ -11,6 +11,8 @@ require 'fiddle/types'
 require 'sketchup.rb'
 require File.join(GNTools::PATH_TOOLS, "GN_CombineTool.rb")
 require File.join(GNTools::PATH_TOOLS, "GN_materialTool.rb")
+require File.join(GNTools::PATH_TOOLS, "GN_OctoPrintDialog.rb")
+require File.join(GNTools::PATH_TOOLS, "octoPrint.rb")
 
 module GNTools
 
@@ -159,6 +161,16 @@ module GNTools
 	  @@activeToolID = nil
 	  @@commandClass = GNTools::CommandClass.new()
 	  @@menu_initialized    = true
+	  @@octoPrintDiag = GNTools::OctoPrintDialog.new
+	  @@octoPrint = GNTools::OctoPrint.new()
+	end
+
+	def self.octoPrint
+		@@octoPrint
+	end
+
+	def self.octoPrintDiag
+		@@octoPrintDiag
 	end
 
 	def self.commandClass
@@ -267,6 +279,9 @@ module GNTools
 	    plugins_menu = UI.menu('Plugins')
 
 		submenu = plugins_menu.add_submenu(GNTools.traduire("CNC Menu"))
+		submenu.add_item(GNTools.traduire('OctoPrint')) {
+			@@octoPrintDiag.show_dialog
+		}
 		submenu.add_item(GNTools::commandClass.cmd_Add_Material)
 		submenu.add_item(GNTools::commandClass.cmdparamGCode)
 		submenu.add_item(GNTools::commandClass.cmdDrillBits)
