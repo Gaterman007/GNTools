@@ -86,9 +86,6 @@
 						href="javascript:alert('Bouton Z- 100 cliqué!');"
 						coords="260,197,297,197,297,227,260,227,260,3" shape="poly">
 
-
-
-
 				  <!-- X+ 100 -->
 				  <area target="" alt="Bouton 13" title="Bouton 13"
 						href="javascript:alert('Bouton X+ 100 cliqué!');"
@@ -104,12 +101,10 @@
 						href="javascript:alert('Bouton X+ 1 cliqué!');"
 						coords="157,143,170,118,157,93,176,75,195,118,176,160" shape="poly">
 
-
 				  <!-- X+ 0.1 -->
 				  <area target="" alt="Bouton 16" title="Bouton 16"
 						href="javascript:alert('Bouton X+ 0.1 cliqué!');"
 						coords="135,118,157,143,170,118,157,93,135,118" shape="poly">
-
 
 				  <!-- X- 0.1 -->
 				  <area target="" alt="Bouton 17" title="Bouton 17"
@@ -165,6 +160,7 @@
   <script>
   	var obj;
 	var files;
+	var apikey;
 	$(document).ready(function(){
 		sketchup.ready();
 		updateTabsHeight(); // Initialiser la hauteur correcte des tabs
@@ -216,7 +212,34 @@
 		let ul = document.createElement("ul");
 		files.forEach(file => {
 			let li = document.createElement("li");
-			li.textContent = file.name; // "name" provient du JSON d’OctoPrint
+
+			let link = document.createElement("a");
+			link.textContent = file.name;
+			link.href = "#"; // on ne met pas l’URL directe
+			link.addEventListener("click", async (e) => {
+				e.preventDefault();
+
+				const response = await fetch(file.refs.download, {
+					headers: { "X-Api-Key": obj.api_key }
+				});
+
+				if (!response.ok) {
+					alert("Erreur téléchargement: " + response.status);
+					return;
+				}
+
+				const blob = await response.blob();
+				const url = URL.createObjectURL(blob);
+
+				const tempLink = document.createElement("a");
+				tempLink.href = url;
+				tempLink.download = file.name;
+				document.body.appendChild(tempLink);
+				tempLink.click();
+				document.body.removeChild(tempLink);
+				URL.revokeObjectURL(url);
+			});
+			li.appendChild(link);
 			ul.appendChild(li);
 		});
 
