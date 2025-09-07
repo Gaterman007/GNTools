@@ -129,7 +129,7 @@
 
 				</map>
 				<br>
-				<label>Send: <input id="sendStr" class="def-cnc-input" style="width: 480px"></label>
+				<label>Send: <input id="send2Str" class="def-cnc-input" style="width: 480px"></label>
 				<button id="send2" class="ui-button ui-widget ui-corner-all">Send</button>
 			</div>
 		</div>
@@ -189,102 +189,27 @@
 	  sketchup.newValue("host",obj);
     }); 
 	
+	$("#sendStr").change(function(){
+	  sendStr = $("#send").val();
+	  sketchup.newValue("sendStr",sendStr);
+    }); 
+
+	$( "#send" ).on( "click", function( event ) {
+		sketchup.buttonPress(29,$("#sendStr").val());
+	});
+
+	$( "#send2" ).on( "click", function( event ) {
+		sketchup.buttonPress(30,$("#send2Str").val());
+	});
+
+	
 	$("#api_key").change(function(){
 	  obj.api_key = $("#api_key").val();
 	  sketchup.newValue("api_key",obj);
     }); 
 	
 	function buttonClicked(buttonNo) {
-		switch (buttonNo) {
-			case 1:
-				alert("$$Home X$$");
-				break;
-			case 2:
-				alert("$$Home Y$$");
-				break;
-			case 3:
-				alert("$$Home Z$$");
-				break;
-			case 4:
-				alert("$$Home All$$");
-				break;
-			case 5:
-				alert("$$Bouton Z+ 100 cliqué!$$");
-				break;
-			case 6:
-				alert("$$Bouton Z+ 10 cliqué!$$");
-				break;
-			case 7:
-				alert("$$Bouton Z+ 1 cliqué!$$");
-				break;
-			case 8:
-				alert("$$Bouton Z+ 0.1 cliqué!$$");
-				break;
-			case 9:
-				alert("$$Bouton Z- 0.1 cliqué!$$");
-				break;
-			case 10:
-				alert("$$Bouton Z- 1 cliqué!$$");
-				break;
-			case 11:
-				alert("$$Bouton Z- 10 cliqué!$$");
-				break;
-			case 12:
-				alert("$$Bouton Z- 100 cliqué!$$");
-				break;
-			case 13:
-				alert("$$Bouton X+ 100 cliqué!$$");
-				break;
-			case 14:
-				alert("$$Bouton X+ 10 cliqué!$$");
-				break;
-			case 15:
-				alert("$$Bouton X+ 1 cliqué!$$");
-				break;
-			case 16:
-				alert("$$Bouton X+ 0.1 cliqué!$$");
-				break;
-			case 17:
-				alert("$$Bouton X- 0.1 cliqué!$$");
-				break;
-			case 18:
-				alert("$$Bouton X- 1 cliqué!$$");
-				break;
-			case 19:
-				alert("$$Bouton X- 10 cliqué!$$");
-				break;
-			case 20:
-				alert("$$Bouton X- 100 cliqué!$$");
-				break;
-			case 21:
-				alert("$$Bouton Y+ 100 cliqué!$$");
-				break;
-			case 22:
-				alert("$$Bouton Y+ 10 cliqué!$$");
-				break;
-			case 23:
-				alert("$$Bouton Y+ 1 cliqué!$$");
-				break;
-			case 24:
-				alert("$$Bouton Y+ 0.1 cliqué!$$");
-				break;
-			case 25:
-				alert("$$Bouton Y- 0.1 cliqué!$$");
-				break;
-			case 26:
-				alert("$$Bouton Y- 1 cliqué!$$");
-				break;
-			case 27:
-				alert("$$Bouton Y- 10 cliqué!$$");
-				break;
-			case 28:
-				alert("$$Bouton Y- 100 cliqué!$$");
-				break;
-
-
-			default:
-				alert("Bouton inconnu : " + buttonNo);
-		}
+		sketchup.buttonPress(buttonNo,obj);
 	};
 	
 	function  updateDialog(datajson) {

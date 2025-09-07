@@ -49,7 +49,78 @@ module GNTools
 		}
 					
 		# when a new value is entered
-		@dialog.add_action_callback("newValue") { |action_context, value, valueName, valueMethod|
+		@dialog.add_action_callback("buttonPress") { |action_context, value, object1|
+			case value
+			when 1
+				puts "$$Home X$$"
+				GNTools.octoPrint.send_gcode("G28 X")
+			when 2
+				puts "$$Home Y$$"
+				GNTools.octoPrint.send_gcode("G28 Y")
+			when 3
+				puts "$$Home Z$$"
+				GNTools.octoPrint.send_gcode("G28 Z")
+			when 4
+				puts "$$Home All$$"
+				GNTools.octoPrint.send_gcode("G28")
+			when 5
+				puts "$$Bouton Z+ 100 cliqué!$$"
+				GNTools.octoPrint.send_gcode("M114")
+			when 6
+				puts "$$Bouton Z+ 10 cliqué!$$"
+			when 7
+				puts "$$Bouton Z+ 1 cliqué!$$"
+			when 8
+				puts "$$Bouton Z+ 0.1 cliqué!$$"
+			when 9
+				puts "$$Bouton Z- 0.1 cliqué!$$"
+			when 10
+				puts "$$Bouton Z- 1 cliqué!$$"
+			when 11
+				puts "$$Bouton Z- 10 cliqué!$$"
+			when 12
+				puts "$$Bouton Z- 100 cliqué!$$"
+			when 13
+				puts "$$Bouton X+ 100 cliqué!$$"
+			when 14
+				puts "$$Bouton X+ 10 cliqué!$$"
+			when 15
+				puts "$$Bouton X+ 1 cliqué!$$"
+			when 16
+				puts "$$Bouton X+ 0.1 cliqué!$$"
+			when 17
+				puts "$$Bouton X- 0.1 cliqué!$$"
+			when 18
+				puts "$$Bouton X- 1 cliqué!$$"
+			when 19
+				puts "$$Bouton X- 10 cliqué!$$"
+			when 20
+				puts "$$Bouton X- 100 cliqué!$$"
+			when 21
+				puts "$$Bouton Y+ 100 cliqué!$$"
+			when 22
+				puts "$$Bouton Y+ 10 cliqué!$$"
+			when 23
+				puts "$$Bouton Y+ 1 cliqué!$$"
+			when 24
+				puts "$$Bouton Y+ 0.1 cliqué!$$"
+			when 25
+				puts "$$Bouton Y- 0.1 cliqué!$$"
+			when 26
+				puts "$$Bouton Y- 1 cliqué!$$"
+			when 27
+				puts "$$Bouton Y- 10 cliqué!$$"
+			when 28
+				puts "$$Bouton Y- 100 cliqué!$$"
+			when 29
+				puts "$$Bouton send cliqué!$$"
+				GNTools.octoPrint.send_gcode(object1)
+			when 30
+				puts "$$Bouton send cliqué!$$"
+				GNTools.octoPrint.send_gcode(object1)
+			else
+				puts "$$Bouton inconnu : #{value}$$"
+			end
 			nil
 		}
 		@dialog.set_size(@@dialogWidth,@@dialogHeight)
@@ -94,7 +165,7 @@ module GNTools
 		dialog.set_html(@@html_content) # Injecter le HTML modifié
 #		dialog.set_file(html_file) # Can be set here.
 		dialog.center # New feature!
-		dialog.set_can_close { false }
+#		dialog.set_can_close { false }
 		dialog
 	end
 	
