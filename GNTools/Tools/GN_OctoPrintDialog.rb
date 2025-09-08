@@ -65,7 +65,8 @@ module GNTools
 				GNTools.octoPrint.send_gcode("G28")
 			when 5
 				puts "$$Bouton Z+ 100 cliqué!$$"
-				GNTools.octoPrint.send_gcode("M114")
+				reponse = GNTools.octoPrint.send_gcode("M114")
+				puts reponse
 			when 6
 				puts "$$Bouton Z+ 10 cliqué!$$"
 			when 7
