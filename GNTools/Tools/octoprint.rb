@@ -4,239 +4,281 @@ require 'json'
 module GNTools
 	class OctoPrint
 	  attr_accessor :api_key
-	  attr_accessor :host
+	  attr_accessor :last_error
+	  attr_reader :host, :reachable
 	  
 	  def initialize(api_key = "", host = "")
 		@api_key = api_key
-		@host    = host
+		self.host = host unless host.empty? # passe par le setter
+		@last_error = nil
+
 		@filename = File.join(GNTools::PATH, "OctoPrintData.txt")
 		if File.exist? @filename
 			loadFromFile()
 		else
-			@api_key = "w3hB9JoyaOEj07EWqCLUbpjrsPtbYXp7cbkw8MqT_x4"
-			@host = "http://10.0.0.108:5000"
+#			@api_key = "w3hB9JoyaOEj07EWqCLUbpjrsPtbYXp7cbkw8MqT_x4"
+#			@host = "http://10.0.0.108:5000"
+
+			@api_key = ""
+			@host = ""
 			saveToFile()
 		end
 	  end
 
-	  # --- 1) Uploader un fichier G-code ---
+	  # --- Setter personnalisé pour host ---
+	  def host=(value)
+	    @host = value
+	    @reachable = quick_ping
+	  end
+
+	  # --- Uploader un fichier G-code ---
 	  def upload(file_path)
-		file_name = File.basename(file_path)
-		uri = URI.parse("#{@host}/api/files/local")
+	    if @reachable
+		  file_name = File.basename(file_path)
+		  uri = URI.parse("#{@host}/api/files/local")
 
-		boundary = "----SketchupBoundary#{rand(1000000)}"
-		post_body = []
+		  boundary = "----SketchupBoundary#{rand(1000000)}"
+		  post_body = []
 
-		post_body << "--#{boundary}\r\n"
-		post_body << "Content-Disposition: form-data; name=\"file\"; filename=\"#{file_name}\"\r\n"
-		post_body << "Content-Type: application/octet-stream\r\n\r\n"
-		post_body << File.read(file_path)
-		post_body << "\r\n--#{boundary}--\r\n"
+		  post_body << "--#{boundary}\r\n"
+		  post_body << "Content-Disposition: form-data; name=\"file\"; filename=\"#{file_name}\"\r\n"
+		  post_body << "Content-Type: application/octet-stream\r\n\r\n"
+		  post_body << File.read(file_path)
+		  post_body << "\r\n--#{boundary}--\r\n"
 
-		request = Net::HTTP::Post.new(uri.request_uri)
-		request["X-Api-Key"] = @api_key
-		request["Content-Type"] = "multipart/form-data; boundary=#{boundary}"
-		request.body = post_body.join
+		  request = Net::HTTP::Post.new(uri.request_uri)
+		  request["X-Api-Key"] = @api_key
+		  request["Content-Type"] = "multipart/form-data; boundary=#{boundary}"
+		  request.body = post_body.join
 
-		http = Net::HTTP.new(uri.host, uri.port)
-		response = http.request(request)
+		  http = Net::HTTP.new(uri.host, uri.port)
+		  response = http.request(request)
 
-		puts "Upload: #{response.code} #{response.body}"
-		response
+#		  puts "Upload: #{response.code} #{response.body}"
+		  response
+		end
 	  end
 
 	  # --- Télécharger un fichier G-code depuis OctoPrint ---
 	  def download(file_name, save_path)
-	    uri = URI.parse("#{@host}/downloads/files/local/#{file_name}")
+	    if @reachable
+	      uri = URI.parse("#{@host}/downloads/files/local/#{file_name}")
 
-	    request = Net::HTTP::Get.new(uri.request_uri)
-	    request["X-Api-Key"] = @api_key
+	      request = Net::HTTP::Get.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
 
-	    http = Net::HTTP.new(uri.host, uri.port)
-	    response = http.request(request)
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
 
-	    if response.code == "200"
-	      File.open(save_path, "wb") { |f| f.write(response.body) }
-		  puts "Fichier téléchargé : #{save_path}"
-		  return true
-	    else
-		  puts "Erreur download: #{response.code} #{response.body}"
-		  return false
-	    end
+	      if response.code == "200"
+	        File.open(save_path, "wb") { |f| f.write(response.body) }
+#		    puts "Fichier téléchargé : #{save_path}"
+		    return true
+	      else
+#		    puts "Erreur download: #{response.code} #{response.body}"
+		    return false
+	      end
+		end
 	  end
 
-	  # --- 2) Lancer impression d’un fichier déjà présent ---
+	  # --- Lancer impression d’un fichier déjà présent ---
 	  def start_print(file_name)
-	    uri = URI.parse("#{@host}/api/files/local/#{file_name}")
+	    if @reachable
+	      uri = URI.parse("#{@host}/api/files/local/#{file_name}")
 
-	    request = Net::HTTP::Post.new(uri.request_uri)
-	    request["X-Api-Key"] = @api_key
-	    request["Content-Type"] = "application/json"
-	    request.body = { command: "select", print: true }.to_json
+	      request = Net::HTTP::Post.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
+	      request["Content-Type"] = "application/json"
+	      request.body = { command: "select", print: true }.to_json
 
-	    http = Net::HTTP.new(uri.host, uri.port)
-	    response = http.request(request)
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
 
-	    puts "Print: #{response.code} #{response.body}"
-	    response
+#	      puts "Print: #{response.code} #{response.body}"
+	      response
+		end
 	  end
 
-	  # --- 3) Envoyer une commande G-code directe ---
+	  # --- Envoyer une commande G-code directe ---
 	  def send_gcode(cmd)
-	    uri = URI.parse("#{@host}/api/printer/command")
+	    if @reachable
+	      uri = URI.parse("#{@host}/api/printer/command")
 
-	    request = Net::HTTP::Post.new(uri.request_uri)
-	    request["X-Api-Key"] = @api_key
-	    request["Content-Type"] = "application/json"
-	    request.body = { command: cmd }.to_json
+	      request = Net::HTTP::Post.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
+	      request["Content-Type"] = "application/json"
+	      request.body = { command: cmd }.to_json
 
-	    http = Net::HTTP.new(uri.host, uri.port)
-	    response = http.request(request)
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
 
-	    puts "G-code: #{response.code} #{response.body}"
-	    response
+#	      puts "G-code: #{response.code} #{response.body}"
+	      response
+		end
 	  end
 
 	  # --- Uploader une chaîne comme fichier G-code ---
 	  def upload_string(content, file_name = "virtual.gcode")
-	    uri = URI.parse("#{@host}/api/files/local")
+	    if @reachable
+	      uri = URI.parse("#{@host}/api/files/local")
 
-	    boundary = "----SketchupBoundary#{rand(1000000)}"
-	    post_body = []
+	      boundary = "----SketchupBoundary#{rand(1000000)}"
+	      post_body = []
 
-	    post_body << "--#{boundary}\r\n"
-	    post_body << "Content-Disposition: form-data; name=\"file\"; filename=\"#{file_name}\"\r\n"
-	    post_body << "Content-Type: application/octet-stream\r\n\r\n"
-	    post_body << content
-	    post_body << "\r\n--#{boundary}--\r\n"
+	      post_body << "--#{boundary}\r\n"
+	      post_body << "Content-Disposition: form-data; name=\"file\"; filename=\"#{file_name}\"\r\n"
+	      post_body << "Content-Type: application/octet-stream\r\n\r\n"
+	      post_body << content
+	      post_body << "\r\n--#{boundary}--\r\n"
 
-	    request = Net::HTTP::Post.new(uri.request_uri)
-	    request["X-Api-Key"] = @api_key
-	    request["Content-Type"] = "multipart/form-data; boundary=#{boundary}"
-	    request.body = post_body.join
+	      request = Net::HTTP::Post.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
+	      request["Content-Type"] = "multipart/form-data; boundary=#{boundary}"
+	      request.body = post_body.join
 
-	    http = Net::HTTP.new(uri.host, uri.port)
-	    response = http.request(request)
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
 
-	    puts "Upload string: #{response.code} #{response.body}"
-	    response
+#	      puts "Upload string: #{response.code} #{response.body}"
+	      response
+		end
 	  end
   
 	  # --- Télécharger un fichier G-code et retourner son contenu comme string ---
 	  def download_string(file_name)
-	    uri = URI.parse("#{@host}/downloads/files/local/#{file_name}")
+	    if @reachable
+	      uri = URI.parse("#{@host}/downloads/files/local/#{file_name}")
 
-	    request = Net::HTTP::Get.new(uri.request_uri)
-	    request["X-Api-Key"] = @api_key
+	      request = Net::HTTP::Get.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
 
-	    http = Net::HTTP.new(uri.host, uri.port)
-	    response = http.request(request)
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
 
-	    if response.code == "200"
-	      puts "Download string OK (#{file_name}, taille: #{response.body.size} octets)"
-		  return response.body   # contenu texte du G-code
-	    else
-		  puts "Erreur download string: #{response.code} #{response.body}"
-		  return nil
-	    end
+	      if response.code == "200"
+#	        puts "Download string OK (#{file_name}, taille: #{response.body.size} octets)"
+		    return response.body   # contenu texte du G-code
+	      else
+#		    puts "Erreur download string: #{response.code} #{response.body}"
+		    return nil
+	      end
+		end
 	  end
 
-	  # --- 4) Pause impression ---
+	  # --- Pause impression ---
 	  def pause_print
 	    control_print("pause")
 	  end
 
-	  # --- 5) Reprendre impression ---
+	  # --- Reprendre impression ---
 	  def resume_print
 	    control_print("resume")
 	  end
 
-	  # --- 6) Annuler impression ---
+	  # --- Annuler impression ---
 	  def cancel_print
 	    control_print("cancel")
 	  end
 
-	  # --- 7) Obtenir statut impression ---
+	  # --- Obtenir statut impression ---
 	  def get_status
-	    uri = URI.parse("#{@host}/api/job")
+	    if quick_ping()
+	      uri = URI.parse("#{@host}/api/job")
 
-	    request = Net::HTTP::Get.new(uri.request_uri)
-	    request["X-Api-Key"] = @api_key
+	      request = Net::HTTP::Get.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
 
-	    http = Net::HTTP.new(uri.host, uri.port)
-	    response = http.request(request)
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
 
-	    if response.code == "200"
-	      json = JSON.parse(response.body)
-	  	  puts "Statut: #{json["state"]}, Progression: #{json.dig("progress", "completion")}%"
-		  return json
-	    else
-		  puts "Erreur status: #{response.code} #{response.body}"
-		  return nil
-	    end
+	      if response.code == "200"
+	        json = JSON.parse(response.body)
+#	  	    puts "Statut: #{json["state"]}, Progression: #{json.dig("progress", "completion")}%"
+		    return json
+	      else
+#		    puts "Erreur status: #{response.code} #{response.body}"
+		    return nil
+	      end
+		end
 	  end
 
 	  def control_print(action)
-	    uri = URI.parse("#{@host}/api/job")
+	    if quick_ping()
+	      uri = URI.parse("#{@host}/api/job")
 
-	    request = Net::HTTP::Post.new(uri.request_uri)
-	    request["X-Api-Key"] = @api_key
-	    request["Content-Type"] = "application/json"
-	    request.body = { command: action }.to_json
+	      request = Net::HTTP::Post.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
+	      request["Content-Type"] = "application/json"
+	      request.body = { command: action }.to_json
 
-	    http = Net::HTTP.new(uri.host, uri.port)
-	    response = http.request(request)
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
 
-	    puts "#{action.capitalize}: #{response.code} #{response.body}"
-	    response
+#	      puts "#{action.capitalize}: #{response.code} #{response.body}"
+	      response
+		end
 	  end
 	  
-      # --- 8) Vérifier le statut global de l'imprimante ---
+      # --- Vérifier le statut global de l'imprimante ---
       def printer_status
-	    uri = URI.parse("#{@host}/api/printer")
+	    if quick_ping()
+	      uri = URI.parse("#{@host}/api/printer")
 
-	    request = Net::HTTP::Get.new(uri.request_uri)
-	    request["X-Api-Key"] = @api_key
+	      request = Net::HTTP::Get.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
 
-	    http = Net::HTTP.new(uri.host, uri.port)
-	    response = http.request(request)
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
 
-	    if response.code == "200"
-		  json = JSON.parse(response.body)
-		  # Exemple d'information utile
-		  state = json.dig("state", "text")
-		  temperature = json["temperature"]
-		  puts "Printer Status: #{state}"
-		  puts "Temperatures: #{temperature}"
-		  return json
-	    else
-		  puts "Erreur printer_status: #{response.code} #{response.body}"
-		  return nil
-	    end
+	      if response.code == "200"
+		    json = JSON.parse(response.body)
+		    # Exemple d'information utile
+#		    state = json.dig("state", "text")
+#		    temperature = json["temperature"]
+#		    puts "Printer Status: #{state}"
+#		    puts "Temperatures: #{temperature}"
+		    return json
+	      else
+#		    puts "Erreur printer_status: #{response.code} #{response.body}"
+		    return nil
+	      end
+		end
 	  end
 
-      # --- 9) Lister les fichiers disponibles ---
+      # --- Lister les fichiers disponibles ---
       def list_files(location = "local")
-        uri = URI.parse("#{@host}/api/files/#{location}")
+	    if @reachable
+          uri = URI.parse("#{@host}/api/files/#{location}")
 
-        request = Net::HTTP::Get.new(uri.request_uri)
-        request["X-Api-Key"] = @api_key
+          request = Net::HTTP::Get.new(uri.request_uri)
+          request["X-Api-Key"] = @api_key
+          http = Net::HTTP.new(uri.host, uri.port)
+          http.open_timeout = 5   # délai max pour ouvrir la connexion (secondes)
+          http.read_timeout = 10  # délai max pour lecture de la réponse
 
-        http = Net::HTTP.new(uri.host, uri.port)
-        response = http.request(request)
+          begin
+            response = http.request(request)
 
-        if response.code == "200"
-          json = JSON.parse(response.body)
-          files = json["files"] || []
-#          puts "Fichiers trouvés (#{location}):"
-#          files.each do |file|
-#            puts "- #{file["name"]} (taille: #{file["size"]} octets)"
-#          end
-          return files
-        else
-          puts "Erreur list_files: #{response.code} #{response.body}"
-          return nil
-        end
+            if response.code == "200"
+              json = JSON.parse(response.body)
+              files = json["files"] || []
+              return files
+            else
+#               puts "Erreur list_files: #{response.code} #{response.body}"
+              return nil
+            end
+
+          rescue SocketError, Errno::ECONNREFUSED => e
+#            puts "Erreur réseau: #{e.message}"
+            return nil
+          rescue Net::OpenTimeout, Net::ReadTimeout => e
+#            puts "Timeout: #{e.message}"
+            return nil
+          rescue => e
+            puts "Erreur inconnue: #{e.class} - #{e.message}"
+            return nil
+          end
+	    end
       end
 	  
 	  def toJson
@@ -262,6 +304,50 @@ module GNTools
 		File.foreach(@filename) { |line|
 			fromJson(line)
 		}
+	  end
+	  
+  	  # --- Tester la connexion (ping OctoPrint) ---
+	  def ping(timeout = 2)
+	    uri = URI.parse("#{@host}/api/version")
+	    request = Net::HTTP::Get.new(uri.request_uri)
+	    request["X-Api-Key"] = @api_key
+
+	    http = Net::HTTP.new(uri.host, uri.port)
+	    http.open_timeout = timeout   # délai pour ouvrir la connexion
+	    http.read_timeout = timeout+1 # délai pour lire la réponse
+
+	    begin
+		  response = http.request(request)
+		  if response.code.start_with?("2")
+		    return true
+		  else
+		    @last_error = "HTTP #{response.code}: #{response.body}"
+		    return false
+		  end
+	    rescue SocketError, Errno::ECONNREFUSED => e
+		  @last_error = "Erreur réseau: #{e.message}"
+		  return false
+	    rescue Net::OpenTimeout, Net::ReadTimeout => e
+		  @last_error = "Timeout: #{e.message}"
+		  return false
+	    rescue => e
+		  @last_error = "Erreur inconnue: #{e.class} - #{e.message}"
+		  return false
+	    end
+	  end
+	  
+	  def quick_ping(timeout = 1)
+		return false if @host.nil? || @host.empty?
+		uri = URI.parse(@host)
+
+		begin
+		  Socket.tcp(uri.host, uri.port, connect_timeout: timeout) do |sock|
+			sock.close
+			return true
+		  end
+		  rescue
+		  return false
+		end
 	  end
     end  # class OctoPrint
 end # method GNTools
