@@ -2,7 +2,7 @@ require 'sketchup'
 module GNTools
   class OctoPrintDialog
 	@@dialogWidth = 850
-	@@dialogHeight = 630
+	@@dialogHeight = 820
 
     def initialize()
 		@title = "OctoPrint Dialog"

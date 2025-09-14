@@ -11,7 +11,7 @@ module GNTools
 		@api_key = api_key
 		self.host = host unless host.empty? # passe par le setter
 		@last_error = nil
-
+		@reachable = false
 		@filename = File.join(GNTools::PATH, "OctoPrintData.txt")
 		if File.exist? @filename
 			loadFromFile()
@@ -264,7 +264,7 @@ module GNTools
               files = json["files"] || []
               return files
             else
-#               puts "Erreur list_files: #{response.code} #{response.body}"
+#              puts "Erreur list_files: #{response.code} #{response.body}"
               return nil
             end
 
@@ -275,9 +275,11 @@ module GNTools
 #            puts "Timeout: #{e.message}"
             return nil
           rescue => e
-            puts "Erreur inconnue: #{e.class} - #{e.message}"
+#            puts "Erreur inconnue: #{e.class} - #{e.message}"
             return nil
           end
+		else
+		  puts "not reachable"
 	    end
       end
 	  
@@ -292,6 +294,7 @@ module GNTools
 		hash = JSON.parse(jsonStr)
 		@api_key = hash["api_key"]
 		@host = hash["host"]
+		@reachable = quick_ping
 	  end
 	  
 	  def saveToFile()

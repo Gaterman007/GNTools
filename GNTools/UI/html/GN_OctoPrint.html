@@ -3,6 +3,83 @@
 <head>
   <link href="../js/jquery-ui.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/Sketchup.css" type="text/css" charset="utf-8" />
+  <style>
+  #file-container {
+/*  width: 510px;         largeur fixe (ajuste selon besoin) */
+  height: 350px;       /* hauteur visible */
+  overflow-y: auto;    /* scrollbar verticale si contenu dépasse */
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 8px;
+  background: #f9f9f9;
+ }
+  #filediv ul {
+    list-style: none;
+    padding: 0;
+	height: 280px;       /* hauteur visible */
+  }
+
+  #filediv li {
+    display: flex;
+    flex-direction: column;  /* empile nom puis boutons */
+/*	overflow-y: auto;     scrollbar verticale si contenu dépasse */
+    margin-bottom: 1px;
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+/*    width: 450px;  largeur fixe optionnelle */
+  }
+
+  .file-name {
+    font-weight: bold;
+    margin-bottom: 6px;
+	color: #333;         /* couleur plus foncée */
+    font-size: 3em; /* texte plus grand */
+  }
+
+  .button-group {
+    display: flex;
+	justify-content: flex-end; /* pousse les boutons à droite */
+    gap: 8px; /* espace entre les boutons */
+  }
+
+  .button-group button {
+	flex: 0; /* les boutons gardent leur taille naturelle */
+/*    flex: 1;  chaque bouton prend la même largeur  */
+  }
+
+  #upload-section {
+    margin: 12px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #f8f8f8;
+  }
+
+  #dropZone {
+    border: 2px dashed #999;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    color: #666;
+    background: #fafafa;
+    margin-bottom: 10px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  #dropZone.dragover {
+    background: #e6f7ff;
+    border-color: #007bff;
+    color: #007bff;
+  }
+
+  progress {
+    width: 100%;
+    height: 16px; 
+  }
+  </style>
 </head>
 <body class="bg-panel-background">
 	<div id="tabs">
@@ -16,9 +93,27 @@
 				<div id="filediv">
 
 				</div>
-				<br>
-				<label>Send: <input id="sendStr" class="def-cnc-input" style="width: 480px"></label>
-				<button id="send" class="ui-button ui-widget ui-corner-all">Send</button>
+				<div id="upload-section">
+				  <h3>📂 Upload fichier G-code</h3>
+
+				  <!-- Zone de drop -->
+				  <div id="dropZone">
+					Déposez un fichier ici ou cliquez pour choisir
+					<input type="file" id="fileInput" accept=".gcode,.gco" hidden />
+				  </div>
+
+				  <!-- Destination -->
+				  <select id="uploadLocation">
+					<option value="local">Local</option>
+					<option value="sdcard">SD Card</option>
+				  </select>
+
+				  <!-- Barre de progression -->
+				  <div id="progressContainer" style="display:none; margin-top:10px;">
+					<progress id="uploadProgress" value="0" max="100"></progress>
+					<span id="progressText">0%</span>
+				  </div>
+				</div>
 			</div>
 		</div>
 		<div id="tabs-2" style="display: none;">
@@ -169,8 +264,8 @@
 				
 				</map>
 				<br>
-				<label>Send: <input id="send2Str" class="def-cnc-input" style="width: 480px"></label>
-				<button id="send2" class="ui-button ui-widget ui-corner-all">Send</button>
+				<label>Send: <input id="sendStr" class="def-cnc-input" style="width: 480px"></label>
+				<button id="send" class="ui-button ui-widget ui-corner-all">Send</button>
 			</div>
 		</div>
 		<div id="tabs-3" style="display: none;">
@@ -229,17 +324,8 @@
 	  sketchup.newValue("host",obj);
     }); 
 	
-	$("#sendStr").change(function(){
-	  sendStr = $("#send").val();
-	  sketchup.newValue("sendStr",sendStr);
-    }); 
-
 	$( "#send" ).on( "click", function( event ) {
-		sketchup.buttonPress(29,$("#sendStr").val());
-	});
-
-	$( "#send2" ).on( "click", function( event ) {
-		sketchup.buttonPress(30,$("#send2Str").val());
+		sketchup.buttonPress(30,$("#sendStr").val());
 	});
 
 	
@@ -257,7 +343,60 @@
 		$("#host").val(obj.host);
 		$("#api_key").val(obj.api_key);
 	};
+	
 	function  updateFiles(datafilejson) {
+		let testData = JSON.stringify([
+		{
+			"name": "test_cube.gcode",
+			"refs": {
+				"download": "/downloads/test_cube.gcode",
+				"resource": "/api/files/local/test_cube.gcode"
+			}
+		},
+		{
+			"name": "benchy.gcode",
+			"refs": {
+				"download": "/downloads/benchy.gcode",
+				"resource": "/api/files/local/benchy.gcode"
+			}
+		},
+		{
+			"name": "benchy.gcode",
+			"refs": {
+				"download": "/downloads/benchy.gcode",
+				"resource": "/api/files/local/benchy.gcode"
+			}
+		},
+		{
+			"name": "benchy.gcode",
+			"refs": {
+				"download": "/downloads/benchy.gcode",
+				"resource": "/api/files/local/benchy.gcode"
+			}
+		},
+		{
+			"name": "benchy.gcode",
+			"refs": {
+				"download": "/downloads/benchy.gcode",
+				"resource": "/api/files/local/benchy.gcode"
+			}
+		},
+		{
+			"name": "benchy.gcode",
+			"refs": {
+				"download": "/downloads/benchy.gcode",
+				"resource": "/api/files/local/benchy.gcode"
+			}
+		},
+		{
+			"name": "calibration.gcode",
+			"refs": {
+				"download": "/downloads/calibration.gcode",
+				"resource": "/api/files/local/calibration.gcode"
+			}
+		}
+		]);
+//		files = JSON.parse(testData);
 		files =  JSON.parse(datafilejson);
 		let fileDiv = document.getElementById("filediv");
 		fileDiv.innerHTML = ""; // vider le contenu précédent
@@ -266,17 +405,66 @@
 			fileDiv.innerHTML = "<p>Aucun fichier trouvé</p>";
 			return;
 		}
-
+		let div = document.createElement("div");
+		div.id = "file-container"; // <-- affecte l'ID
+		// Création d'une liste UL (liste non ordonnée) qui contiendra tous les fichiers
 		let ul = document.createElement("ul");
+		
+		// On parcourt le tableau `files` (retourné par OctoPrint via l’API REST)
 		files.forEach(file => {
+			// Création d’un élément <li> (un élément de la liste)
 			let li = document.createElement("li");
-
+			
+			// Création d’un lien <a> pour représenter le fichier
 			let link = document.createElement("a");
-			link.textContent = file.name;
-			link.href = "#"; // on ne met pas l’URL directe
+			link.textContent = file.name;	 // le texte affiché = nom du fichier
+			link.href = "#"; // on met un href factice, car on va gérer le clic nous-mêmes
+			
+			// on agrandit le texte en ligne
+			link.style.fontSize = "1.5em";   // 40% plus gros
+			link.style.fontWeight = "bold";  // en gras
+			
+			// Gestionnaire d’événement quand on clique sur le lien
 			link.addEventListener("click", async (e) => {
-				e.preventDefault();
+				e.preventDefault();		// empêche le comportement par défaut du lien (navigation)
 
+				// 🔹 Requête HTTP pour télécharger le fichier depuis OctoPrint
+				const response = await fetch(file.refs.download, {
+					headers: { "X-Api-Key": obj.api_key }
+				});
+				
+				// Vérifie si le téléchargement a échoué (403, 404, etc.)
+				if (!response.ok) {
+					alert("Erreur téléchargement: " + response.status);
+					return;
+				}
+				
+				// Récupération du fichier en tant que "Blob" (binaire brut)
+				const blob = await response.blob();
+				const url = URL.createObjectURL(blob);
+
+				// Création d’un lien invisible <a> qui va déclencher le téléchargement
+				const tempLink = document.createElement("a");
+				tempLink.href = url;
+				tempLink.download = file.name; // force le navigateur à enregistrer sous ce nom
+
+				// Ajout du lien temporaire dans le DOM pour pouvoir le "cliquer"
+				document.body.appendChild(tempLink);
+				tempLink.click(); // déclenche le téléchargement
+				// Nettoyage : on supprime le lien temporaire et on libère l’URL du blob
+				document.body.removeChild(tempLink);
+				URL.revokeObjectURL(url);
+			});
+			li.appendChild(link);
+			// Groupe de boutons sous le nom
+			let btnGroup = document.createElement("div");
+			btnGroup.classList.add("button-group");	
+			
+			// --- Bouton "Télécharger"
+			let btnDownload = document.createElement("button");
+			btnDownload.textContent = "⬇️";
+			btnDownload.title = "Télécharger le fichier";
+			btnDownload.addEventListener("click", async () => {
 				const response = await fetch(file.refs.download, {
 					headers: { "X-Api-Key": obj.api_key }
 				});
@@ -297,14 +485,178 @@
 				document.body.removeChild(tempLink);
 				URL.revokeObjectURL(url);
 			});
-			li.appendChild(link);
+			btnGroup.appendChild(btnDownload);
+			
+			// --- Bouton "Pause / Resume"
+			let btnPauseResume = document.createElement("button");
+			btnPauseResume.textContent = "⏯️"; // play/pause icon
+			btnPauseResume.title = "Pause / Reprendre l'impression";
+			btnPauseResume.addEventListener("click", async () => {
+			  const response = await fetch("/api/job", {
+				method: "POST",
+				headers: {
+				  "Content-Type": "application/json",
+				  "X-Api-Key": obj.api_key
+				},
+				body: JSON.stringify({ command: "pause", action: "toggle" })
+			  });
+
+			  if (!response.ok) {
+				alert("Erreur Pause/Resume: " + response.status);
+			  } else {
+				alert("✅ Pause/Resume envoyé !");
+			  }
+			});
+			btnGroup.appendChild(btnPauseResume);
+
+			// --- Bouton "Cancel"
+			let btnCancel = document.createElement("button");
+			btnCancel.textContent = "❌";
+			btnCancel.title = "Annuler l'impression";
+			btnCancel.addEventListener("click", async () => {
+			  if (!confirm("Annuler l'impression en cours ?")) return;
+
+			  const response = await fetch("/api/job", {
+				method: "POST",
+				headers: {
+				  "Content-Type": "application/json",
+				  "X-Api-Key": obj.api_key
+				},
+				body: JSON.stringify({ command: "cancel" })
+			  });
+
+			  if (!response.ok) {
+				alert("Erreur Cancel: " + response.status);
+			  } else {
+				alert("⛔ Impression annulée !");
+			  }
+			});
+			btnGroup.appendChild(btnCancel);
+			// --- Bouton "Imprimer"
+			let btnPrint = document.createElement("button");
+			btnPrint.textContent = "🖨️";
+			btnPrint.title = "Impression";
+			btnPrint.addEventListener("click", async () => {
+				const response = await fetch(`/api/files/local/${file.name}`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"X-Api-Key": obj.api_key
+					},
+					body: JSON.stringify({ command: "select", print: true })
+				});
+
+				if (!response.ok) {
+					alert("Erreur impression: " + response.status);
+				} else {
+					alert("Impression démarrée !");
+				}
+			});
+			btnGroup.appendChild(btnPrint);
+
+			// --- Bouton "Supprimer"
+			let btnDelete = document.createElement("button");
+			btnDelete.textContent = "🗑️";
+			btnDelete.title = "effacer fichier";
+			btnDelete.addEventListener("click", async () => {
+				if (!confirm(`Supprimer le fichier "${file.name}" ?`)) return;
+
+				const response = await fetch(file.refs.resource, {
+					method: "DELETE",
+					headers: { "X-Api-Key": obj.api_key }
+				});
+
+				if (!response.ok) {
+					alert("Erreur suppression: " + response.status);
+				} else {
+					alert("Fichier supprimé !");
+					li.remove(); // on enlève la ligne de la liste
+				}
+			});
+			btnGroup.appendChild(btnDelete);
+			li.appendChild(btnGroup);
 			ul.appendChild(li);
 		});
+		div.appendChild(ul)
+		fileDiv.appendChild(div);
+		let dropZone = document.getElementById("dropZone");
+		let fileInput = document.getElementById("fileInput");
+		let uploadLocation = document.getElementById("uploadLocation");
+		let progressContainer = document.getElementById("progressContainer");
+		let uploadProgress = document.getElementById("uploadProgress");
+		let progressText = document.getElementById("progressText");
 
-		fileDiv.appendChild(ul);		
+		// Clique → ouvrir le sélecteur fichier
+		dropZone.addEventListener("click", () => fileInput.click());
+
+		// Highlight quand on survole
+		dropZone.addEventListener("dragover", (e) => {
+		  e.preventDefault();
+		  dropZone.classList.add("dragover");
+		});
+		dropZone.addEventListener("dragleave", () => {
+		  dropZone.classList.remove("dragover");
+		});
+
+		// Drop du fichier
+		dropZone.addEventListener("drop", (e) => {
+		  e.preventDefault();
+		  dropZone.classList.remove("dragover");
+		  let file = e.dataTransfer.files[0];
+		  if (file) uploadFile(file);
+		});
+
+		// Si choisi par clic
+		fileInput.addEventListener("change", () => {
+		  if (fileInput.files.length > 0) {
+			uploadFile(fileInput.files[0]);
+		  }
+		});
+
+		// Fonction d’upload avec progression
+		function uploadFile(file) {
+		  let location = uploadLocation.value;
+		  let formData = new FormData();
+		  formData.append("file", file);
+
+		  let xhr = new XMLHttpRequest();
+		  xhr.open("POST", `/api/files/${location}`, true);
+		  xhr.setRequestHeader("X-Api-Key", obj.api_key);
+
+		  // Montrer la barre
+		  progressContainer.style.display = "block";
+		  uploadProgress.value = 0;
+		  progressText.textContent = "0%";
+
+		  // Suivi progression
+		  xhr.upload.addEventListener("progress", (e) => {
+			if (e.lengthComputable) {
+			  let percent = Math.round((e.loaded / e.total) * 100);
+			  uploadProgress.value = percent;
+			  progressText.textContent = percent + "%";
+			}
+		  });
+
+		  // Fin de l’upload
+		  xhr.onload = () => {
+			if (xhr.status >= 200 && xhr.status < 300) {
+			  alert(`✅ ${file.name} uploadé sur ${location}`);
+			  updateFileList();
+			} else {
+			  alert("Erreur upload: " + xhr.status);
+			}
+			fileInput.value = "";
+			progressContainer.style.display = "none"; // cacher après upload
+		  };
+
+		  xhr.onerror = () => {
+			alert("Erreur réseau lors de l’upload !");
+			progressContainer.style.display = "none";
+		  };
+
+		  xhr.send(formData);
+		}
 	};
-
-	
   </script>
 </body>
 </html>
