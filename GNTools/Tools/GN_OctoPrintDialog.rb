@@ -8,6 +8,28 @@ module GNTools
 		@title = "OctoPrint Dialog"
 	end
 	
+	def addToAxis(axis,montant)
+		reponse = GNTools.octoPrint.send_gcode("M114")
+		json = JSON.parse(reponse.body)
+		pos = json.dig("position")
+		if pos
+		  positionZ = pos[axis.downcase] + montant
+		  reponse = GNTools.octoPrint.send_gcode("G0 #{axis.upcase}#{positionZ}")
+		end
+		reponse
+	end
+
+	def subToAxis(axis,montant)
+		reponse = GNTools.octoPrint.send_gcode("M114")
+		json = JSON.parse(reponse.body)
+		pos = json.dig("position")
+		if pos
+		  positionZ = pos[axis.downcase] - montant
+		  reponse = GNTools.octoPrint.send_gcode("G0 #{axis.upcase}#{positionZ}")
+		end
+		reponse
+	end
+	
 	def show_dialog
 	  if @dialog && @dialog.visible?
 		self.update_dialog
@@ -65,54 +87,76 @@ module GNTools
 				GNTools.octoPrint.send_gcode("G28")
 			when 5
 				puts "$$Bouton Z+ 100 cliqué!$$"
-				reponse = GNTools.octoPrint.send_gcode("M114")
-				puts reponse
+				addToAxis("Z",100)
 			when 6
 				puts "$$Bouton Z+ 10 cliqué!$$"
+				addToAxis("Z",10)
 			when 7
 				puts "$$Bouton Z+ 1 cliqué!$$"
+				addToAxis("Z",1)
 			when 8
 				puts "$$Bouton Z+ 0.1 cliqué!$$"
+				addToAxis("Z",0.1)
 			when 9
 				puts "$$Bouton Z- 0.1 cliqué!$$"
+				addToAxis("Z",0.1)
 			when 10
 				puts "$$Bouton Z- 1 cliqué!$$"
+				subToAxis("Z",1)
 			when 11
 				puts "$$Bouton Z- 10 cliqué!$$"
+				subToAxis("Z",10)
 			when 12
 				puts "$$Bouton Z- 100 cliqué!$$"
+				subToAxis("Z",100)
 			when 13
 				puts "$$Bouton X+ 100 cliqué!$$"
+				addToAxis("X",100)
 			when 14
 				puts "$$Bouton X+ 10 cliqué!$$"
+				addToAxis("X",10)
 			when 15
 				puts "$$Bouton X+ 1 cliqué!$$"
+				addToAxis("X",1)
 			when 16
 				puts "$$Bouton X+ 0.1 cliqué!$$"
+				addToAxis("X",0.1)
 			when 17
 				puts "$$Bouton X- 0.1 cliqué!$$"
+				subToAxis("X",0.1)
 			when 18
 				puts "$$Bouton X- 1 cliqué!$$"
+				subToAxis("X",1)
 			when 19
 				puts "$$Bouton X- 10 cliqué!$$"
+				subToAxis("X",10)
 			when 20
 				puts "$$Bouton X- 100 cliqué!$$"
+				subToAxis("X",100)
 			when 21
 				puts "$$Bouton Y+ 100 cliqué!$$"
+				addToAxis("Y",100)
 			when 22
 				puts "$$Bouton Y+ 10 cliqué!$$"
+				addToAxis("Y",10)
 			when 23
 				puts "$$Bouton Y+ 1 cliqué!$$"
+				addToAxis("Y",1)
 			when 24
 				puts "$$Bouton Y+ 0.1 cliqué!$$"
+				addToAxis("Y",0.1)
 			when 25
 				puts "$$Bouton Y- 0.1 cliqué!$$"
+				subToAxis("Y",0.1)
 			when 26
 				puts "$$Bouton Y- 1 cliqué!$$"
+				subToAxis("Y",1)
 			when 27
 				puts "$$Bouton Y- 10 cliqué!$$"
+				subToAxis("Y",10)
 			when 28
 				puts "$$Bouton Y- 100 cliqué!$$"
+				subToAxis("Y",100)
 			when 29
 				puts "$$Bouton send cliqué!$$"
 				GNTools.octoPrint.send_gcode(object1)
@@ -147,12 +191,14 @@ module GNTools
 		jquery_js_path = "file:///" + File.join(PATH_UI, 'js/external/jquery/','jquery.js').gsub("\\", "/")
 		jquery_uijs_path = "file:///" + File.join(PATH_UI, 'js', 'jquery-ui.js').gsub("\\", "/")
 		jquery_uiimage_path = "file:///" + File.join(PATH_UI, 'images', 'senderControl.jpg').gsub("\\", "/")
+		jquery_uiimage2_path = "file:///" + File.join(PATH_UI, 'images', 'moreControls.jpg').gsub("\\", "/")
 		# Modifier le HTML pour utiliser ces chemins
 		@@html_content.gsub!("../css/Sketchup.css", css_path)
 		@@html_content.gsub!("../js/jquery-ui.css", jquery_ui_path)
 		@@html_content.gsub!("../js/external/jquery/jquery.js", jquery_js_path)
 		@@html_content.gsub!("../js/jquery-ui.js", jquery_uijs_path)
 		@@html_content.gsub!("../images/senderControl.jpg", jquery_uiimage_path)
+		@@html_content.gsub!("../images/moreControls.jpg", jquery_uiimage2_path)
 		
 		options = {
 			:dialog_title => @title,

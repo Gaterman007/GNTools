@@ -118,9 +118,9 @@ module GNTools
 	  end
 
 	  # --- Uploader une chaîne comme fichier G-code ---
-	  def upload_string(content, file_name = "virtual.gcode")
+	  def upload_string(content, file_name = "virtual.gcode", location = "local")
 	    if @reachable
-	      uri = URI.parse("#{@host}/api/files/local")
+	      uri = URI.parse("#{@host}/api/files/#{location}")
 
 	      boundary = "----SketchupBoundary#{rand(1000000)}"
 	      post_body = []
@@ -248,6 +248,7 @@ module GNTools
       # --- Lister les fichiers disponibles ---
       def list_files(location = "local")
 	    if @reachable
+		  puts "reachable"
           uri = URI.parse("#{@host}/api/files/#{location}")
 
           request = Net::HTTP::Get.new(uri.request_uri)

@@ -35,7 +35,7 @@
     font-weight: bold;
     margin-bottom: 6px;
 	color: #333;         /* couleur plus foncée */
-    font-size: 3em; /* texte plus grand */
+    font-size: 2em; /* texte plus grand */
   }
 
   .button-group {
@@ -79,6 +79,11 @@
     width: 100%;
     height: 16px; 
   }
+  .wrapper {
+    display: flex;
+    justify-content: flex-end; /* aligne à droite */
+    gap: 20px; /* espace entre les deux div */
+  }
   </style>
 </head>
 <body class="bg-panel-background">
@@ -117,155 +122,160 @@
 			</div>
 		</div>
 		<div id="tabs-2" style="display: none;">
-			<div class="container"  style="margin: 10px;">
-				<img src="../images/senderControl.jpg" usemap="#image-map" alt="senderControl" style="max-width:100%; height:auto;">
-				<map name="image-map">
-				  <!-- Home X -->
-				  <area target="" alt="Bouton 1" title="Home X"
-						href="javascript:buttonClicked(1);"
-						coords="12,3,60,3,60,13,21,52,12,52,12,3" shape="poly">
+			<div class="wrapper">
+				<div class="container"  style="margin: 10px; width: 480px;">
+					<img src="../images/moreControls.jpg" usemap="#image-map2" alt="moreControls" style="max-width:100%; height:auto;">
+				</div>
+				<div class="container"  style="margin: 10px;">
+					<img src="../images/senderControl.jpg" usemap="#image-map" alt="senderControl" style="max-width:100%; height:auto;">
+					<map name="image-map">
+					  <!-- Home X -->
+					  <area target="" alt="Bouton 1" title="Home X"
+							href="javascript:buttonClicked(1);"
+							coords="12,3,60,3,60,13,21,52,12,52,12,3" shape="poly">
 
-				  <!-- Home Y -->
-				  <area target="" alt="Bouton 2" title="Home Y"
-						href="javascript:buttonClicked(2);"
-						coords="187,3,237,3,237,52,227,52,187,14,187,3" shape="poly">
-
-
-				  <!-- Home Z -->
-				  <area target="" alt="Bouton 3" title="Home Z"
-						href="javascript:buttonClicked(3);"
-						coords="187,221,187,230,237,230,237,181,230,181,187,221" shape="poly">
-
-				  <!-- Home All -->
-				  <area target="" alt="Bouton 4" title="Home"
-						href="javascript:buttonClicked(4);"
-						coords="12,230,60,230,60,221,21,181,12,181,12,3" shape="poly">
-
-				  <!-- Z+ 100 -->
-				  <area target="" alt="Bouton 5" title="Z 100"
-						href="javascript:buttonClicked(5);"
-						coords="260,3,297,3,297,35,260,35,260,3" shape="poly">
-
-				  <!-- Z+ 10 -->
-				  <area target="" alt="Bouton 6" title="Z 10"
-						href="javascript:buttonClicked(6);"
-						coords="260,35,297,35,297,63,260,63,260,35" shape="poly">
-
-				  <!-- Z+ 1 -->
-				  <area target="" alt="Bouton 7" title="Z 1"
-						href="javascript:buttonClicked(7);"
-						coords="260,63,297,63,297,88,260,88,260,63" shape="poly">
-
-				  <!-- Z+ 0.1 -->
-				  <area target="" alt="Bouton 8" title="Z 0.1"
-						href="javascript:buttonClicked(8);"
-						coords="260,88,297,88,297,106,260,106,260,88" shape="poly">
-
-				  <!-- Z- 0.1 -->
-				  <area target="" alt="Bouton 9" title="Z -0.1"
-						href="javascript:buttonClicked(9);"
-						coords="260,124,297,124,297,146,260,146,260,124" shape="poly">
-
-				  <!-- Z- 1 -->
-				  <area target="" alt="Bouton 10" title="Z -1"
-						href="javascript:buttonClicked(10);"
-						coords="260,146,297,146,297,170,260,170,260,146" shape="poly">
-
-				  <!-- Z- 10 -->
-				  <area target="" alt="Bouton 11" title="Z -10"
-						href="javascript:buttonClicked(11);"
-						coords="260,170,297,170,297,197,260,197,260,170" shape="poly">
-
-				  <!-- Z- 100 -->
-				  <area target="" alt="Bouton 12" title="Z -100"
-						href="javascript:buttonClicked(12);"
-						coords="260,197,297,197,297,227,260,227,260,3" shape="poly">
-
-				  <!-- X+ 100 -->
-				  <area target="" alt="Bouton 13" title="X 100"
-						href="javascript:buttonClicked(13);"
-						coords="195,177,214,118,195,56,209,41,237,118,209,190" shape="poly">
-
-				  <!-- X+ 10 -->
-				  <area target="" alt="Bouton 14" title="X 10"
-						href="javascript:buttonClicked(14);"
-						coords="176,75,195,118,176,160,195,177,214,118,195,56" shape="poly">
-
-				  <!-- X+ 1 -->
-				  <area target="" alt="Bouton 15" title="X 1"
-						href="javascript:buttonClicked(15);"
-						coords="157,143,170,118,157,93,176,75,195,118,176,160" shape="poly">
-
-				  <!-- X+ 0.1 -->
-				  <area target="" alt="Bouton 16" title="X 0.1"
-						href="javascript:buttonClicked(16);"
-						coords="135,118,157,143,170,118,157,93,135,118" shape="poly">
-
-				  <!-- X- 0.1 -->
-				  <area target="" alt="Bouton 17" title="X -0.1"
-						href="javascript:buttonClicked(17);"
-						coords="115,118,90,143,83,118,90,93,115,118" shape="poly">
-
-				  <!-- X- 1 -->
-				  <area target="" alt="Bouton 18" title="X -1"
-						href="javascript:buttonClicked(18);"
-						coords="90,143,83,118,90,93,73,76,57,118,73,160" shape="poly">
-
-				  <!-- X- 10 -->
-				  <area target="" alt="Bouton 19" title="X -10"
-						href="javascript:buttonClicked(19);"
-						coords="73,76,57,118,73,160,56,177,31,118,59,59" shape="poly">
-
-				  <!-- X- 100 -->
-				  <area target="" alt="Bouton 20" title="X -100"
-						href="javascript:buttonClicked(20);"
-						coords="56,177,31,118,59,59,42,42,13,118,42,194" shape="poly">
-
-				  <!-- Y+ 100 -->
-				  <area target="" alt="Bouton 21" title="Y 100"
-						href="javascript:buttonClicked(21);"
-						coords="64,49,125,28,182,47,196,35,125,5,52,34" shape="poly">
-
-				  <!-- Y+ 10 -->
-				  <area target="" alt="Bouton 22" title="Y 10"
-						href="javascript:buttonClicked(22);"
-						coords="170,67,125,52,85,67,64,49,125,28,182,47" shape="poly">
-
-				  <!-- Y+ 1 -->
-				  <area target="" alt="Bouton 23" title="Y 1"
-						href="javascript:buttonClicked(15);"
-						coords="102,88,125,75,148,84,170,67,125,52,85,67" shape="poly">
+					  <!-- Home Y -->
+					  <area target="" alt="Bouton 2" title="Home Y"
+							href="javascript:buttonClicked(2);"
+							coords="187,3,237,3,237,52,227,52,187,14,187,3" shape="poly">
 
 
-				  <!-- Y+ 0.1 -->
-				  <area target="" alt="Bouton 24" title="Y 0.1"
-						href="javascript:buttonClicked(24);"
-						coords="124,110,102,88,125,75,148,84" shape="poly">
+					  <!-- Home Z -->
+					  <area target="" alt="Bouton 3" title="Home Z"
+							href="javascript:buttonClicked(3);"
+							coords="187,221,187,230,237,230,237,181,230,181,187,221" shape="poly">
 
-				  <!-- Y- 0.1 -->
-				  <area target="" alt="Bouton 25" title="Y -0.1"
-						href="javascript:buttonClicked(17);"
-						coords="125,128,101,152,125,161,150,152" shape="poly">
+					  <!-- Home All -->
+					  <area target="" alt="Bouton 4" title="Home"
+							href="javascript:buttonClicked(4);"
+							coords="12,230,60,230,60,221,21,181,12,181,12,3" shape="poly">
 
-				  <!-- Y- 1 -->
-				  <area target="" alt="Bouton 26" title="Y -1"
-						href="javascript:buttonClicked(18);"
-						coords="101,152,125,161,150,152,168,170,125,186,82,169" shape="poly">
+					  <!-- Z+ 100 -->
+					  <area target="" alt="Bouton 5" title="Z 100"
+							href="javascript:buttonClicked(5);"
+							coords="260,3,297,3,297,35,260,35,260,3" shape="poly">
 
-				  <!-- Y- 10 -->
-				  <area target="" alt="Bouton 27" title="Y -10"
-						href="javascript:buttonClicked(27);"
-						coords="168,170,125,186,82,169,65,187,125,210,185,188" shape="poly">
+					  <!-- Z+ 10 -->
+					  <area target="" alt="Bouton 6" title="Z 10"
+							href="javascript:buttonClicked(6);"
+							coords="260,35,297,35,297,63,260,63,260,35" shape="poly">
 
-				  <!-- Y- 100 -->
-				  <area target="" alt="Bouton 28" title="Y -100"
-						href="javascript:buttonClicked(28);"
-						coords="65,187,125,210,185,188,198,200,124,230,51,200" shape="poly">
-				
-				</map>
-				<br>
-				<label>Send: <input id="sendStr" class="def-cnc-input" style="width: 480px"></label>
-				<button id="send" class="ui-button ui-widget ui-corner-all">Send</button>
+					  <!-- Z+ 1 -->
+					  <area target="" alt="Bouton 7" title="Z 1"
+							href="javascript:buttonClicked(7);"
+							coords="260,63,297,63,297,88,260,88,260,63" shape="poly">
+
+					  <!-- Z+ 0.1 -->
+					  <area target="" alt="Bouton 8" title="Z 0.1"
+							href="javascript:buttonClicked(8);"
+							coords="260,88,297,88,297,106,260,106,260,88" shape="poly">
+
+					  <!-- Z- 0.1 -->
+					  <area target="" alt="Bouton 9" title="Z -0.1"
+							href="javascript:buttonClicked(9);"
+							coords="260,124,297,124,297,146,260,146,260,124" shape="poly">
+
+					  <!-- Z- 1 -->
+					  <area target="" alt="Bouton 10" title="Z -1"
+							href="javascript:buttonClicked(10);"
+							coords="260,146,297,146,297,170,260,170,260,146" shape="poly">
+
+					  <!-- Z- 10 -->
+					  <area target="" alt="Bouton 11" title="Z -10"
+							href="javascript:buttonClicked(11);"
+							coords="260,170,297,170,297,197,260,197,260,170" shape="poly">
+
+					  <!-- Z- 100 -->
+					  <area target="" alt="Bouton 12" title="Z -100"
+							href="javascript:buttonClicked(12);"
+							coords="260,197,297,197,297,227,260,227,260,3" shape="poly">
+
+					  <!-- X+ 100 -->
+					  <area target="" alt="Bouton 13" title="X 100"
+							href="javascript:buttonClicked(13);"
+							coords="195,177,214,118,195,56,209,41,237,118,209,190" shape="poly">
+
+					  <!-- X+ 10 -->
+					  <area target="" alt="Bouton 14" title="X 10"
+							href="javascript:buttonClicked(14);"
+							coords="176,75,195,118,176,160,195,177,214,118,195,56" shape="poly">
+
+					  <!-- X+ 1 -->
+					  <area target="" alt="Bouton 15" title="X 1"
+							href="javascript:buttonClicked(15);"
+							coords="157,143,170,118,157,93,176,75,195,118,176,160" shape="poly">
+
+					  <!-- X+ 0.1 -->
+					  <area target="" alt="Bouton 16" title="X 0.1"
+							href="javascript:buttonClicked(16);"
+							coords="135,118,157,143,170,118,157,93,135,118" shape="poly">
+
+					  <!-- X- 0.1 -->
+					  <area target="" alt="Bouton 17" title="X -0.1"
+							href="javascript:buttonClicked(17);"
+							coords="115,118,90,143,83,118,90,93,115,118" shape="poly">
+
+					  <!-- X- 1 -->
+					  <area target="" alt="Bouton 18" title="X -1"
+							href="javascript:buttonClicked(18);"
+							coords="90,143,83,118,90,93,73,76,57,118,73,160" shape="poly">
+
+					  <!-- X- 10 -->
+					  <area target="" alt="Bouton 19" title="X -10"
+							href="javascript:buttonClicked(19);"
+							coords="73,76,57,118,73,160,56,177,31,118,59,59" shape="poly">
+
+					  <!-- X- 100 -->
+					  <area target="" alt="Bouton 20" title="X -100"
+							href="javascript:buttonClicked(20);"
+							coords="56,177,31,118,59,59,42,42,13,118,42,194" shape="poly">
+
+					  <!-- Y+ 100 -->
+					  <area target="" alt="Bouton 21" title="Y 100"
+							href="javascript:buttonClicked(21);"
+							coords="64,49,125,28,182,47,196,35,125,5,52,34" shape="poly">
+
+					  <!-- Y+ 10 -->
+					  <area target="" alt="Bouton 22" title="Y 10"
+							href="javascript:buttonClicked(22);"
+							coords="170,67,125,52,85,67,64,49,125,28,182,47" shape="poly">
+
+					  <!-- Y+ 1 -->
+					  <area target="" alt="Bouton 23" title="Y 1"
+							href="javascript:buttonClicked(15);"
+							coords="102,88,125,75,148,84,170,67,125,52,85,67" shape="poly">
+
+
+					  <!-- Y+ 0.1 -->
+					  <area target="" alt="Bouton 24" title="Y 0.1"
+							href="javascript:buttonClicked(24);"
+							coords="124,110,102,88,125,75,148,84" shape="poly">
+
+					  <!-- Y- 0.1 -->
+					  <area target="" alt="Bouton 25" title="Y -0.1"
+							href="javascript:buttonClicked(17);"
+							coords="125,128,101,152,125,161,150,152" shape="poly">
+
+					  <!-- Y- 1 -->
+					  <area target="" alt="Bouton 26" title="Y -1"
+							href="javascript:buttonClicked(18);"
+							coords="101,152,125,161,150,152,168,170,125,186,82,169" shape="poly">
+
+					  <!-- Y- 10 -->
+					  <area target="" alt="Bouton 27" title="Y -10"
+							href="javascript:buttonClicked(27);"
+							coords="168,170,125,186,82,169,65,187,125,210,185,188" shape="poly">
+
+					  <!-- Y- 100 -->
+					  <area target="" alt="Bouton 28" title="Y -100"
+							href="javascript:buttonClicked(28);"
+							coords="65,187,125,210,185,188,198,200,124,230,51,200" shape="poly">
+					
+					</map>
+					<br>
+					<label>Send: <input id="sendStr" class="def-cnc-input" style="width: 480px"></label>
+					<button id="send" class="ui-button ui-widget ui-corner-all">Send</button>
+				</div>
 			</div>
 		</div>
 		<div id="tabs-3" style="display: none;">
@@ -345,58 +355,6 @@
 	};
 	
 	function  updateFiles(datafilejson) {
-		let testData = JSON.stringify([
-		{
-			"name": "test_cube.gcode",
-			"refs": {
-				"download": "/downloads/test_cube.gcode",
-				"resource": "/api/files/local/test_cube.gcode"
-			}
-		},
-		{
-			"name": "benchy.gcode",
-			"refs": {
-				"download": "/downloads/benchy.gcode",
-				"resource": "/api/files/local/benchy.gcode"
-			}
-		},
-		{
-			"name": "benchy.gcode",
-			"refs": {
-				"download": "/downloads/benchy.gcode",
-				"resource": "/api/files/local/benchy.gcode"
-			}
-		},
-		{
-			"name": "benchy.gcode",
-			"refs": {
-				"download": "/downloads/benchy.gcode",
-				"resource": "/api/files/local/benchy.gcode"
-			}
-		},
-		{
-			"name": "benchy.gcode",
-			"refs": {
-				"download": "/downloads/benchy.gcode",
-				"resource": "/api/files/local/benchy.gcode"
-			}
-		},
-		{
-			"name": "benchy.gcode",
-			"refs": {
-				"download": "/downloads/benchy.gcode",
-				"resource": "/api/files/local/benchy.gcode"
-			}
-		},
-		{
-			"name": "calibration.gcode",
-			"refs": {
-				"download": "/downloads/calibration.gcode",
-				"resource": "/api/files/local/calibration.gcode"
-			}
-		}
-		]);
-//		files = JSON.parse(testData);
 		files =  JSON.parse(datafilejson);
 		let fileDiv = document.getElementById("filediv");
 		fileDiv.innerHTML = ""; // vider le contenu précédent
