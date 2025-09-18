@@ -133,6 +133,7 @@ module GNTools
 				GNTools.octoPrint.jog_head(y: -10)
 			when 28
 				GNTools.octoPrint.jog_head(y: -100)
+
 			when 29
 				puts "$$Bouton send cliqué!$$"
 				GNTools.octoPrint.send_gcode(object1)

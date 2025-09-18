@@ -242,7 +242,7 @@
 
 					  <!-- Y+ 1 -->
 					  <area target="" alt="Bouton 23" title="Y 1"
-							href="javascript:buttonClicked(23);"
+							href="javascript:buttonClicked(15);"
 							coords="102,88,125,75,148,84,170,67,125,52,85,67" shape="poly">
 
 
@@ -253,12 +253,12 @@
 
 					  <!-- Y- 0.1 -->
 					  <area target="" alt="Bouton 25" title="Y -0.1"
-							href="javascript:buttonClicked(25);"
+							href="javascript:buttonClicked(17);"
 							coords="125,128,101,152,125,161,150,152" shape="poly">
 
 					  <!-- Y- 1 -->
 					  <area target="" alt="Bouton 26" title="Y -1"
-							href="javascript:buttonClicked(26);"
+							href="javascript:buttonClicked(18);"
 							coords="101,152,125,161,150,152,168,170,125,186,82,169" shape="poly">
 
 					  <!-- Y- 10 -->
