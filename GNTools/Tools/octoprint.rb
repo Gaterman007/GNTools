@@ -369,8 +369,8 @@ module GNTools
 #            puts "Erreur inconnue: #{e.class} - #{e.message}"
             return nil
           end
-		else
-		  puts "not reachable"
+#		else
+#		  puts "not reachable"
 	    end
       end
 	  

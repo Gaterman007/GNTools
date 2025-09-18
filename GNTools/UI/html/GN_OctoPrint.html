@@ -124,6 +124,9 @@
 		<div id="tabs-2" style="display: none;">
 			<div class="wrapper">
 				<div class="container"  style="margin: 10px; width: 480px;">
+					<label>X: <input id="XStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
+					<label>Y: <input id="YStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
+					<label>Z: <input id="ZStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
 					<img src="../images/moreControls.jpg" usemap="#image-map2" alt="moreControls" style="max-width:100%; height:auto;">
 				</div>
 				<div class="container"  style="margin: 10px;">
@@ -307,6 +310,9 @@
 	var files;
 	var apikey;
 	$(document).ready(function(){
+		$("#XStr").val("0.00");
+		$("#YStr").val("0.00");
+		$("#ZStr").val("0.00");
 		sketchup.ready();
 		updateTabsHeight(); // Initialiser la hauteur correcte des tabs
 	});
@@ -315,6 +321,17 @@
 		const footerHeight = $('#ui-footer').outerHeight(); // Hauteur du footer
 		$('#tabs').css('max-height', 'calc(100vh - ' + footerHeight + 'px)');
 	}
+	function formatToTwoDecimals($input) {
+	  let val = parseFloat($input.val());
+	  if (!isNaN(val)) {
+	    $input.val(val.toFixed(2)); // toujours 2 décimales
+	  }
+	}
+
+	// Sur blur (quand on sort du champ)
+	$("#XStr, #YStr, #ZStr").on("blur", function() {
+	  formatToTwoDecimals($(this));
+	});
 	
 	$( "#tabs" ).tabs();
 	$( "#setDefault, #cancel, #accept").button();
