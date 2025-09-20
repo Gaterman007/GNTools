@@ -67,6 +67,7 @@ module GNTools
 			GNTools.octoPrint.host = value["host"]
 			GNTools.octoPrint.api_key = value["api_key"]		
 			GNTools.octoPrint.saveToFile()
+			self.update_dialog
 			nil
 		}
 					
@@ -139,8 +140,15 @@ module GNTools
 			when 30
 				puts "$$Bouton send cliqué!$$"
 				GNTools.octoPrint.send_gcode(object1)
+			when 31
+				puts "$$Bouton auto connect$$"
+				GNTools.octoPrint.connexion
+			when 32
+				puts "$$Bouton disconnect$$"
+				GNTools.octoPrint.connexion(false)
 			else
 				puts "$$Bouton inconnu : #{value}$$"
+				
 			end
 			nil
 		}
@@ -189,7 +197,55 @@ module GNTools
 #		dialog.set_file(html_file) # Can be set here.
 		dialog.center # New feature!
 #		dialog.set_can_close { false }
+		dialog.set_on_closed {
+		  # Code to execute when the dialog is closed
+		  puts "Dialog has been closed."
+		  # For example, you might save the dialog's position and size:
+		  @position = dialog.get_position
+		  @size = dialog.get_size
+		  @dialog = nil # Clear the reference to the dialog
+		}
 		dialog
+	end
+	
+	def update_status
+		interval = 0.5
+
+		# Stocker le dernier état pour ne pas envoyer si pas de changement
+		@last_status ||= {}
+
+		timerid = UI.start_timer(interval, true) do
+#		  next unless @dialog # vérifier que le dialog existe toujours
+		  next false unless @dialog
+		  # Construire le nouvel état
+		  status_hash = {}
+		  status_hash["ping"] = GNTools.octoPrint.quick_ping
+		  connect_info = GNTools.octoPrint.connection_Info
+		  status_hash.merge!(connect_info) if connect_info
+
+		  reloadFile = false
+		  if status_hash["current"] && @last_status["current"] &&
+			status_hash["current"]["state"] != @last_status["current"]["state"]
+			reloadFile = true
+		  end
+		  # Comparer avec le dernier état
+		  if status_hash != @last_status
+			@last_status = status_hash.dup
+
+			# Envoyer le JSON au dialog
+			script_str = "statusDialog(\'#{JSON.generate(status_hash)}\')"
+			@dialog.execute_script(script_str)
+		  end
+		  if reloadFile
+			UI.set_cursor(632)
+			sleep 1
+		  	files = GNTools.octoPrint.list_files("")
+			scriptStr = "updateFiles(\'#{JSON.generate(files)}\')"
+			@dialog.execute_script(scriptStr)
+			UI.set_cursor(630)
+		  end
+		  
+		end
 	end
 	
 	def update_dialog
@@ -198,6 +254,8 @@ module GNTools
 		updateHash["api_key"] = GNTools.octoPrint.api_key
 		scriptStr = "updateDialog(\'#{JSON.generate(updateHash)}\')"
 		@dialog.execute_script(scriptStr)
+		
+		self.update_status
 		
 		files = GNTools.octoPrint.list_files("")
 		scriptStr = "updateFiles(\'#{JSON.generate(files)}\')"

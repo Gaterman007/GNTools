@@ -293,6 +293,45 @@ module GNTools
 		end
 	  end
 
+	  def connection_Info
+	    if quick_ping()
+	      uri = URI.parse("#{@host}/api/connection")
+
+	      request = Net::HTTP::Get.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
+
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
+#		  puts response
+	      if response.code == "200"
+	        json = JSON.parse(response.body)
+#	  	    puts "Statut: #{json["state"]}, Progression: #{json.dig("progress", "completion")}%"
+		    return json
+	      else
+#		    puts "Erreur status: #{response.code} #{response.body}"
+		    return nil
+	      end
+		end
+	  end
+
+	  def connexion(connect = true)
+	    if quick_ping()
+	      uri = URI.parse("#{@host}/api/connection")
+
+	      request = Net::HTTP::Post.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
+	      request["Content-Type"] = "application/json"
+		  if connect
+			request.body = { command: "connect" }.to_json
+		  else
+			request.body = { command: "disconnect" }.to_json
+		  end
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
+		  response
+	    end
+	  end
+	  
 	  def control_print(action)
 	    if quick_ping()
 	      uri = URI.parse("#{@host}/api/job")
@@ -337,9 +376,9 @@ module GNTools
 	  end
 
       # --- Lister les fichiers disponibles ---
-      def list_files(location = "local")
+      def list_files(location = "/local")
 	    if @reachable
-          uri = URI.parse("#{@host}/api/files/#{location}")
+          uri = URI.parse("#{@host}/api/files#{location}")
 
           request = Net::HTTP::Get.new(uri.request_uri)
           request["X-Api-Key"] = @api_key

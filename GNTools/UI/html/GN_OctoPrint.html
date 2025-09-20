@@ -289,6 +289,11 @@
 			<div class="container" style="margin: 10px;">
 				<label>Api Key:<br> <textarea id="api_key" style="height: 199px; width: 100%;"></textarea></label>
 			</div>
+			<div class="container" id = "host_available" style="margin: 10px;">
+				
+			</div>	
+			
+			
 		</div>	
 	</div>
 
@@ -305,6 +310,7 @@
   </div>
   <script src="../js/external/jquery/jquery.js"></script>
   <script src="../js/jquery-ui.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
   <script>
   	var obj;
 	var files;
@@ -360,9 +366,38 @@
 	  obj.api_key = $("#api_key").val();
 	  sketchup.newValue("api_key",obj);
     }); 
-	
+
 	function buttonClicked(buttonNo) {
 		sketchup.buttonPress(buttonNo,obj);
+	};
+	
+	function statusDialog(datadialog) {
+		var objdata =  JSON.parse(datadialog);
+		let text = "";
+		// ping
+		text += "Host: " + (objdata.ping ? "disponible" : "non disponible") + "<br>";
+
+		// current.* infos
+		if (objdata.current) {
+			text += "État: " + objdata.current.state + "<br>";
+			text += "Baudrate: " + objdata.current.baudrate + "<br>";
+			text += "Port: " + objdata.current.port + "<br>";
+			text += "Profile: " + objdata.current.printerProfile + "<br>";
+			if (objdata.current.state === "Closed") {
+				text += '<button id="auto_connect_btn">Auto Connect</button>';
+			} else {
+				text += '<button id="disconnect_btn">Disconnect</button>';
+			}
+		}
+
+		// mettre dans #host_available
+		$("#host_available").html(text);
+        $("#auto_connect_btn").on("click", function () {
+		  sketchup.buttonPress(31,$("#sendStr").val());
+	    });
+        $("#disconnect_btn").on("click", function () {
+		  sketchup.buttonPress(32,$("#sendStr").val());
+	    });		
 	};
 	
 	function  updateDialog(datajson) {
