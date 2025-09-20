@@ -254,6 +254,14 @@ module GNTools
 		updateHash["api_key"] = GNTools.octoPrint.api_key
 		scriptStr = "updateDialog(\'#{JSON.generate(updateHash)}\')"
 		@dialog.execute_script(scriptStr)
+
+		status_hash = {}
+		status_hash["ping"] = GNTools.octoPrint.quick_ping
+		connect_info = GNTools.octoPrint.connection_Info
+		status_hash.merge!(connect_info) if connect_info
+		# Envoyer le JSON au dialog
+		script_str = "statusDialog(\'#{JSON.generate(status_hash)}\')"
+		@dialog.execute_script(script_str)
 		
 		self.update_status
 		
