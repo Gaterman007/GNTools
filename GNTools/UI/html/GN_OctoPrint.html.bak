@@ -124,6 +124,9 @@
 		<div id="tabs-2" style="display: none;">
 			<div class="wrapper">
 				<div class="container"  style="margin: 10px; width: 480px;">
+					<label>X: <input id="XStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
+					<label>Y: <input id="YStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
+					<label>Z: <input id="ZStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
 					<img src="../images/moreControls.jpg" usemap="#image-map2" alt="moreControls" style="max-width:100%; height:auto;">
 				</div>
 				<div class="container"  style="margin: 10px;">
@@ -242,7 +245,7 @@
 
 					  <!-- Y+ 1 -->
 					  <area target="" alt="Bouton 23" title="Y 1"
-							href="javascript:buttonClicked(15);"
+							href="javascript:buttonClicked(23);"
 							coords="102,88,125,75,148,84,170,67,125,52,85,67" shape="poly">
 
 
@@ -253,12 +256,12 @@
 
 					  <!-- Y- 0.1 -->
 					  <area target="" alt="Bouton 25" title="Y -0.1"
-							href="javascript:buttonClicked(17);"
+							href="javascript:buttonClicked(25);"
 							coords="125,128,101,152,125,161,150,152" shape="poly">
 
 					  <!-- Y- 1 -->
 					  <area target="" alt="Bouton 26" title="Y -1"
-							href="javascript:buttonClicked(18);"
+							href="javascript:buttonClicked(26);"
 							coords="101,152,125,161,150,152,168,170,125,186,82,169" shape="poly">
 
 					  <!-- Y- 10 -->
@@ -286,6 +289,11 @@
 			<div class="container" style="margin: 10px;">
 				<label>Api Key:<br> <textarea id="api_key" style="height: 199px; width: 100%;"></textarea></label>
 			</div>
+			<div class="container" id = "host_available" style="margin: 10px;">
+				
+			</div>	
+			
+			
 		</div>	
 	</div>
 
@@ -302,11 +310,15 @@
   </div>
   <script src="../js/external/jquery/jquery.js"></script>
   <script src="../js/jquery-ui.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
   <script>
   	var obj;
 	var files;
 	var apikey;
 	$(document).ready(function(){
+		$("#XStr").val("0.00");
+		$("#YStr").val("0.00");
+		$("#ZStr").val("0.00");
 		sketchup.ready();
 		updateTabsHeight(); // Initialiser la hauteur correcte des tabs
 	});
@@ -315,6 +327,17 @@
 		const footerHeight = $('#ui-footer').outerHeight(); // Hauteur du footer
 		$('#tabs').css('max-height', 'calc(100vh - ' + footerHeight + 'px)');
 	}
+	function formatToTwoDecimals($input) {
+	  let val = parseFloat($input.val());
+	  if (!isNaN(val)) {
+	    $input.val(val.toFixed(2)); // toujours 2 décimales
+	  }
+	}
+
+	// Sur blur (quand on sort du champ)
+	$("#XStr, #YStr, #ZStr").on("blur", function() {
+	  formatToTwoDecimals($(this));
+	});
 	
 	$( "#tabs" ).tabs();
 	$( "#setDefault, #cancel, #accept").button();
@@ -343,9 +366,38 @@
 	  obj.api_key = $("#api_key").val();
 	  sketchup.newValue("api_key",obj);
     }); 
-	
+
 	function buttonClicked(buttonNo) {
 		sketchup.buttonPress(buttonNo,obj);
+	};
+	
+	function statusDialog(datadialog) {
+		var objdata =  JSON.parse(datadialog);
+		let text = "";
+		// ping
+		text += "Host: " + (objdata.ping ? "disponible" : "non disponible") + "<br>";
+
+		// current.* infos
+		if (objdata.current) {
+			text += "État: " + objdata.current.state + "<br>";
+			text += "Baudrate: " + objdata.current.baudrate + "<br>";
+			text += "Port: " + objdata.current.port + "<br>";
+			text += "Profile: " + objdata.current.printerProfile + "<br>";
+			if (objdata.current.state === "Closed") {
+				text += '<button id="auto_connect_btn">Auto Connect</button>';
+			} else {
+				text += '<button id="disconnect_btn">Disconnect</button>';
+			}
+		}
+
+		// mettre dans #host_available
+		$("#host_available").html(text);
+        $("#auto_connect_btn").on("click", function () {
+		  sketchup.buttonPress(31,$("#sendStr").val());
+	    });
+        $("#disconnect_btn").on("click", function () {
+		  sketchup.buttonPress(32,$("#sendStr").val());
+	    });		
 	};
 	
 	function  updateDialog(datajson) {
