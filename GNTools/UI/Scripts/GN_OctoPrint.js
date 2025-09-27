@@ -1,0 +1,651 @@
+var obj;
+var files;
+var apikey;
+var dataobject;
+
+const mapDataClipPath = [
+  // Homes
+  { id: 1, title: "Home X", gShape:"", clipPath: "polygon(3.85% 1.26%, 19.23% 1.26%, 19.23% 5.46%, 6.72% 21.85%, 3.85% 21.85%, 3.85% 1.26%)",color: "rgba(255,0,0,0.8)" ,hoverShift:[-2,-2],spanText:["🏠 X","4%","2%","1.2em"]},
+  { id: 2, title: "Home Y", gShape:"", clipPath: "polygon(59.62% 1.26%, 76.28% 1.26%, 76.28% 21.85%, 72.76% 21.85%, 59.62% 5.88%, 59.62% 1.26%)",color: "rgba(255,0,0,0.8)"  ,hoverShift:[2,-2],spanText:["🏠 Y","63%","2%","1.2em"]},
+  { id: 3, title: "Home Z", gShape:"", clipPath: "polygon(59.62% 93.7%, 59.62% 96.64%, 76.28% 96.64%, 76.28% 76.05%, 73.72% 76.05%, 59.62% 93.7%)",color: "rgba(255,0,0,0.8)"  ,hoverShift:[2,2],spanText:["🏠 Z","63%","87%","1.2em"]},
+  { id: 4, title: "Home",   gShape:"", clipPath: "polygon(3.85% 96.64%, 19.23% 96.64%, 19.23% 93.7%, 6.72% 76.05%, 3.85% 76.05%, 3.85% 1.26%)",color: "rgba(255,0,0,0.8)"  ,hoverShift:[-2,2],spanText:["🏠","4%","87%","1.2em"]},
+
+  // Z+
+  { id: 5, title: "Z 100", gShape:"", clipPath: "polygon(83.33% 1.26%, 95.19% 1.26%, 95.19% 14.71%, 83.33% 14.71%, 83.33% 1.26%)",color: "rgba(0,255,0,0.6)" ,hoverShift:[2,-2],spanText:["100","85%","5%","1.2em"]},
+  { id: 6, title: "Z 10",  gShape:"", clipPath: "polygon(83.33% 14.71%, 95.19% 14.71%, 95.19% 26.47%, 83.33% 26.47%, 83.33% 14.71%)",color: "rgba(0,212,0,0.6)" ,hoverShift:[2,-2],spanText:["10","87%","20%","1.2em"]},
+  { id: 7, title: "Z 1",   gShape:"", clipPath: "polygon(83.33% 26.47%, 95.19% 26.47%, 95.19% 37.0%, 83.33% 37.0%, 83.33% 26.47%)" ,color: "rgba(0,170,0,0.6)",hoverShift:[2,-2],spanText:["1","89%","30%","1.2em"]},
+  { id: 8, title: "Z 0.1", gShape:"", clipPath: "polygon(83.33% 37.0%, 95.19% 37.0%, 95.19% 46.54%, 83.33% 46.54%, 83.33% 37.0%)",color: "rgba(0,128,0,0.6)" ,hoverShift:[2,-2],spanText:["0.1","87%","40%","1.2em"]},
+
+  // Z-
+  { id: 9, title: "Z -0.1",  gShape:"", clipPath: "polygon(83.33% 50.1%, 95.19% 50.1%, 95.19% 61.34%, 83.33% 61.34%, 83.33% 52.1%)",color: "rgba(0,128,0,0.6)"  ,hoverShift:[2,2]},
+  { id: 10, title: "Z -1",   gShape:"", clipPath: "polygon(83.33% 61.34%, 95.19% 61.34%, 95.19% 71.64%, 83.33% 71.64%, 83.33% 61.34%)" ,color: "rgba(0,170,0,0.6)" ,hoverShift:[2,2]},
+  { id: 11, title: "Z -10",  gShape:"", clipPath: "polygon(83.33% 71.64%, 95.19% 71.64%, 95.19% 82.77%, 83.33% 82.77%, 83.33% 71.64%)",color: "rgba(0,212,0,0.6)"  ,hoverShift:[2,2]},
+  { id: 12, title: "Z -100", gShape:"", clipPath: "polygon(83.33% 82.77%, 95.19% 82.77%, 95.19% 95.59%, 83.33% 95.59%, 83.33% 1.26%)",color: "rgba(0,255,0,0.6)"  ,hoverShift:[2,2]},
+
+  // X+
+  { id: 13, title: "X 100", gShape:[40, 50, 30, 38, 320, 400 ], clipPath: "" ,color: "rgba(0,0,255,0.6)",hoverShift:[3,0],spanText:["100","70%","47%","1.2em"]},
+  { id: 14, title: "X 10",  gShape:[40, 50, 20, 30, 320, 400 ], clipPath: "" ,color: "rgba(0,0,212,0.6)",hoverShift:[3,0],spanText:["10","62%","47%","1.2em"]},
+  { id: 15, title: "X 1",   gShape:[40, 50, 10, 20, 320, 400 ], clipPath: "" ,color: "rgba(0,0,170,0.6)",hoverShift:[3,0],spanText:["1","52%","47%","1.2em"]},
+  { id: 16, title: "X 0.1", gShape:[40, 50,  0, 10, 320, 400 ], clipPath: "" ,color: "rgba(0,0,128,0.6)",hoverShift:[3,0],spanText:["0.1","42%","47%","1.2em"]},
+
+  // X-
+  { id: 17, title: "X -0.1", gShape:[40, 50,  0, 10, 140, 220], clipPath: "" ,color: "rgba(0,0,128,0.6)" ,hoverShift:[-3,0]},
+  { id: 18, title: "X -1",   gShape:[40, 50, 10, 20, 140, 220], clipPath: "" ,color: "rgba(0,0,170,0.6)" ,hoverShift:[-3,0]},
+  { id: 19, title: "X -10",  gShape:[40, 50, 20, 30, 140, 220], clipPath: "" ,color: "rgba(0,0,212,0.6)" ,hoverShift:[-3,0]},
+  { id: 20, title: "X -100", gShape:[40, 50, 30, 38, 140, 220], clipPath: "" ,color: "rgba(0,0,255,0.6)" ,hoverShift:[-3,0]},
+
+  // Y+
+  { id: 21, title: "Y 100", gShape:[40, 50, 30, 38, 225, 315], clipPath: "" ,color: "rgba(255,255,0,0.6)" ,hoverShift:[0,-3]},
+  { id: 22, title: "Y 10",  gShape:[40, 50, 20, 30, 225, 315], clipPath: "" ,color: "rgba(212,212,0,0.6)" ,hoverShift:[0,-3]},
+  { id: 23, title: "Y 1",   gShape:[40, 50, 10, 20, 225, 315], clipPath: "" ,color: "rgba(170,170,0,0.6)" ,hoverShift:[0,-3]},
+  { id: 24, title: "Y 0.1", gShape:[40, 50,  0, 10, 225, 315], clipPath: "" ,color: "rgba(128,128,0,0.6)" ,hoverShift:[0,-3]},
+
+  // Y-
+  { id: 25, title: "Y -0.1", gShape:[40, 50,  0, 10, 45, 135], clipPath: "" ,color: "rgba(128,128,0,0.6)" ,hoverShift:[0,3]},
+  { id: 26, title: "Y -1",   gShape:[40, 50, 10, 20, 45, 135], clipPath: "" ,color: "rgba(170,170,0,0.6)" ,hoverShift:[0,3]},
+  { id: 27, title: "Y -10",  gShape:[40, 50, 20, 30, 45, 135], clipPath: "" ,color: "rgba(212,212,0,0.6)" ,hoverShift:[0,3]},
+  { id: 28, title: "Y -100", gShape:[40, 50, 30, 38, 45, 135], clipPath: "" ,color: "rgba(255,255,0,0.6)" ,hoverShift:[0,3]},
+];
+
+function generateCShape(cx, cy, rInner, rOuter, startAngle, endAngle, points = 20) {
+    const coords = [];
+    // contour extérieur
+    for (let i = 0; i <= points; i++) {
+        const angle = (startAngle + (i / points) * (endAngle - startAngle)) * Math.PI / 180;
+        const x = cx + rOuter * Math.cos(angle);
+        const y = cy + rOuter * Math.sin(angle);
+        coords.push(`${x.toFixed(2)}% ${y.toFixed(2)}%`);
+    }
+    // contour intérieur (en sens inverse)
+    for (let i = points; i >= 0; i--) {
+        const angle = (startAngle + (i / points) * (endAngle - startAngle)) * Math.PI / 180;
+        const x = cx + rInner * Math.cos(angle);
+        const y = cy + rInner * Math.sin(angle);
+        coords.push(`${x.toFixed(2)}% ${y.toFixed(2)}%`);
+    }
+    return `polygon(${coords.join(', ')})`;
+}
+
+const buttons = document.getElementById("jog-buttons");
+
+
+$("#checkLogin").click(function() {
+  let host = $("#host").val() || "http://10.0.0.108:5000";  
+  let apikey = $("#api_key").val();                        
+
+  fetch(host + "/api/login?passive=true", {
+	method: "POST",
+	headers: {
+	  "Content-Type": "application/json",
+	  "X-Api-Key": apikey   // on passe la clé ici
+	},
+	body: "{}"   // obligatoire pour POST mais vide
+  })
+  .then(response => {
+	if (!response.ok) throw new Error("HTTP " + response.status);
+	return response.json();
+  })
+  .then(data => {
+	console.log("Réponse passive login:", data);
+	document.getElementById("session").value = data.session || "pas de session";
+	// ⚡️ On ouvre le websocket avec SockJS une fois le login OK
+	let sock = new SockJS("http://10.0.0.108:5000/sockjs/websocket");
+	sock.onopen = function () {
+		console.log("✅ SockJS connecté !");
+		// Optionnel : forcer l’auth API si pas de cookie pris en compte
+//			sock.send(JSON.stringify({ auth: apikey }));
+	};
+
+	sock.onmessage = function (event) {
+		console.log("📩 Message reçu :", event.data);
+		// Ici tu peux traiter les events OctoPrint (printerStateChanged, etc.)
+	};
+
+	sock.onclose = function () {
+		console.log("🔌 SockJS fermé");
+	};
+
+	sock.onerror = function (err) {
+		console.error("❌ Erreur WebSocket:", err);
+	};
+  })
+  .catch(err => {
+	console.error("Erreur passive login:", err);
+	alert("Connexion échouée : " + err.message);
+  });
+});
+
+
+$(document).ready(function(){
+	$("#XStr").val("0.00");
+	$("#YStr").val("0.00");
+	$("#ZStr").val("0.00");
+	$("#SpindleSpeed").val("255");
+	mapDataClipPath.forEach((btn, index) => {
+	  const area = document.createElement("button");
+	  area.classList.add("jog-btn");        // une classe pour style commun
+	  area.title = btn.title
+	  if (btn.spanText && btn.spanText.length === 4) {
+		// texte déplaçable
+		const [spantexte,cx,cy,fontsize] = btn.spanText;
+		const label = document.createElement("span");
+		label.textContent = spantexte;
+		label.style.position = "absolute";
+		label.style.left = cx;   // X
+		label.style.top = cy;    // Y
+		label.style.fontSize = fontsize;
+		area.appendChild(label);
+	  }
+	  let clip;
+	  if (btn.gShape && btn.gShape.length === 6) {
+		const [cx, cy, rInner, rOuter, startAngle, endAngle] = btn.gShape;
+		clip = generateCShape(cx, cy, rInner, rOuter, startAngle, endAngle);
+	  } else {
+		clip = btn.clipPath;   // directement utilisé
+	  }
+	  area.style.clipPath = clip;
+	  area.style.background = btn.color || "rgba(0,150,255,0.6)"; // couleur spécifique ou défaut
+
+	  if (btn.hoverShift && btn.hoverShift.length === 2) {
+		const [shiftX, shiftY] = btn.hoverShift;
+		area.onmouseenter = () => {
+		  area.style.transform = `translate(${shiftX}px,${shiftY}px)`;
+		};
+	  } else {
+		area.onmouseenter = () => {
+		  area.style.transform = `translate(-2px,-2px)`;
+		};
+	  }
+	  // pseudo-élément border via style CSS inline
+	  area.style.overflow = "visible"; // pour que ::after dépasse si besoin
+	  area.onmouseleave = () => {
+		area.style.transform = "translate(0px,0px)";
+	  };
+	  area.onclick = () => buttonClicked(btn.id);
+	  area.id = `btn-${btn.id}`; // ID pour cibler le pseudo-élément
+	  buttons.appendChild(area);
+	});
+	sketchup.ready();
+	updateTabsHeight(); // Initialiser la hauteur correcte des tabs
+});
+// Mettre à jour la hauteur de #tabs en fonction de la hauteur du footer
+function updateTabsHeight() {
+	const footerHeight = $('#ui-footer').outerHeight(); // Hauteur du footer
+	$('#tabs').css('max-height', 'calc(100vh - ' + footerHeight + 'px)');
+}
+function formatToTwoDecimals($input) {
+  let val = parseFloat($input.val());
+  if (!isNaN(val)) {
+	$input.val(val.toFixed(2)); // toujours 2 décimales
+  }
+}
+
+$("#setToCoord" ).on( "click", function( event ) {
+	let coords = {
+				"X":$("#XStr").val(),
+				"Y":$("#YStr").val(),
+				"Z":$("#ZStr").val()
+				};
+	sketchup.buttonPress(33,coords);
+});
+
+$("#setToZero" ).on( "click", function( event ) {
+	$("#XStr").val("0.00");
+	$("#YStr").val("0.00");
+	$("#ZStr").val("0.00");
+	let coords = {
+				"X":0.00,
+				"Y":0.00,
+				"Z":0.00
+				};
+	sketchup.buttonPress(33,coords);
+});
+
+$("#SpindleSpeed").change(function() {
+  let val = parseInt($(this).val(), 10); // convertir en entier
+  if (val > 255) {
+	$(this).val(255);
+  } else if (val < 0) {
+	$(this).val(0);
+  } else {
+	$(this).val(val);
+  }
+});
+
+$("#spindleStart1" ).on( "click", function( event ) {
+	let val = {
+				"speed":parseInt($("#SpindleSpeed").val(),10)
+			  };
+	sketchup.buttonPress(34,val);
+});
+$("#spindleStart2" ).on( "click", function( event ) {
+	let val = {
+				"speed":parseInt($("#SpindleSpeed").val(),10)
+			  };
+	sketchup.buttonPress(35,val);
+});
+$("#spindleStop" ).on( "click", function( event ) {
+	sketchup.buttonPress(36,0);
+});
+
+$("#MesureMode" ).on( "click", function( event ) {
+    const btn = $(this);
+	let milimetre;
+    if (btn.text() === "Millimetre") {
+	  milimetre = false;
+      btn.text("Pouce");
+    } else {
+	  milimetre = true;
+      btn.text("Millimetre");
+    }
+	sketchup.buttonPress(37,milimetre);
+});
+$("#MovementStyle" ).on( "click", function( event ) {
+    const btn = $(this);
+	let relatif;
+    if (btn.text() === "Relatif") {
+	  relatif = false;
+      btn.text("Absolu");
+    } else {
+	  relatif = true;
+      btn.text("Relatif");
+    }
+	sketchup.buttonPress(38,relatif);
+});
+// Sur blur (quand on sort du champ)
+$("#XStr, #YStr, #ZStr").on("blur", function() {
+  formatToTwoDecimals($(this));
+});
+
+$( "#tabs" ).tabs();
+$( "#setDefault, #cancel, #accept").button();
+$( "#setDefault" ).on( "click", function( event ) {
+	obj.api_key = $("#api_key").val();
+	obj.host = $("#host").val();
+	obj.macro1 = $("#Macro1Input").val();
+	obj.macro2 = $("#Macro2Input").val();
+	obj.macro3 = $("#Macro3Input").val();
+	sketchup.setDefault(obj);
+} );
+$( "#accept" ).on( "click", function( event ) {
+	obj.api_key = $("#api_key").val();
+	obj.host = $("#host").val();
+	obj.macro1 = $("#Macro1Input").val();
+	obj.macro2 = $("#Macro2Input").val();
+	obj.macro3 = $("#Macro3Input").val();
+	sketchup.accept(obj);
+} );
+
+$( "#cancel" ).on( "click", function( event ) {
+	sketchup.cancel();
+} );
+
+$("#host").change(function(){
+  obj.host = $("#host").val();
+  sketchup.newValue("host",obj);
+}); 
+
+$( "#send" ).on( "click", function( event ) {
+	sketchup.buttonPress(30,$("#sendStr").val());
+});
+
+$("#Macro1Input").change(function(){
+  obj.macro1 = $("#Macro1Input").val();
+  sketchup.newValue("Macro1button",obj);
+}); 
+$("#Macro2Input").change(function(){
+  obj.macro2 = $("#Macro2Input").val();
+  sketchup.newValue("Macro2button",obj);
+}); 
+$("#Macro3Input").change(function(){
+  obj.macro3 = $("#Macro1Input").val();
+  sketchup.newValue("Macro3button",obj);
+}); 
+
+$( "#Macro1button" ).on( "click", function( event ) {
+	sketchup.buttonPress(30,$("#Macro1Input").val());
+});
+$( "#Macro2button" ).on( "click", function( event ) {
+	sketchup.buttonPress(30,$("#Macro2Input").val());
+});
+$( "#Macro3button" ).on( "click", function( event ) {
+	sketchup.buttonPress(30,$("#Macro3Input").val());
+});
+
+
+$("#api_key").change(function(){
+  obj.api_key = $("#api_key").val();
+  sketchup.newValue("api_key",obj);
+}); 
+
+function buttonClicked(buttonNo) {
+	let val = {
+				"speed":$("#jogSpeed").val()
+			  };
+	sketchup.buttonPress(buttonNo,val);
+};
+
+function statusDialog(datadialog) {
+	var objdata =  JSON.parse(datadialog);
+	let text = "";
+	// ping
+	text += "Host: " + (objdata.ping ? "disponible" : "non disponible") + "<br>";
+
+	// current.* infos
+	if (objdata.current) {
+		text += "État: " + objdata.current.state + "<br>";
+		text += "Baudrate: " + objdata.current.baudrate + "<br>";
+		text += "Port: " + objdata.current.port + "<br>";
+		text += "Profile: " + objdata.current.printerProfile + "<br>";
+		if (objdata.current.state === "Closed") {
+			text += '<button id="auto_connect_btn">Auto Connect</button>';
+		} else {
+			text += '<button id="disconnect_btn">Disconnect</button>';
+		}
+	}
+
+	// mettre dans #host_available
+	$("#host_available").html(text);
+	$("#auto_connect_btn").on("click", function () {
+	  sketchup.buttonPress(31,$("#sendStr").val());
+	});
+	$("#disconnect_btn").on("click", function () {
+	  sketchup.buttonPress(32,$("#sendStr").val());
+	});		
+};
+
+function  updateDialog(datajson) {
+	obj =  JSON.parse(datajson);
+	$("#host").val(obj.host);
+	$("#api_key").val(obj.api_key);
+	$("#Macro1Input").val(obj.macro1);
+	$("#Macro2Input").val(obj.macro2);
+	$("#Macro3Input").val(obj.macro3);	
+};
+
+function  updateObjects(dataobjectjson) {
+	dataobject =  JSON.parse(dataobjectjson);
+	let objectList = document.getElementById("objectList");
+	objectList.innerHTML = ""; // vider le contenu précédent
+	if (!dataobject || dataobject.length === 0) {
+		objectList.innerHTML = "<p>Aucun objet trouvé</p>";
+		return;
+	}
+	let div = document.createElement("div");
+	div.id = "object-container"; // <-- affecte l'ID
+	// Création d'une liste UL (liste non ordonnée) qui contiendra tous les fichiers
+	let ul = document.createElement("ul");
+	console.log(dataobject.objet)
+	dataobject.objet.forEach(objectx => {
+		console.log(objectx)
+		// Création d’un élément <li> (un élément de la liste)
+		let li = document.createElement("li");
+		li.innerHTML = objectx
+		ul.appendChild(li);
+	});
+	div.appendChild(ul)
+	objectList.appendChild(div);
+
+};
+
+function  updateFiles(datafilejson) {
+	files =  JSON.parse(datafilejson);
+	let fileDiv = document.getElementById("filediv");
+	fileDiv.innerHTML = ""; // vider le contenu précédent
+
+	if (!files || files.length === 0) {
+		fileDiv.innerHTML = "<p>Aucun fichier trouvé</p>";
+		return;
+	}
+	let div = document.createElement("div");
+	div.id = "file-container"; // <-- affecte l'ID
+	// Création d'une liste UL (liste non ordonnée) qui contiendra tous les fichiers
+	let ul = document.createElement("ul");
+	
+	// On parcourt le tableau `files` (retourné par OctoPrint via l’API REST)
+	files.forEach(file => {
+		// Création d’un élément <li> (un élément de la liste)
+		let li = document.createElement("li");
+		
+		// Création d’un lien <a> pour représenter le fichier
+		let link = document.createElement("a");
+		link.textContent = file.name;	 // le texte affiché = nom du fichier
+		link.href = "#"; // on met un href factice, car on va gérer le clic nous-mêmes
+		
+		// on agrandit le texte en ligne
+		link.style.fontSize = "1.5em";   // 40% plus gros
+		link.style.fontWeight = "bold";  // en gras
+		
+		// Gestionnaire d’événement quand on clique sur le lien
+		link.addEventListener("click", async (e) => {
+			e.preventDefault();		// empêche le comportement par défaut du lien (navigation)
+
+			// 🔹 Requête HTTP pour télécharger le fichier depuis OctoPrint
+			const response = await fetch(file.refs.download, {
+				headers: { "X-Api-Key": obj.api_key }
+			});
+			
+			// Vérifie si le téléchargement a échoué (403, 404, etc.)
+			if (!response.ok) {
+				alert("Erreur téléchargement: " + response.status);
+				return;
+			}
+			
+			// Récupération du fichier en tant que "Blob" (binaire brut)
+			const blob = await response.blob();
+			const url = URL.createObjectURL(blob);
+
+			// Création d’un lien invisible <a> qui va déclencher le téléchargement
+			const tempLink = document.createElement("a");
+			tempLink.href = url;
+			tempLink.download = file.name; // force le navigateur à enregistrer sous ce nom
+
+			// Ajout du lien temporaire dans le DOM pour pouvoir le "cliquer"
+			document.body.appendChild(tempLink);
+			tempLink.click(); // déclenche le téléchargement
+			// Nettoyage : on supprime le lien temporaire et on libère l’URL du blob
+			document.body.removeChild(tempLink);
+			URL.revokeObjectURL(url);
+		});
+		li.appendChild(link);
+		// Groupe de boutons sous le nom
+		let btnGroup = document.createElement("div");
+		btnGroup.classList.add("button-group");	
+		
+		// --- Bouton "Télécharger"
+		let btnDownload = document.createElement("button");
+		btnDownload.textContent = "⬇️";
+		btnDownload.title = "Télécharger le fichier";
+		btnDownload.addEventListener("click", async () => {
+			const response = await fetch(file.refs.download, {
+				headers: { "X-Api-Key": obj.api_key }
+			});
+
+			if (!response.ok) {
+				alert("Erreur téléchargement: " + response.status);
+				return;
+			}
+
+			const blob = await response.blob();
+			const url = URL.createObjectURL(blob);
+
+			const tempLink = document.createElement("a");
+			tempLink.href = url;
+			tempLink.download = file.name;
+			document.body.appendChild(tempLink);
+			tempLink.click();
+			document.body.removeChild(tempLink);
+			URL.revokeObjectURL(url);
+		});
+		btnGroup.appendChild(btnDownload);
+		
+		// --- Bouton "Pause / Resume"
+		let btnPauseResume = document.createElement("button");
+		btnPauseResume.textContent = "⏯️"; // play/pause icon
+		btnPauseResume.title = "Pause / Reprendre l'impression";
+		btnPauseResume.addEventListener("click", async () => {
+		  const response = await fetch("/api/job", {
+			method: "POST",
+			headers: {
+			  "Content-Type": "application/json",
+			  "X-Api-Key": obj.api_key
+			},
+			body: JSON.stringify({ command: "pause", action: "toggle" })
+		  });
+
+		  if (!response.ok) {
+			alert("Erreur Pause/Resume: " + response.status);
+		  } else {
+			alert("✅ Pause/Resume envoyé !");
+		  }
+		});
+		btnGroup.appendChild(btnPauseResume);
+
+		// --- Bouton "Cancel"
+		let btnCancel = document.createElement("button");
+		btnCancel.textContent = "❌";
+		btnCancel.title = "Annuler l'impression";
+		btnCancel.addEventListener("click", async () => {
+		  if (!confirm("Annuler l'impression en cours ?")) return;
+
+		  const response = await fetch("/api/job", {
+			method: "POST",
+			headers: {
+			  "Content-Type": "application/json",
+			  "X-Api-Key": obj.api_key
+			},
+			body: JSON.stringify({ command: "cancel" })
+		  });
+
+		  if (!response.ok) {
+			alert("Erreur Cancel: " + response.status);
+		  } else {
+			alert("⛔ Impression annulée !");
+		  }
+		});
+		btnGroup.appendChild(btnCancel);
+		// --- Bouton "Imprimer"
+		let btnPrint = document.createElement("button");
+		btnPrint.textContent = "🖨️";
+		btnPrint.title = "Impression";
+		btnPrint.addEventListener("click", async () => {
+			const response = await fetch(`/api/files/local/${file.name}`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-Api-Key": obj.api_key
+				},
+				body: JSON.stringify({ command: "select", print: true })
+			});
+
+			if (!response.ok) {
+				alert("Erreur impression: " + response.status);
+			} else {
+				alert("Impression démarrée !");
+			}
+		});
+		btnGroup.appendChild(btnPrint);
+
+		// --- Bouton "Supprimer"
+		let btnDelete = document.createElement("button");
+		btnDelete.textContent = "🗑️";
+		btnDelete.title = "effacer fichier";
+		btnDelete.addEventListener("click", async () => {
+			if (!confirm(`Supprimer le fichier "${file.name}" ?`)) return;
+
+			const response = await fetch(file.refs.resource, {
+				method: "DELETE",
+				headers: { "X-Api-Key": obj.api_key }
+			});
+
+			if (!response.ok) {
+				alert("Erreur suppression: " + response.status);
+			} else {
+				alert("Fichier supprimé !");
+				li.remove(); // on enlève la ligne de la liste
+			}
+		});
+		btnGroup.appendChild(btnDelete);
+		li.appendChild(btnGroup);
+		ul.appendChild(li);
+	});
+	div.appendChild(ul)
+	fileDiv.appendChild(div);
+	let dropZone = document.getElementById("dropZone");
+	let fileInput = document.getElementById("fileInput");
+	let uploadLocation = document.getElementById("uploadLocation");
+	let progressContainer = document.getElementById("progressContainer");
+	let uploadProgress = document.getElementById("uploadProgress");
+	let progressText = document.getElementById("progressText");
+
+	// Clique → ouvrir le sélecteur fichier
+	dropZone.addEventListener("click", () => fileInput.click());
+
+	// Highlight quand on survole
+	dropZone.addEventListener("dragover", (e) => {
+	  e.preventDefault();
+	  dropZone.classList.add("dragover");
+	});
+	dropZone.addEventListener("dragleave", () => {
+	  dropZone.classList.remove("dragover");
+	});
+
+	// Drop du fichier
+	dropZone.addEventListener("drop", (e) => {
+	  e.preventDefault();
+	  dropZone.classList.remove("dragover");
+	  let file = e.dataTransfer.files[0];
+	  if (file) uploadFile(file);
+	});
+
+	// Si choisi par clic
+	fileInput.addEventListener("change", () => {
+	  if (fileInput.files.length > 0) {
+		uploadFile(fileInput.files[0]);
+	  }
+	});
+
+	// Fonction d’upload avec progression
+	function uploadFile(file) {
+	  let location = uploadLocation.value;
+	  let formData = new FormData();
+	  formData.append("file", file);
+
+	  let xhr = new XMLHttpRequest();
+	  xhr.open("POST", `/api/files/${location}`, true);
+	  xhr.setRequestHeader("X-Api-Key", obj.api_key);
+
+	  // Montrer la barre
+	  progressContainer.style.display = "block";
+	  uploadProgress.value = 0;
+	  progressText.textContent = "0%";
+
+	  // Suivi progression
+	  xhr.upload.addEventListener("progress", (e) => {
+		if (e.lengthComputable) {
+		  let percent = Math.round((e.loaded / e.total) * 100);
+		  uploadProgress.value = percent;
+		  progressText.textContent = percent + "%";
+		}
+	  });
+
+	  // Fin de l’upload
+	  xhr.onload = () => {
+		if (xhr.status >= 200 && xhr.status < 300) {
+		  alert(`✅ ${file.name} uploadé sur ${location}`);
+		  updateFileList();
+		} else {
+		  alert("Erreur upload: " + xhr.status);
+		}
+		fileInput.value = "";
+		progressContainer.style.display = "none"; // cacher après upload
+	  };
+
+	  xhr.onerror = () => {
+		alert("Erreur réseau lors de l’upload !");
+		progressContainer.style.display = "none";
+	  };
+
+	  xhr.send(formData);
+	}
+};

@@ -3,95 +3,15 @@
 <head>
   <link href="../js/jquery-ui.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/Sketchup.css" type="text/css" charset="utf-8" />
-  <style>
-  #file-container {
-/*  width: 510px;         largeur fixe (ajuste selon besoin) */
-  height: 350px;       /* hauteur visible */
-  overflow-y: auto;    /* scrollbar verticale si contenu dépasse */
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 8px;
-  background: #f9f9f9;
- }
-  #filediv ul {
-    list-style: none;
-    padding: 0;
-	height: 280px;       /* hauteur visible */
-  }
-
-  #filediv li {
-    display: flex;
-    flex-direction: column;  /* empile nom puis boutons */
-/*	overflow-y: auto;     scrollbar verticale si contenu dépasse */
-    margin-bottom: 1px;
-    padding: 15px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    background: #f9f9f9;
-/*    width: 450px;  largeur fixe optionnelle */
-  }
-
-  .file-name {
-    font-weight: bold;
-    margin-bottom: 6px;
-	color: #333;         /* couleur plus foncée */
-    font-size: 2em; /* texte plus grand */
-  }
-
-  .button-group {
-    display: flex;
-	justify-content: flex-end; /* pousse les boutons à droite */
-    gap: 8px; /* espace entre les boutons */
-  }
-
-  .button-group button {
-	flex: 0; /* les boutons gardent leur taille naturelle */
-/*    flex: 1;  chaque bouton prend la même largeur  */
-  }
-
-  #upload-section {
-    margin: 12px 0;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background: #f8f8f8;
-  }
-
-  #dropZone {
-    border: 2px dashed #999;
-    border-radius: 8px;
-    padding: 30px;
-    text-align: center;
-    cursor: pointer;
-    color: #666;
-    background: #fafafa;
-    margin-bottom: 10px;
-    transition: background 0.2s, border-color 0.2s;
-  }
-
-  #dropZone.dragover {
-    background: #e6f7ff;
-    border-color: #007bff;
-    color: #007bff;
-  }
-
-  progress {
-    width: 100%;
-    height: 16px; 
-  }
-  .wrapper {
-    display: flex;
-    justify-content: flex-end; /* aligne à droite */
-    gap: 20px; /* espace entre les deux div */
-  }
-  </style>
+  <link rel="stylesheet" href="../css/styles.css" type="text/css" charset="utf-8" />
 </head>
 <body class="bg-panel-background">
 	<div id="tabs">
 		<ul>
 			<li><a href="#tabs-1" id = "Command">Files</a></li>
 			<li><a href="#tabs-2" id = "GCode">Control</a></li>
-			<li><a href="#tabs-3" id = "Config">Config</a></li>
+			<li><a href="#tabs-3" id = "Objects">Objects</a></li>
+			<li><a href="#tabs-4" id = "Config">Config</a></li>
 		</ul>
 		<div id="tabs-1" style="display: none;">
 			<div class="container"  style="margin: 10px;">
@@ -122,176 +42,78 @@
 			</div>
 		</div>
 		<div id="tabs-2" style="display: none;">
-			<div class="wrapper">
-				<div class="container"  style="margin: 10px; width: 480px;">
-					<button id="setToCoord" class="ui-button ui-widget ui-corner-all">Set To:</button><br>
-					<label>X: <input id="XStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
-					<label>Y: <input id="YStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
-					<label>Z: <input id="ZStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
-					<button id="setToZero" class="ui-button ui-widget ui-corner-all">Set Zero coords</button>
-					<br>Spindle:<br>
-					<button id="spindleStart1" class="ui-button ui-widget ui-corner-all">Horaire</button>
-					<button id="spindleStart2" class="ui-button ui-widget ui-corner-all">Anti-Horaire</button>
-					<label>Vitesse: <input id="SpindleSpeed" type="number" step="1" class="def-cnc-input" min="0" max="255" style="margin: 3px; width: 200px; text-align: right;"></label>
-					<button id="spindleStop" class="ui-button ui-widget ui-corner-all">Arret</button>
-					<br>Misc:<br>
-					<button id="MesureMode" class="ui-button ui-widget ui-corner-all">Millimetre/Pouce</button>
-					<button id="MovementStyle" class="ui-button ui-widget ui-corner-all">Relatif/Absolu</button>
-					<!--<img src="../images/moreControls.jpg" usemap="#image-map2" alt="moreControls" style="max-width:100%; height:auto;">-->
+			<div style="display: flex; gap: 20px; align-items: flex-start;">
+			  <div class="container"  style="margin: 10px;">
+				<div class="spindlecontainer" style = "width:240px;">
+					<button id="setToCoord" class="def-button">Set To:</button><br>
+					<div style="display:flex; align-items:center; gap:8px;">
+						<label>X: <input id="XStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
+					</div>
+					<div style="display:flex; align-items:center; gap:8px;">
+						<label>Y: <input id="YStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
+					</div>
+					<div style="display:flex; align-items:center; gap:8px;">
+						<label>Z: <input id="ZStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
+					</div>
+					<button id="setToZero" class="def-button">Set Zero coords</button>
 				</div>
-				<div class="container"  style="margin: 10px;">
-					<img src="../images/senderControl.jpg" usemap="#image-map" alt="senderControl" style="max-width:100%; height:auto;">
-					<map name="image-map">
-					  <!-- Home X -->
-					  <area target="" alt="Bouton 1" title="Home X"
-							href="javascript:buttonClicked(1);"
-							coords="12,3,60,3,60,13,21,52,12,52,12,3" shape="poly">
-
-					  <!-- Home Y -->
-					  <area target="" alt="Bouton 2" title="Home Y"
-							href="javascript:buttonClicked(2);"
-							coords="187,3,237,3,237,52,227,52,187,14,187,3" shape="poly">
-
-
-					  <!-- Home Z -->
-					  <area target="" alt="Bouton 3" title="Home Z"
-							href="javascript:buttonClicked(3);"
-							coords="187,221,187,230,237,230,237,181,230,181,187,221" shape="poly">
-
-					  <!-- Home All -->
-					  <area target="" alt="Bouton 4" title="Home"
-							href="javascript:buttonClicked(4);"
-							coords="12,230,60,230,60,221,21,181,12,181,12,3" shape="poly">
-
-					  <!-- Z+ 100 -->
-					  <area target="" alt="Bouton 5" title="Z 100"
-							href="javascript:buttonClicked(5);"
-							coords="260,3,297,3,297,35,260,35,260,3" shape="poly">
-
-					  <!-- Z+ 10 -->
-					  <area target="" alt="Bouton 6" title="Z 10"
-							href="javascript:buttonClicked(6);"
-							coords="260,35,297,35,297,63,260,63,260,35" shape="poly">
-
-					  <!-- Z+ 1 -->
-					  <area target="" alt="Bouton 7" title="Z 1"
-							href="javascript:buttonClicked(7);"
-							coords="260,63,297,63,297,88,260,88,260,63" shape="poly">
-
-					  <!-- Z+ 0.1 -->
-					  <area target="" alt="Bouton 8" title="Z 0.1"
-							href="javascript:buttonClicked(8);"
-							coords="260,88,297,88,297,106,260,106,260,88" shape="poly">
-
-					  <!-- Z- 0.1 -->
-					  <area target="" alt="Bouton 9" title="Z -0.1"
-							href="javascript:buttonClicked(9);"
-							coords="260,124,297,124,297,146,260,146,260,124" shape="poly">
-
-					  <!-- Z- 1 -->
-					  <area target="" alt="Bouton 10" title="Z -1"
-							href="javascript:buttonClicked(10);"
-							coords="260,146,297,146,297,170,260,170,260,146" shape="poly">
-
-					  <!-- Z- 10 -->
-					  <area target="" alt="Bouton 11" title="Z -10"
-							href="javascript:buttonClicked(11);"
-							coords="260,170,297,170,297,197,260,197,260,170" shape="poly">
-
-					  <!-- Z- 100 -->
-					  <area target="" alt="Bouton 12" title="Z -100"
-							href="javascript:buttonClicked(12);"
-							coords="260,197,297,197,297,227,260,227,260,3" shape="poly">
-
-					  <!-- X+ 100 -->
-					  <area target="" alt="Bouton 13" title="X 100"
-							href="javascript:buttonClicked(13);"
-							coords="195,177,214,118,195,56,209,41,237,118,209,190" shape="poly">
-
-					  <!-- X+ 10 -->
-					  <area target="" alt="Bouton 14" title="X 10"
-							href="javascript:buttonClicked(14);"
-							coords="176,75,195,118,176,160,195,177,214,118,195,56" shape="poly">
-
-					  <!-- X+ 1 -->
-					  <area target="" alt="Bouton 15" title="X 1"
-							href="javascript:buttonClicked(15);"
-							coords="157,143,170,118,157,93,176,75,195,118,176,160" shape="poly">
-
-					  <!-- X+ 0.1 -->
-					  <area target="" alt="Bouton 16" title="X 0.1"
-							href="javascript:buttonClicked(16);"
-							coords="135,118,157,143,170,118,157,93,135,118" shape="poly">
-
-					  <!-- X- 0.1 -->
-					  <area target="" alt="Bouton 17" title="X -0.1"
-							href="javascript:buttonClicked(17);"
-							coords="115,118,90,143,83,118,90,93,115,118" shape="poly">
-
-					  <!-- X- 1 -->
-					  <area target="" alt="Bouton 18" title="X -1"
-							href="javascript:buttonClicked(18);"
-							coords="90,143,83,118,90,93,73,76,57,118,73,160" shape="poly">
-
-					  <!-- X- 10 -->
-					  <area target="" alt="Bouton 19" title="X -10"
-							href="javascript:buttonClicked(19);"
-							coords="73,76,57,118,73,160,56,177,31,118,59,59" shape="poly">
-
-					  <!-- X- 100 -->
-					  <area target="" alt="Bouton 20" title="X -100"
-							href="javascript:buttonClicked(20);"
-							coords="56,177,31,118,59,59,42,42,13,118,42,194" shape="poly">
-
-					  <!-- Y+ 100 -->
-					  <area target="" alt="Bouton 21" title="Y 100"
-							href="javascript:buttonClicked(21);"
-							coords="64,49,125,28,182,47,196,35,125,5,52,34" shape="poly">
-
-					  <!-- Y+ 10 -->
-					  <area target="" alt="Bouton 22" title="Y 10"
-							href="javascript:buttonClicked(22);"
-							coords="170,67,125,52,85,67,64,49,125,28,182,47" shape="poly">
-
-					  <!-- Y+ 1 -->
-					  <area target="" alt="Bouton 23" title="Y 1"
-							href="javascript:buttonClicked(23);"
-							coords="102,88,125,75,148,84,170,67,125,52,85,67" shape="poly">
-
-
-					  <!-- Y+ 0.1 -->
-					  <area target="" alt="Bouton 24" title="Y 0.1"
-							href="javascript:buttonClicked(24);"
-							coords="124,110,102,88,125,75,148,84" shape="poly">
-
-					  <!-- Y- 0.1 -->
-					  <area target="" alt="Bouton 25" title="Y -0.1"
-							href="javascript:buttonClicked(25);"
-							coords="125,128,101,152,125,161,150,152" shape="poly">
-
-					  <!-- Y- 1 -->
-					  <area target="" alt="Bouton 26" title="Y -1"
-							href="javascript:buttonClicked(26);"
-							coords="101,152,125,161,150,152,168,170,125,186,82,169" shape="poly">
-
-					  <!-- Y- 10 -->
-					  <area target="" alt="Bouton 27" title="Y -10"
-							href="javascript:buttonClicked(27);"
-							coords="168,170,125,186,82,169,65,187,125,210,185,188" shape="poly">
-
-					  <!-- Y- 100 -->
-					  <area target="" alt="Bouton 28" title="Y -100"
-							href="javascript:buttonClicked(28);"
-							coords="65,187,125,210,185,188,198,200,124,230,51,200" shape="poly">
-					
-					</map>
-					<br>
-					<label>Send: <input id="sendStr" class="def-cnc-input" style="width: 480px"></label>
-					<button id="send" class="ui-button ui-widget ui-corner-all">Send</button>
+				<div class="spindlecontainer">
+					Spindle:<br>
+					<button id="spindleStart1" class="def-button">Horaire</button>
+					<button id="spindleStart2" class="def-button">Anti-Horaire</button>
+					<div style="display:flex; align-items:center; gap:8px;">
+						<label>Vitesse: <input id="SpindleSpeed" type="number" step="1" class="def-cnc-input" min="0" max="255" style="margin: 3px; width: 200px; text-align: right;"></label>
+					</div>
+					<button id="spindleStop" class="def-button">Arret</button>
 				</div>
-			</div>
+				<div class="spindlecontainer">
+					Misc:<br>
+					<button id="MesureMode" class="def-button">Millimetre</button>
+					<button id="MovementStyle" class="def-button">Absolu</button>
+				</div>
+			  </div>
+			  <div class="spindlecontainer" style = "width:400px; height:340px;">
+			    <div id="jog-buttons" style="position:relative; width:400px; height:340px;">
+			    </div>
+			    <div class="container"  style="margin: 10px;">
+			      <label>Vitesse: <input id="jogSpeed" type="number" step="1" class="def-cnc-input" min="0" max="255" style="margin: 3px; width: 200px; text-align: right;"></label>
+			    </div>
+			  </div>
+            </div>
+			<div class="container" style = "width:100%;">
+			  <div class="container"  style="margin: 10px;">
+				<div style="display:flex; align-items:center; gap:8px;">
+				  <input id="sendStr" class="def-cnc-input" style="width: 400px">
+				  <button id="send" class="ui-button ui-widget ui-corner-all">Send</button>
+				</div>
+				<div style="display:flex; align-items:center; gap:8px;">
+				  <label for="sendStr">Macro 1:</label>
+				  <input id="Macro1Input" class="def-cnc-input" style="width: 400px">
+				  <button id="Macro1button" class="ui-button ui-widget ui-corner-all">Send</button>
+				</div>
+				<div style="display:flex; align-items:center; gap:8px;">
+				  <label for="sendStr">Macro 2:</label>
+				  <input id="Macro2Input" class="def-cnc-input" style="width: 400px">
+				  <button id="Macro2button" class="ui-button ui-widget ui-corner-all">Send</button>
+				</div>
+				<div style="display:flex; align-items:center; gap:8px;">
+				  <label for="sendStr">Macro 3:</label>
+				  <input id="Macro3Input" class="def-cnc-input" style="width: 400px">
+				  <button id="Macro3button" class="ui-button ui-widget ui-corner-all">Send</button>
+				</div>
+			  </div>	
+		    </div>
 		</div>
 		<div id="tabs-3" style="display: none;">
+		<div class="container" style="text-align: center; color: #333;">
+		<h1>Liste d objets CNC</h1> 
+		</div>
+		<div class="spindlecontainer" style = "width:95%; height:340px;">
+		<div id="objectList">
+		</div>
+		</div>
+		</div>	
+		<div id="tabs-4" style="display: none;">
 			<div class="container"  style="margin: 10px;">
 				<label>Host: <input id="host" class="def-cnc-input" style="width: 360px"></label>
 			</div>
@@ -321,416 +143,6 @@
   <script src="../js/external/jquery/jquery.js"></script>
   <script src="../js/jquery-ui.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-  <script>
-  	var obj;
-	var files;
-	var apikey;
-	$(document).ready(function(){
-		$("#XStr").val("0.00");
-		$("#YStr").val("0.00");
-		$("#ZStr").val("0.00");
-		$("#SpindleSpeed").val("255")
-		sketchup.ready();
-		updateTabsHeight(); // Initialiser la hauteur correcte des tabs
-	});
-	// Mettre à jour la hauteur de #tabs en fonction de la hauteur du footer
-	function updateTabsHeight() {
-		const footerHeight = $('#ui-footer').outerHeight(); // Hauteur du footer
-		$('#tabs').css('max-height', 'calc(100vh - ' + footerHeight + 'px)');
-	}
-	function formatToTwoDecimals($input) {
-	  let val = parseFloat($input.val());
-	  if (!isNaN(val)) {
-	    $input.val(val.toFixed(2)); // toujours 2 décimales
-	  }
-	}
-
-	$("#setToCoord" ).on( "click", function( event ) {
-		let coords = {
-					"X":$("#XStr").val(),
-					"Y":$("#YStr").val(),
-					"Z":$("#ZStr").val()
-					};
-		sketchup.buttonPress(33,coords);
-	});
-
-	$("#setToZero" ).on( "click", function( event ) {
-		$("#XStr").val("0.00");
-		$("#YStr").val("0.00");
-		$("#ZStr").val("0.00");
-		let coords = {
-					"X":0.00,
-					"Y":0.00,
-					"Z":0.00
-					};
-		sketchup.buttonPress(33,coords);
-	});
-	
-	$("#SpindleSpeed").change(function() {
-	  let val = parseInt($(this).val(), 10); // convertir en entier
-	  if (val > 255) {
-		$(this).val(255);
-	  } else if (val < 0) {
-		$(this).val(0);
-	  } else {
-		$(this).val(val);
-	  }
-	});
-	
-	$("#spindleStart1" ).on( "click", function( event ) {
-		let val = {
-					"speed":parseInt($("#SpindleSpeed").val(),10)
-				  };
-		sketchup.buttonPress(34,val);
-	});
-	$("#spindleStart2" ).on( "click", function( event ) {
-		let val = {
-					"speed":parseInt($("#SpindleSpeed").val(),10)
-				  };
-		sketchup.buttonPress(35,val);
-	});
-	$("#spindleStop" ).on( "click", function( event ) {
-		sketchup.buttonPress(36,0);
-	});
-	$("#MesureMode" ).on( "click", function( event ) {
-		sketchup.buttonPress(37,0);
-	});
-	$("#MovementStyle" ).on( "click", function( event ) {
-		sketchup.buttonPress(38,0);
-	});
-	// Sur blur (quand on sort du champ)
-	$("#XStr, #YStr, #ZStr").on("blur", function() {
-	  formatToTwoDecimals($(this));
-	});
-	
-	$( "#tabs" ).tabs();
-	$( "#setDefault, #cancel, #accept").button();
-	$( "#setDefault" ).on( "click", function( event ) {
-		sketchup.setDefault(obj);
-	} );
-	$( "#accept" ).on( "click", function( event ) {
-		obj.api_key = $("#api_key").val();
-		obj.host = $("#host").val();
-		sketchup.accept(obj);
-	} );
-	$( "#cancel" ).on( "click", function( event ) {
-		sketchup.cancel();
-	} );
-	$("#host").change(function(){
-	  obj.host = $("#host").val();
-	  sketchup.newValue("host",obj);
-    }); 
-	
-	$( "#send" ).on( "click", function( event ) {
-		sketchup.buttonPress(30,$("#sendStr").val());
-	});
-
-	
-	$("#api_key").change(function(){
-	  obj.api_key = $("#api_key").val();
-	  sketchup.newValue("api_key",obj);
-    }); 
-
-	function buttonClicked(buttonNo) {
-		sketchup.buttonPress(buttonNo,obj);
-	};
-	
-	function statusDialog(datadialog) {
-		var objdata =  JSON.parse(datadialog);
-		let text = "";
-		// ping
-		text += "Host: " + (objdata.ping ? "disponible" : "non disponible") + "<br>";
-
-		// current.* infos
-		if (objdata.current) {
-			text += "État: " + objdata.current.state + "<br>";
-			text += "Baudrate: " + objdata.current.baudrate + "<br>";
-			text += "Port: " + objdata.current.port + "<br>";
-			text += "Profile: " + objdata.current.printerProfile + "<br>";
-			if (objdata.current.state === "Closed") {
-				text += '<button id="auto_connect_btn">Auto Connect</button>';
-			} else {
-				text += '<button id="disconnect_btn">Disconnect</button>';
-			}
-		}
-
-		// mettre dans #host_available
-		$("#host_available").html(text);
-        $("#auto_connect_btn").on("click", function () {
-		  sketchup.buttonPress(31,$("#sendStr").val());
-	    });
-        $("#disconnect_btn").on("click", function () {
-		  sketchup.buttonPress(32,$("#sendStr").val());
-	    });		
-	};
-	
-	function  updateDialog(datajson) {
-		obj =  JSON.parse(datajson);
-		$("#host").val(obj.host);
-		$("#api_key").val(obj.api_key);
-	};
-	
-	function  updateFiles(datafilejson) {
-		files =  JSON.parse(datafilejson);
-		let fileDiv = document.getElementById("filediv");
-		fileDiv.innerHTML = ""; // vider le contenu précédent
-
-		if (!files || files.length === 0) {
-			fileDiv.innerHTML = "<p>Aucun fichier trouvé</p>";
-			return;
-		}
-		let div = document.createElement("div");
-		div.id = "file-container"; // <-- affecte l'ID
-		// Création d'une liste UL (liste non ordonnée) qui contiendra tous les fichiers
-		let ul = document.createElement("ul");
-		
-		// On parcourt le tableau `files` (retourné par OctoPrint via l’API REST)
-		files.forEach(file => {
-			// Création d’un élément <li> (un élément de la liste)
-			let li = document.createElement("li");
-			
-			// Création d’un lien <a> pour représenter le fichier
-			let link = document.createElement("a");
-			link.textContent = file.name;	 // le texte affiché = nom du fichier
-			link.href = "#"; // on met un href factice, car on va gérer le clic nous-mêmes
-			
-			// on agrandit le texte en ligne
-			link.style.fontSize = "1.5em";   // 40% plus gros
-			link.style.fontWeight = "bold";  // en gras
-			
-			// Gestionnaire d’événement quand on clique sur le lien
-			link.addEventListener("click", async (e) => {
-				e.preventDefault();		// empêche le comportement par défaut du lien (navigation)
-
-				// 🔹 Requête HTTP pour télécharger le fichier depuis OctoPrint
-				const response = await fetch(file.refs.download, {
-					headers: { "X-Api-Key": obj.api_key }
-				});
-				
-				// Vérifie si le téléchargement a échoué (403, 404, etc.)
-				if (!response.ok) {
-					alert("Erreur téléchargement: " + response.status);
-					return;
-				}
-				
-				// Récupération du fichier en tant que "Blob" (binaire brut)
-				const blob = await response.blob();
-				const url = URL.createObjectURL(blob);
-
-				// Création d’un lien invisible <a> qui va déclencher le téléchargement
-				const tempLink = document.createElement("a");
-				tempLink.href = url;
-				tempLink.download = file.name; // force le navigateur à enregistrer sous ce nom
-
-				// Ajout du lien temporaire dans le DOM pour pouvoir le "cliquer"
-				document.body.appendChild(tempLink);
-				tempLink.click(); // déclenche le téléchargement
-				// Nettoyage : on supprime le lien temporaire et on libère l’URL du blob
-				document.body.removeChild(tempLink);
-				URL.revokeObjectURL(url);
-			});
-			li.appendChild(link);
-			// Groupe de boutons sous le nom
-			let btnGroup = document.createElement("div");
-			btnGroup.classList.add("button-group");	
-			
-			// --- Bouton "Télécharger"
-			let btnDownload = document.createElement("button");
-			btnDownload.textContent = "⬇️";
-			btnDownload.title = "Télécharger le fichier";
-			btnDownload.addEventListener("click", async () => {
-				const response = await fetch(file.refs.download, {
-					headers: { "X-Api-Key": obj.api_key }
-				});
-
-				if (!response.ok) {
-					alert("Erreur téléchargement: " + response.status);
-					return;
-				}
-
-				const blob = await response.blob();
-				const url = URL.createObjectURL(blob);
-
-				const tempLink = document.createElement("a");
-				tempLink.href = url;
-				tempLink.download = file.name;
-				document.body.appendChild(tempLink);
-				tempLink.click();
-				document.body.removeChild(tempLink);
-				URL.revokeObjectURL(url);
-			});
-			btnGroup.appendChild(btnDownload);
-			
-			// --- Bouton "Pause / Resume"
-			let btnPauseResume = document.createElement("button");
-			btnPauseResume.textContent = "⏯️"; // play/pause icon
-			btnPauseResume.title = "Pause / Reprendre l'impression";
-			btnPauseResume.addEventListener("click", async () => {
-			  const response = await fetch("/api/job", {
-				method: "POST",
-				headers: {
-				  "Content-Type": "application/json",
-				  "X-Api-Key": obj.api_key
-				},
-				body: JSON.stringify({ command: "pause", action: "toggle" })
-			  });
-
-			  if (!response.ok) {
-				alert("Erreur Pause/Resume: " + response.status);
-			  } else {
-				alert("✅ Pause/Resume envoyé !");
-			  }
-			});
-			btnGroup.appendChild(btnPauseResume);
-
-			// --- Bouton "Cancel"
-			let btnCancel = document.createElement("button");
-			btnCancel.textContent = "❌";
-			btnCancel.title = "Annuler l'impression";
-			btnCancel.addEventListener("click", async () => {
-			  if (!confirm("Annuler l'impression en cours ?")) return;
-
-			  const response = await fetch("/api/job", {
-				method: "POST",
-				headers: {
-				  "Content-Type": "application/json",
-				  "X-Api-Key": obj.api_key
-				},
-				body: JSON.stringify({ command: "cancel" })
-			  });
-
-			  if (!response.ok) {
-				alert("Erreur Cancel: " + response.status);
-			  } else {
-				alert("⛔ Impression annulée !");
-			  }
-			});
-			btnGroup.appendChild(btnCancel);
-			// --- Bouton "Imprimer"
-			let btnPrint = document.createElement("button");
-			btnPrint.textContent = "🖨️";
-			btnPrint.title = "Impression";
-			btnPrint.addEventListener("click", async () => {
-				const response = await fetch(`/api/files/local/${file.name}`, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						"X-Api-Key": obj.api_key
-					},
-					body: JSON.stringify({ command: "select", print: true })
-				});
-
-				if (!response.ok) {
-					alert("Erreur impression: " + response.status);
-				} else {
-					alert("Impression démarrée !");
-				}
-			});
-			btnGroup.appendChild(btnPrint);
-
-			// --- Bouton "Supprimer"
-			let btnDelete = document.createElement("button");
-			btnDelete.textContent = "🗑️";
-			btnDelete.title = "effacer fichier";
-			btnDelete.addEventListener("click", async () => {
-				if (!confirm(`Supprimer le fichier "${file.name}" ?`)) return;
-
-				const response = await fetch(file.refs.resource, {
-					method: "DELETE",
-					headers: { "X-Api-Key": obj.api_key }
-				});
-
-				if (!response.ok) {
-					alert("Erreur suppression: " + response.status);
-				} else {
-					alert("Fichier supprimé !");
-					li.remove(); // on enlève la ligne de la liste
-				}
-			});
-			btnGroup.appendChild(btnDelete);
-			li.appendChild(btnGroup);
-			ul.appendChild(li);
-		});
-		div.appendChild(ul)
-		fileDiv.appendChild(div);
-		let dropZone = document.getElementById("dropZone");
-		let fileInput = document.getElementById("fileInput");
-		let uploadLocation = document.getElementById("uploadLocation");
-		let progressContainer = document.getElementById("progressContainer");
-		let uploadProgress = document.getElementById("uploadProgress");
-		let progressText = document.getElementById("progressText");
-
-		// Clique → ouvrir le sélecteur fichier
-		dropZone.addEventListener("click", () => fileInput.click());
-
-		// Highlight quand on survole
-		dropZone.addEventListener("dragover", (e) => {
-		  e.preventDefault();
-		  dropZone.classList.add("dragover");
-		});
-		dropZone.addEventListener("dragleave", () => {
-		  dropZone.classList.remove("dragover");
-		});
-
-		// Drop du fichier
-		dropZone.addEventListener("drop", (e) => {
-		  e.preventDefault();
-		  dropZone.classList.remove("dragover");
-		  let file = e.dataTransfer.files[0];
-		  if (file) uploadFile(file);
-		});
-
-		// Si choisi par clic
-		fileInput.addEventListener("change", () => {
-		  if (fileInput.files.length > 0) {
-			uploadFile(fileInput.files[0]);
-		  }
-		});
-
-		// Fonction d’upload avec progression
-		function uploadFile(file) {
-		  let location = uploadLocation.value;
-		  let formData = new FormData();
-		  formData.append("file", file);
-
-		  let xhr = new XMLHttpRequest();
-		  xhr.open("POST", `/api/files/${location}`, true);
-		  xhr.setRequestHeader("X-Api-Key", obj.api_key);
-
-		  // Montrer la barre
-		  progressContainer.style.display = "block";
-		  uploadProgress.value = 0;
-		  progressText.textContent = "0%";
-
-		  // Suivi progression
-		  xhr.upload.addEventListener("progress", (e) => {
-			if (e.lengthComputable) {
-			  let percent = Math.round((e.loaded / e.total) * 100);
-			  uploadProgress.value = percent;
-			  progressText.textContent = percent + "%";
-			}
-		  });
-
-		  // Fin de l’upload
-		  xhr.onload = () => {
-			if (xhr.status >= 200 && xhr.status < 300) {
-			  alert(`✅ ${file.name} uploadé sur ${location}`);
-			  updateFileList();
-			} else {
-			  alert("Erreur upload: " + xhr.status);
-			}
-			fileInput.value = "";
-			progressContainer.style.display = "none"; // cacher après upload
-		  };
-
-		  xhr.onerror = () => {
-			alert("Erreur réseau lors de l’upload !");
-			progressContainer.style.display = "none";
-		  };
-
-		  xhr.send(formData);
-		}
-	};
-  </script>
+  <script src="../Scripts/GN_OctoPrint.js"></script>
 </body>
 </html>

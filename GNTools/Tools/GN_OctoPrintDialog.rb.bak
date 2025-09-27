@@ -146,6 +146,26 @@ module GNTools
 			when 32
 				puts "$$Bouton disconnect$$"
 				GNTools.octoPrint.connexion(false)
+			when 33 #setToCoord
+				puts "$$Bouton G92 X#{object1["X"]} Y#{object1["Y"]} Z#{object1["Z"]}$$"
+				GNTools.octoPrint.send_gcode("G92 X#{object1["X"]} Y#{object1["Y"]} Z#{object1["Z"]}")
+			when 34 #spindleStart1
+				vitesse = object1["speed"]
+				puts "$$Bouton M3 S#{vitesse}$$"
+				GNTools.octoPrint.send_gcode("M3 S#{vitesse}")
+			when 35 #spindleStart2
+				vitesse = 255 - object1["speed"]
+				puts "$$Bouton M4 S#{vitesse}$$"
+				GNTools.octoPrint.send_gcode("M4 S#{vitesse}")
+			when 36 #spindleStop
+				puts "$$Bouton M5$$"
+				GNTools.octoPrint.send_gcode("M5")
+			when 37 #MesureMode
+				puts "$$Bouton G90$$"
+				GNTools.octoPrint.send_gcode("G90")
+			when 38 #MovementStyle
+				puts "$$Bouton G91$$"
+				GNTools.octoPrint.send_gcode("G91")
 			else
 				puts "$$Bouton inconnu : #{value}$$"
 				

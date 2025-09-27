@@ -24,3 +24,158 @@
 #longText div.selected {
     background-color: #cfcf19; /* Change the background color for selected lines */
 }
+
+#file-container {
+/*  width: 510px;         largeur fixe (ajuste selon besoin) */
+	height: 350px;       /* hauteur visible */
+	overflow-y: auto;    /* scrollbar verticale si contenu dépasse */
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	padding: 8px;
+	background: #f9f9f9;
+}
+
+#filediv ul {
+    list-style: none;
+    padding: 0;
+	height: 280px;       /* hauteur visible */
+}
+
+#filediv li {
+    display: flex;
+    flex-direction: column;  /* empile nom puis boutons */
+/*	overflow-y: auto;     scrollbar verticale si contenu dépasse */
+    margin-bottom: 1px;
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+/*    width: 450px;  largeur fixe optionnelle */
+}
+
+.file-name {
+    font-weight: bold;
+    margin-bottom: 6px;
+	color: #333;         /* couleur plus foncée */
+    font-size: 2em; /* texte plus grand */
+}
+
+.button-group {
+    display: flex;
+	justify-content: flex-end; /* pousse les boutons à droite */
+    gap: 8px; /* espace entre les boutons */
+}
+
+.button-group button {
+	flex: 0; /* les boutons gardent leur taille naturelle */
+/*    flex: 1;  chaque bouton prend la même largeur  */
+}
+
+#upload-section {
+    margin: 12px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #f8f8f8;
+}
+
+#dropZone {
+    border: 2px dashed #999;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    color: #666;
+    background: #fafafa;
+    margin-bottom: 10px;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+#dropZone.dragover {
+    background: #e6f7ff;
+    border-color: #007bff;
+    color: #007bff;
+}
+
+progress {
+    width: 100%;
+    height: 16px; 
+}
+
+.wrapper {
+    display: flex;
+    justify-content: flex-end; /* aligne à droite */
+    gap: 20px; /* espace entre les deux div */
+}
+.cnc-wrapper {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  justify-content: center;
+}
+
+.def-button {
+  border: 3px solid #0ffffff;
+  margin: 3px;
+  cursor: pointer;
+  font-family: "Courier New", monospace;
+  background: rgba(0,128,0,0.6);  /* fond sombre semi-transparent */
+/*  background: rgba(0,150,255,0.2);  si tu veux garder un fond visible */
+  color: white;                   /* couleur du texte */
+  transition: all 0.2s ease-in-out;
+}
+
+.def-button:hover {
+  background: rgba(0,255,0,0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.jog-btn {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  background: rgba(40, 40, 40, 0.8);  /* fond sombre semi-transparent */
+/*  background: rgba(0,150,255,0.2);  si tu veux garder un fond visible */
+  color: white;                   /* couleur du texte */
+  transition: all 0.2s ease-in-out;
+}
+
+.jog-layout {
+  display: flex;
+  flex-direction: column;
+  height: 95%;
+  width: 80%;
+  justify-content: space-between; /* espace haut/bas */
+  text-align: left;
+  font-family: "Courier New", monospace;
+}
+
+.jog-layout .row {
+  display: flex;
+  justify-content: space-between; /* espace entre X et Y */
+  padding: 0 10px;                /* marge gauche/droite */
+}
+
+.jog-layout .spacer {
+  flex: 1; /* pousse le Z vers le bas */
+}
+
+/* effet hover */
+.jog-btn:hover {
+  background: rgba(60, 60, 60, 0.9);
+  transform: translateY(-2px);
+}
+
+/* effet clic */
+.jog-btn:active {
+  transform: translateY(0px) scale(0.98);
+}
+
+.spindlecontainer {
+  margin: 10px;
+  border: 1px solid black;   /* épaisseur 1px, trait plein, noir */
+  padding: 8px;              /* espace interne */
+  border-radius: 6px;        /* coins arrondis (optionnel) */
+}

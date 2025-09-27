@@ -124,10 +124,20 @@
 		<div id="tabs-2" style="display: none;">
 			<div class="wrapper">
 				<div class="container"  style="margin: 10px; width: 480px;">
+					<button id="setToCoord" class="ui-button ui-widget ui-corner-all">Set To:</button><br>
 					<label>X: <input id="XStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
 					<label>Y: <input id="YStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
 					<label>Z: <input id="ZStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>
-					<img src="../images/moreControls.jpg" usemap="#image-map2" alt="moreControls" style="max-width:100%; height:auto;">
+					<button id="setToZero" class="ui-button ui-widget ui-corner-all">Set Zero coords</button>
+					<br>Spindle:<br>
+					<button id="spindleStart1" class="ui-button ui-widget ui-corner-all">Horaire</button>
+					<button id="spindleStart2" class="ui-button ui-widget ui-corner-all">Anti-Horaire</button>
+					<label>Vitesse: <input id="SpindleSpeed" type="number" step="1" class="def-cnc-input" min="0" max="255" style="margin: 3px; width: 200px; text-align: right;"></label>
+					<button id="spindleStop" class="ui-button ui-widget ui-corner-all">Arret</button>
+					<br>Misc:<br>
+					<button id="MesureMode" class="ui-button ui-widget ui-corner-all">Millimetre/Pouce</button>
+					<button id="MovementStyle" class="ui-button ui-widget ui-corner-all">Relatif/Absolu</button>
+					<!--<img src="../images/moreControls.jpg" usemap="#image-map2" alt="moreControls" style="max-width:100%; height:auto;">-->
 				</div>
 				<div class="container"  style="margin: 10px;">
 					<img src="../images/senderControl.jpg" usemap="#image-map" alt="senderControl" style="max-width:100%; height:auto;">
@@ -319,6 +329,7 @@
 		$("#XStr").val("0.00");
 		$("#YStr").val("0.00");
 		$("#ZStr").val("0.00");
+		$("#SpindleSpeed").val("255")
 		sketchup.ready();
 		updateTabsHeight(); // Initialiser la hauteur correcte des tabs
 	});
@@ -334,6 +345,59 @@
 	  }
 	}
 
+	$("#setToCoord" ).on( "click", function( event ) {
+		let coords = {
+					"X":$("#XStr").val(),
+					"Y":$("#YStr").val(),
+					"Z":$("#ZStr").val()
+					};
+		sketchup.buttonPress(33,coords);
+	});
+
+	$("#setToZero" ).on( "click", function( event ) {
+		$("#XStr").val("0.00");
+		$("#YStr").val("0.00");
+		$("#ZStr").val("0.00");
+		let coords = {
+					"X":0.00,
+					"Y":0.00,
+					"Z":0.00
+					};
+		sketchup.buttonPress(33,coords);
+	});
+	
+	$("#SpindleSpeed").change(function() {
+	  let val = parseInt($(this).val(), 10); // convertir en entier
+	  if (val > 255) {
+		$(this).val(255);
+	  } else if (val < 0) {
+		$(this).val(0);
+	  } else {
+		$(this).val(val);
+	  }
+	});
+	
+	$("#spindleStart1" ).on( "click", function( event ) {
+		let val = {
+					"speed":parseInt($("#SpindleSpeed").val(),10)
+				  };
+		sketchup.buttonPress(34,val);
+	});
+	$("#spindleStart2" ).on( "click", function( event ) {
+		let val = {
+					"speed":parseInt($("#SpindleSpeed").val(),10)
+				  };
+		sketchup.buttonPress(35,val);
+	});
+	$("#spindleStop" ).on( "click", function( event ) {
+		sketchup.buttonPress(36,0);
+	});
+	$("#MesureMode" ).on( "click", function( event ) {
+		sketchup.buttonPress(37,0);
+	});
+	$("#MovementStyle" ).on( "click", function( event ) {
+		sketchup.buttonPress(38,0);
+	});
 	// Sur blur (quand on sort du champ)
 	$("#XStr, #YStr, #ZStr").on("blur", function() {
 	  formatToTwoDecimals($(this));

@@ -96,6 +96,32 @@ module GNTools
 	    @reachable = quick_ping
 	  end
 
+	  def jog_head(x: nil, y: nil, z: nil, absolute: false, speed: nil)
+	    if @reachable
+		  uri = URI.parse("#{@host}/api/printer/printhead")
+
+		  request = Net::HTTP::Post.new(uri.request_uri)
+		  request["X-Api-Key"] = @api_key
+		  request["Content-Type"] = "application/json"
+
+		  body = { command: "jog", absolute: absolute }
+		  body[:x] = x if x
+		  body[:y] = y if y
+		  body[:z] = z if z
+		  body[:speed] = speed if speed
+
+		  request.body = body.to_json
+
+		  http = Net::HTTP.new(uri.host, uri.port)
+		  response = http.request(request)
+
+#		  puts "Jog -> #{body}"
+#		  puts "Response: #{response.code} #{response.body}"
+
+		  response
+	    end
+	  end
+
 	  # --- Uploader un fichier G-code ---
 	  def upload(file_path, location = "local")
 	    if @reachable
@@ -267,6 +293,45 @@ module GNTools
 		end
 	  end
 
+	  def connection_Info
+	    if quick_ping()
+	      uri = URI.parse("#{@host}/api/connection")
+
+	      request = Net::HTTP::Get.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
+
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
+#		  puts response
+	      if response.code == "200"
+	        json = JSON.parse(response.body)
+#	  	    puts "Statut: #{json["state"]}, Progression: #{json.dig("progress", "completion")}%"
+		    return json
+	      else
+#		    puts "Erreur status: #{response.code} #{response.body}"
+		    return nil
+	      end
+		end
+	  end
+
+	  def connexion(connect = true)
+	    if quick_ping()
+	      uri = URI.parse("#{@host}/api/connection")
+
+	      request = Net::HTTP::Post.new(uri.request_uri)
+	      request["X-Api-Key"] = @api_key
+	      request["Content-Type"] = "application/json"
+		  if connect
+			request.body = { command: "connect" }.to_json
+		  else
+			request.body = { command: "disconnect" }.to_json
+		  end
+	      http = Net::HTTP.new(uri.host, uri.port)
+	      response = http.request(request)
+		  response
+	    end
+	  end
+	  
 	  def control_print(action)
 	    if quick_ping()
 	      uri = URI.parse("#{@host}/api/job")
@@ -311,9 +376,9 @@ module GNTools
 	  end
 
       # --- Lister les fichiers disponibles ---
-      def list_files(location = "local")
+      def list_files(location = "/local")
 	    if @reachable
-          uri = URI.parse("#{@host}/api/files/#{location}")
+          uri = URI.parse("#{@host}/api/files#{location}")
 
           request = Net::HTTP::Get.new(uri.request_uri)
           request["X-Api-Key"] = @api_key
@@ -343,8 +408,8 @@ module GNTools
 #            puts "Erreur inconnue: #{e.class} - #{e.message}"
             return nil
           end
-		else
-		  puts "not reachable"
+#		else
+#		  puts "not reachable"
 	    end
       end
 	  

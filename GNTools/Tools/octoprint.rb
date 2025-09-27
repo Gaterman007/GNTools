@@ -71,12 +71,16 @@ module GNTools
 	  attr_accessor :api_key
 	  attr_accessor :last_error
 	  attr_reader :host, :reachable
+	  attr_accessor :macro1, :macro2, :macro3
 	  
 	  def initialize(api_key = "", host = "")
 		@api_key = api_key
 		self.host = host unless host.empty? # passe par le setter
 		@last_error = nil
 		@reachable = false
+		@macro1 = ""
+		@macro2 = ""
+		@macro3 = ""
 		@filename = File.join(GNTools::PATH, "OctoPrintData.txt")
 		if File.exist? @filename
 			loadFromFile()
@@ -187,6 +191,13 @@ module GNTools
 
 #	      puts "Print: #{response.code} #{response.body}"
 	      response
+		end
+	  end
+
+	  def send_gcodes(textes)
+		tabligne = textes.split(/\r\n|\r|\n|#r/)
+		tabligne.each do |ligne|
+		  self.send_gcode(ligne)
 		end
 	  end
 
@@ -416,7 +427,10 @@ module GNTools
 	  def toJson
 		JSON.generate({
 				'api_key'  => @api_key,
-				'host' => @host
+				'host' => @host,
+				'macro1' => @macro1,
+				'macro2' => @macro2,
+				'macro3' => @macro3
 			})		
 	  end
 	  
@@ -424,6 +438,9 @@ module GNTools
 		hash = JSON.parse(jsonStr)
 		@api_key = hash["api_key"]
 		@host = hash["host"]
+		@macro1 = hash["macro1"]
+		@macro2 = hash["macro2"]
+		@macro3 = hash["macro3"]
 		@reachable = quick_ping
 	  end
 	  
@@ -477,9 +494,11 @@ module GNTools
 		begin
 		  Socket.tcp(uri.host, uri.port, connect_timeout: timeout) do |sock|
 			sock.close
+			@reachable = true
 			return true
 		  end
 		  rescue
+		  @reachable = false
 		  return false
 		end
 	  end
