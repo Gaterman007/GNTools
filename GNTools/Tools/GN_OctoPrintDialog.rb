@@ -78,6 +78,18 @@ module GNTools
 		}
 					
 		# when a new value is entered
+		@dialog.add_action_callback("octoPrint") { |action_context, value|
+			case value
+			when "updateFiles"
+				self.update_fileslist
+			when "Connected"
+				self.update_connectionInfo
+			when "Disconnected"
+				self.update_connectionInfo
+			end
+			nil
+		}
+		# when a new value is entered
 		@dialog.add_action_callback("buttonPress") { |action_context, value, object1|
 			case value
 			when 1
@@ -175,6 +187,11 @@ module GNTools
 				else
 					GNTools.octoPrint.send_gcode("G90")
 				end
+			when 39 #object cnc print
+				if object1
+					gcodes = "G21#rG90"
+					GNTools.octoPrint.send_gcodes(gcodes)
+				end
 			else
 				puts "$$Bouton inconnu : #{value}$$"
 				
@@ -242,52 +259,25 @@ module GNTools
 		dialog
 	end
 	
-	def update_status
-		interval = 3
-
-		# Stocker le dernier état pour ne pas envoyer si pas de changement
-		@last_status ||= {}
-
-		timerid = UI.start_timer(interval, true) do
-#		  next unless @dialog # vérifier que le dialog existe toujours
-		  next false unless @dialog
-		  # Construire le nouvel état
-		  status_hash = {}
-		  status_hash["ping"] = GNTools.octoPrint.quick_ping
-		  if GNTools.octoPrint.reachable
-		    @fileslisted = true
-			connect_info = GNTools.octoPrint.connection_Info
-			status_hash.merge!(connect_info) if connect_info
-
-			reloadFile = false
-			if status_hash["current"] && @last_status["current"] &&
-			  status_hash["current"]["state"] != @last_status["current"]["state"]
-			  reloadFile = true
-			end
-			# Comparer avec le dernier état
-			if status_hash != @last_status
-			  @last_status = status_hash.dup
-
-			  # Envoyer le JSON au dialog
-			  script_str = "statusDialog(\'#{JSON.generate(status_hash)}\')"
-			  @dialog.execute_script(script_str)
-			end
-			if reloadFile
-			  UI.set_cursor(632)
-			  sleep 1
-			  files = GNTools.octoPrint.list_files("")
-			  scriptStr = "updateFiles(\'#{JSON.generate(files)}\')"
-			  @dialog.execute_script(scriptStr)
-			  UI.set_cursor(630)
-			end
-		  else
-			if @fileslisted
-			  scriptStr = "updateFiles(\'#{JSON.generate(nil)}\')"
-			  @dialog.execute_script(scriptStr)
-			end
-			@fileslisted = false
-		  end
-		end
+	def update_connectionInfo
+		status_hash = {}
+		status_hash["ping"] = GNTools.octoPrint.quick_ping
+		connect_info = GNTools.octoPrint.connection_Info
+		status_hash.merge!(connect_info) if connect_info
+		script_str = "statusDialog(\'#{JSON.generate(status_hash)}\')"
+		@dialog.execute_script(script_str)
+	end
+	
+	def update_fileslist
+		files = GNTools.octoPrint.list_files("")
+		scriptStr = "updateFiles(\'#{JSON.generate(files)}\')"
+		@dialog.execute_script(scriptStr)
+	end
+	
+	def update_Objects
+		newlist = self.get_ObjectList
+		scriptStr = "updateObjects(\'#{JSON.generate(newlist)}\')"
+		@dialog.execute_script(scriptStr)
 	end
 	
 	def update_dialog
@@ -298,28 +288,11 @@ module GNTools
 		updateHash["macro2"] = GNTools.octoPrint.macro2	|| ""	
 		updateHash["macro3"] = GNTools.octoPrint.macro3 || ""
 		scriptStr = "updateDialog(\'#{JSON.generate(updateHash)}\')"
-		@dialog.execute_script(scriptStr)
 
-		status_hash = {}
-		status_hash["ping"] = GNTools.octoPrint.quick_ping
-		connect_info = GNTools.octoPrint.connection_Info
-		status_hash.merge!(connect_info) if connect_info
-		# Envoyer le JSON au dialog
-		script_str = "statusDialog(\'#{JSON.generate(status_hash)}\')"
-		@dialog.execute_script(script_str)
-		
-		self.update_status
-		
-		files = GNTools.octoPrint.list_files("")
-		scriptStr = "updateFiles(\'#{JSON.generate(files)}\')"
 		@dialog.execute_script(scriptStr)
-		
-		newlist = self.get_ObjectList
-		puts newlist
-		scriptStr = "updateObjects(\'#{JSON.generate(newlist)}\')"
-		@dialog.execute_script(scriptStr)
-
-		
+		self.update_connectionInfo
+		self.updateFiles
+		self.update_Objects
 	end
 	
 	def get_ObjectList

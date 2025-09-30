@@ -1,7 +1,7 @@
 require 'sketchup'
 module GNTools
   class OctoPrintDialog
-	@@dialogWidth = 850
+	@@dialogWidth = 890
 	@@dialogHeight = 820
 
     def initialize()
@@ -51,8 +51,11 @@ module GNTools
 		}
 		# when the button "Accept" is press "OK"
 		@dialog.add_action_callback("accept") { |action_context, value|
-			GNTools.octoPrint.host = value["host"]
-			GNTools.octoPrint.api_key = value["api_key"]
+			GNTools.octoPrint.host = value["host"]  || ""
+			GNTools.octoPrint.api_key = value["api_key"] || ""
+			GNTools.octoPrint.macro1 = value["macro1"] || ""	
+			GNTools.octoPrint.macro2 = value["macro2"] || ""	
+			GNTools.octoPrint.macro3 = value["macro3"] || ""
 			self.close_dialog
 			nil
 		}
@@ -64,8 +67,11 @@ module GNTools
 					
 		# when the button "Set Default" is press
 		@dialog.add_action_callback("setDefault") { |action_context, value|
-			GNTools.octoPrint.host = value["host"]
-			GNTools.octoPrint.api_key = value["api_key"]		
+			GNTools.octoPrint.host = value["host"] || ""
+			GNTools.octoPrint.api_key = value["api_key"] || ""		
+			GNTools.octoPrint.macro1 = value["macro1"] || ""
+			GNTools.octoPrint.macro2 = value["macro2"] || ""
+			GNTools.octoPrint.macro3 = value["macro3"] || ""	
 			GNTools.octoPrint.saveToFile()
 			self.update_dialog
 			nil
@@ -134,12 +140,9 @@ module GNTools
 				GNTools.octoPrint.jog_head(y: -10)
 			when 28
 				GNTools.octoPrint.jog_head(y: -100)
-			when 29
-				puts "$$Bouton send cliqué!$$"
-				GNTools.octoPrint.send_gcode(object1)
 			when 30
-				puts "$$Bouton send cliqué!$$"
-				GNTools.octoPrint.send_gcode(object1)
+				puts "$$Bouton send cliqué!$$ #{object1} 30"
+				GNTools.octoPrint.send_gcodes(object1)
 			when 31
 				puts "$$Bouton auto connect$$"
 				GNTools.octoPrint.connexion
@@ -161,11 +164,17 @@ module GNTools
 				puts "$$Bouton M5$$"
 				GNTools.octoPrint.send_gcode("M5")
 			when 37 #MesureMode
-				puts "$$Bouton G90$$"
-				GNTools.octoPrint.send_gcode("G90")
+				if object1
+					GNTools.octoPrint.send_gcode("G21")
+				else
+					GNTools.octoPrint.send_gcode("G20")
+				end
 			when 38 #MovementStyle
-				puts "$$Bouton G91$$"
-				GNTools.octoPrint.send_gcode("G91")
+				if object1
+					GNTools.octoPrint.send_gcode("G91")
+				else
+					GNTools.octoPrint.send_gcode("G90")
+				end
 			else
 				puts "$$Bouton inconnu : #{value}$$"
 				
@@ -186,19 +195,24 @@ module GNTools
 	end
 			
 	def create_dialog
+		@fileslisted = true
 		html_file = File.join(PATH_UI, 'html', 'GN_OctoPrint.html') # Use external HTML
 		@@html_content = File.read(html_file)
 				
 		plugin_dir = File.dirname(PATH_UI) # Chemin du plugin
 		css_path = "file:///" + File.join(PATH_UI, 'css', 'Sketchup.css').gsub("\\", "/")
+		cssStyle_path = "file:///" + File.join(PATH_UI, 'css', 'styles.css').gsub("\\", "/")
 		jquery_ui_path = "file:///" + File.join(PATH_UI, 'js', 'jquery-ui.css').gsub("\\", "/")
+		octoprint_ui_path = "file:///" + File.join(PATH_UI, 'Scripts', 'GN_OctoPrint.js').gsub("\\", "/")
 		jquery_js_path = "file:///" + File.join(PATH_UI, 'js/external/jquery/','jquery.js').gsub("\\", "/")
 		jquery_uijs_path = "file:///" + File.join(PATH_UI, 'js', 'jquery-ui.js').gsub("\\", "/")
 		jquery_uiimage_path = "file:///" + File.join(PATH_UI, 'images', 'senderControl.jpg').gsub("\\", "/")
 		jquery_uiimage2_path = "file:///" + File.join(PATH_UI, 'images', 'moreControls.jpg').gsub("\\", "/")
 		# Modifier le HTML pour utiliser ces chemins
 		@@html_content.gsub!("../css/Sketchup.css", css_path)
+		@@html_content.gsub!("../css/styles.css", cssStyle_path)
 		@@html_content.gsub!("../js/jquery-ui.css", jquery_ui_path)
+		@@html_content.gsub!("../Scripts/GN_OctoPrint.js",octoprint_ui_path)
 		@@html_content.gsub!("../js/external/jquery/jquery.js", jquery_js_path)
 		@@html_content.gsub!("../js/jquery-ui.js", jquery_uijs_path)
 		@@html_content.gsub!("../images/senderControl.jpg", jquery_uiimage_path)
@@ -229,7 +243,7 @@ module GNTools
 	end
 	
 	def update_status
-		interval = 0.5
+		interval = 3
 
 		# Stocker le dernier état pour ne pas envoyer si pas de changement
 		@last_status ||= {}
@@ -240,38 +254,49 @@ module GNTools
 		  # Construire le nouvel état
 		  status_hash = {}
 		  status_hash["ping"] = GNTools.octoPrint.quick_ping
-		  connect_info = GNTools.octoPrint.connection_Info
-		  status_hash.merge!(connect_info) if connect_info
+		  if GNTools.octoPrint.reachable
+		    @fileslisted = true
+			connect_info = GNTools.octoPrint.connection_Info
+			status_hash.merge!(connect_info) if connect_info
 
-		  reloadFile = false
-		  if status_hash["current"] && @last_status["current"] &&
-			status_hash["current"]["state"] != @last_status["current"]["state"]
-			reloadFile = true
-		  end
-		  # Comparer avec le dernier état
-		  if status_hash != @last_status
-			@last_status = status_hash.dup
+			reloadFile = false
+			if status_hash["current"] && @last_status["current"] &&
+			  status_hash["current"]["state"] != @last_status["current"]["state"]
+			  reloadFile = true
+			end
+			# Comparer avec le dernier état
+			if status_hash != @last_status
+			  @last_status = status_hash.dup
 
-			# Envoyer le JSON au dialog
-			script_str = "statusDialog(\'#{JSON.generate(status_hash)}\')"
-			@dialog.execute_script(script_str)
+			  # Envoyer le JSON au dialog
+			  script_str = "statusDialog(\'#{JSON.generate(status_hash)}\')"
+			  @dialog.execute_script(script_str)
+			end
+			if reloadFile
+			  UI.set_cursor(632)
+			  sleep 1
+			  files = GNTools.octoPrint.list_files("")
+			  scriptStr = "updateFiles(\'#{JSON.generate(files)}\')"
+			  @dialog.execute_script(scriptStr)
+			  UI.set_cursor(630)
+			end
+		  else
+			if @fileslisted
+			  scriptStr = "updateFiles(\'#{JSON.generate(nil)}\')"
+			  @dialog.execute_script(scriptStr)
+			end
+			@fileslisted = false
 		  end
-		  if reloadFile
-			UI.set_cursor(632)
-			sleep 1
-		  	files = GNTools.octoPrint.list_files("")
-			scriptStr = "updateFiles(\'#{JSON.generate(files)}\')"
-			@dialog.execute_script(scriptStr)
-			UI.set_cursor(630)
-		  end
-		  
 		end
 	end
 	
 	def update_dialog
 		updateHash = {}
-		updateHash["host"] = GNTools.octoPrint.host
-		updateHash["api_key"] = GNTools.octoPrint.api_key
+		updateHash["host"] = GNTools.octoPrint.host || ""
+		updateHash["api_key"] = GNTools.octoPrint.api_key || ""
+		updateHash["macro1"] = GNTools.octoPrint.macro1	|| ""
+		updateHash["macro2"] = GNTools.octoPrint.macro2	|| ""	
+		updateHash["macro3"] = GNTools.octoPrint.macro3 || ""
 		scriptStr = "updateDialog(\'#{JSON.generate(updateHash)}\')"
 		@dialog.execute_script(scriptStr)
 
@@ -288,6 +313,38 @@ module GNTools
 		files = GNTools.octoPrint.list_files("")
 		scriptStr = "updateFiles(\'#{JSON.generate(files)}\')"
 		@dialog.execute_script(scriptStr)
+		
+		newlist = self.get_ObjectList
+		puts newlist
+		scriptStr = "updateObjects(\'#{JSON.generate(newlist)}\')"
+		@dialog.execute_script(scriptStr)
+
+		
+	end
+	
+	def get_ObjectList
+		names = []
+	    model = Sketchup.active_model
+		return {} unless model
+
+		ents = model.active_entities
+		return {} unless ents
+		
+		ents.each do |entity|
+			next unless entity.respond_to?(:name) && entity.name && !entity.name.empty?
+
+			groupName = nil
+			if defined?(Paths) && Paths.respond_to?(:isGroupObj)
+				groupName = Paths::isGroupObj(entity)
+			end
+
+			if groupName
+				# stocke l'entité par son nom
+				names << entity.name
+			end
+		end
+
+		return {"objet" => names}
 	end
   end # class OctoPrintDialog
 end # module GNTools
