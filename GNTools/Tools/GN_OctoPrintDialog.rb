@@ -83,7 +83,8 @@ module GNTools
 				  when "Error"
 					puts "💥 Erreur: #{payload['error']}"
 				  when "PositionUpdate"
-					puts "📍 Position: #{payload}"
+					puts "📍 Position: #{payload["x"]},#{payload["y"]},#{payload["z"]}"
+					update_position(payload["x"],payload["y"],payload["z"])
 				else
 				  puts "📩 Event: #{type}  (#{JSON.pretty_generate(payload)})"
 				end
@@ -412,6 +413,15 @@ module GNTools
 		connect_info = GNTools.octoPrint.connection_Info
 		status_hash.merge!(connect_info) if connect_info
 		script_str = "statusDialog(\'#{JSON.generate(status_hash)}\')"
+		@dialog.execute_script(script_str)
+	end
+	
+	def update_position(x,y,z)
+		status_hash = {}
+		status_hash["x"] = x
+		status_hash["y"] = y
+		status_hash["z"] = z
+		script_str = "update_position(\'#{JSON.generate(status_hash)}\')"
 		@dialog.execute_script(script_str)
 	end
 	

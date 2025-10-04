@@ -300,6 +300,15 @@ function buttonClicked(buttonNo) {
 	sketchup.buttonPress(buttonNo,val);
 };
 
+function update_position(data) {
+	$("#XStr, #YStr, #ZStr").on("blur", function() {
+  formatToTwoDecimals($(this));
+})
+	$("#XStr").val("0.00");
+	$("#YStr").val("0.00");
+	$("#ZStr").val("0.00");	
+}
+
 function statusDialog(datadialog) {
 	var objdata =  JSON.parse(datadialog);
 	let text = "";
