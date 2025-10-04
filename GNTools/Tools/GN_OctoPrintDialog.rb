@@ -6,33 +6,104 @@ module GNTools
 
     def initialize()
 		@title = "OctoPrint Dialog"
-	end
-	
-	def addToAxis(axis,montant)
-		reponse = GNTools.octoPrint.send_gcode("M114")
-		json = JSON.parse(reponse.body)
-		pos = json.dig("position")
-		if pos
-		  positionZ = pos[axis.downcase] + montant
-		  reponse = GNTools.octoPrint.send_gcode("G0 #{axis.upcase}#{positionZ}")
-		end
-		reponse
-	end
-
-	def subToAxis(axis,montant)
-		reponse = GNTools.octoPrint.send_gcode("M114")
-		json = JSON.parse(reponse.body)
-		pos = json.dig("position")
-		if pos
-		  positionZ = pos[axis.downcase] - montant
-		  reponse = GNTools.octoPrint.send_gcode("G0 #{axis.upcase}#{positionZ}")
-		end
-		reponse
+		@printerPaused = false
 	end
 	
 	def show_dialog
+	  GNTools.octoPrint.add_observer do |event, data|
+      case event
+		when :print_started
+			puts "UI: impression démarrée -> #{data}"
+		when :joghead
+			puts "UI: joghead"
+		when :upload
+			puts "upload"
+		when :download
+			puts "download"
+		when :start_print
+			puts "start_print"
+		when :delete_file
+			puts "delete_file"
+		when :GCodeSend
+			puts "GCodeSend"
+		when :upload_string
+			puts "upload_string"
+		when :download_string
+			puts "download_string"
+		when :pause_print
+			puts "pause_print"
+		when :resume_print
+			puts "resume_print"
+		when :cancel_print
+			puts "cancel_print"
+		when :print_status
+			puts "print_status"
+		when :connection_info
+			puts "connection_info"
+		when :connection
+			puts "connection"
+		when :control_print
+			puts "control_print"
+		when :printer_status
+			puts "printer_status"
+		when :list_files
+			puts "list_files"
+		when :ping
+			puts "ping"
+		when :reachable_changed
+			update_dialog
+			update_connectionInfo
+			puts "reachable_changed #{data}"
+		when :login
+			puts "login"
+		when :closeSocket
+			puts "closeSocket"
+		when :handle_message
+			puts "handle_message"
+			if data.has_key?("event")
+				type    = data["event"]["type"]
+				payload = data["event"]["payload"] || {}
+				case type
+				  when "Connected"
+					puts "🔌 Imprimante connectée"
+				  when "Disconnected"
+					puts "❌ Imprimante déconnectée"
+				  when "PrintStarted"
+					puts "▶️ Impression démarrée: #{payload['name']}"
+				  when "PrintDone"
+					puts "✅ Impression terminée: #{payload['name']}"
+				  when "PrintFailed"
+					puts "⚠️ Impression échouée: #{payload['name']}"
+				  when "UpdatedFiles"
+					puts "📂 Fichiers mis à jour"
+					update_fileslist
+				  when "PrinterStateChanged"
+					puts "📩 Event: #{type} #{payload['error']}"
+					update_connectionInfo
+				  when "Error"
+					puts "💥 Erreur: #{payload['error']}"
+				  when "PositionUpdate"
+					puts "📍 Position: #{payload}"
+				else
+				  puts "📩 Event: #{type}  (#{JSON.pretty_generate(payload)})"
+				end
+			elsif data.has_key?("connected")
+				puts "✅ Connecté au serveur OctoPrint, version #{data["connected"]["display_version"]}"
+			elsif data.has_key?("history")
+				puts "⚠️ History:"
+	#		    puts "⚠️ History: #{JSON.pretty_generate(data)}"
+			elsif data.has_key?("plugin")
+				puts "🌡 Plugin: #{data["plugin"]}, données: #{data["data"]}"
+			elsif data.has_key?("timelapse")
+				puts "⚠️ Timelapse: #{JSON.pretty_generate(data)}"
+			else
+				puts "⚠️ Inconnu: #{JSON.pretty_generate(data)}"
+			end
+
+		end
+	  end
 	  if @dialog && @dialog.visible?
-		self.update_dialog
+		self.update_all
 		self.update_Tab
 		@dialog.set_size(@@dialogWidth,@@dialogHeight)
 		dialog.center # New feature!
@@ -45,7 +116,7 @@ module GNTools
 
 		# when the dialog is ready update the data
 		@dialog.add_action_callback("ready") { |action_context|
-			self.update_dialog
+			self.update_all
 #			self.update_Tab
 			nil
 		}
@@ -65,6 +136,22 @@ module GNTools
 			nil
 		}
 					
+		@dialog.add_action_callback("newValue") { |action_context, value, object1|
+			case value
+			when "host"
+				GNTools.octoPrint.host = object1["host"] || ""
+				GNTools.octoPrint.closeWebSocket
+				GNTools.octoPrint.login_passive
+				puts "host was changed"
+			when "api_key"
+				GNTools.octoPrint.api_key = object1["api_key"] || ""
+				GNTools.octoPrint.closeWebSocket
+				GNTools.octoPrint.login_passive
+				puts "api key was changed"
+			end
+			nil
+		}
+					
 		# when the button "Set Default" is press
 		@dialog.add_action_callback("setDefault") { |action_context, value|
 			GNTools.octoPrint.host = value["host"] || ""
@@ -73,7 +160,7 @@ module GNTools
 			GNTools.octoPrint.macro2 = value["macro2"] || ""
 			GNTools.octoPrint.macro3 = value["macro3"] || ""	
 			GNTools.octoPrint.saveToFile()
-			self.update_dialog
+			self.update_all
 			nil
 		}
 					
@@ -105,52 +192,76 @@ module GNTools
 				puts "$$Home All$$"
 				GNTools.octoPrint.send_gcode("G28")
 			when 5
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(z: 100)
 			when 6
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(z: 10)
 			when 7
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(z: 1)
 			when 8
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(z: 0.1)
 			when 9
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(z: -0.1)
 			when 10
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(z: -1)
 			when 11
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(z: -10)
 			when 12
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(z: -100)
 			when 13
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(x: 100)
 			when 14
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(x: 10)
 			when 15
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(x: 1)
 			when 16
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(x: 0.1)
 			when 17
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(x: -0.1)
 			when 18
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(x: -1)
 			when 19
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(x: -10)
 			when 20
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(x: -100)
 			when 21
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(y: 100)
 			when 22
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(y: 10)
 			when 23
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(y: 1)
 			when 24
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(y: 0.1)
 			when 25
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(y: -0.1)
 			when 26
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(y: -1)
 			when 27
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(y: -10)
 			when 28
+				puts "$$jog $$ speed #{object1}"
 				GNTools.octoPrint.jog_head(y: -100)
 			when 30
 				puts "$$Bouton send cliqué!$$ #{object1} 30"
@@ -188,10 +299,37 @@ module GNTools
 					GNTools.octoPrint.send_gcode("G90")
 				end
 			when 39 #object cnc print
+				puts "print objet"
+				puts object1
 				if object1
 					gcodes = "G21#rG90"
 					GNTools.octoPrint.send_gcodes(gcodes)
 				end
+			when 40
+#				puts "download file"
+				GNTools.octoPrint.download(object1["name"],object1["name"], object1["origin"])
+			when 41
+#				puts "Télécharger file"
+				GNTools.octoPrint.download(object1["name"],object1["name"], object1["origin"])
+			when 42
+#				puts "Pause / Reprendre l'impression"
+				if @printerPaused
+					GNTools.octoPrint.resume_print
+					@printerPaused = false
+				else
+					GNTools.octoPrint.pause_print
+					@printerPaused = true
+				end
+			when 43
+#				puts "Annuler l'impression"
+				GNTools.octoPrint.cancel_print
+			when 44
+				puts "Impression"
+				@printerPaused = false
+				GNTools.octoPrint.start_print(object1["name"], object1["origin"])
+			when 45
+				puts "effacer fichier"
+				GNTools.octoPrint.delete_file(object1["name"], object1["origin"])
 			else
 				puts "$$Bouton inconnu : #{value}$$"
 				
@@ -202,12 +340,21 @@ module GNTools
 		@dialog.center # New feature!
 		@dialog.show
 	  end
+	  if not GNTools.octoPrint.login_passive
+		  @repeating_timer_id = UI.start_timer(10, true) do
+		      next false unless @dialog
+			  if GNTools.octoPrint.login_passive
+				  UI.stop_timer(@repeating_timer_id)
+			  end
+		  end
+	  end
 	end
 			
 	def close_dialog
 		if @dialog
 			@dialog.set_can_close { true }
 			@dialog.close
+			GNTools.octoPrint.closeWebSocket
 		end
 	end
 			
@@ -261,7 +408,7 @@ module GNTools
 	
 	def update_connectionInfo
 		status_hash = {}
-		status_hash["ping"] = GNTools.octoPrint.quick_ping
+		status_hash["ping"] = GNTools.octoPrint.reachable
 		connect_info = GNTools.octoPrint.connection_Info
 		status_hash.merge!(connect_info) if connect_info
 		script_str = "statusDialog(\'#{JSON.generate(status_hash)}\')"
@@ -280,19 +427,23 @@ module GNTools
 		@dialog.execute_script(scriptStr)
 	end
 	
+	def update_all
+		self.update_dialog
+		self.update_connectionInfo
+		self.update_fileslist
+		self.update_Objects
+	end
+	
 	def update_dialog
 		updateHash = {}
 		updateHash["host"] = GNTools.octoPrint.host || ""
 		updateHash["api_key"] = GNTools.octoPrint.api_key || ""
+		updateHash["ping"] = GNTools.octoPrint.reachable
 		updateHash["macro1"] = GNTools.octoPrint.macro1	|| ""
 		updateHash["macro2"] = GNTools.octoPrint.macro2	|| ""	
 		updateHash["macro3"] = GNTools.octoPrint.macro3 || ""
 		scriptStr = "updateDialog(\'#{JSON.generate(updateHash)}\')"
-
 		@dialog.execute_script(scriptStr)
-		self.update_connectionInfo
-		self.updateFiles
-		self.update_Objects
 	end
 	
 	def get_ObjectList

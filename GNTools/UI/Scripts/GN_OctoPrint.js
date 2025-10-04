@@ -66,8 +66,6 @@ function generateCShape(cx, cy, rInner, rOuter, startAngle, endAngle, points = 2
     return `polygon(${coords.join(', ')})`;
 }
 
-const buttons = document.getElementById("jog-buttons");
-
 function httpToWs(url) {
   // Si ça commence par https → convertir en wss
   if (url.startsWith("https://")) {
@@ -81,115 +79,13 @@ function httpToWs(url) {
   return url;
 }
 
-function login() {
-  let host = $("#host").val() || "http://10.0.0.108:5000";  
-  let apikey = $("#api_key").val();                        
-
-  fetch(host + "/api/login?passive=true", {
-	method: "POST",
-	headers: {
-	  "Content-Type": "application/json",
-	  "X-Api-Key": apikey   // on passe la clé ici
-	},
-	body: "{}"   // obligatoire pour POST mais vide
-  })
-  .then(response => {
-	if (!response.ok) throw new Error("HTTP " + response.status);
-	return response.json();
-  })
-  .then(data => {
-	const auth = `${data.name}:${data.session}`;
-	const socketUrl = httpToWs(host) + '/sockjs/websocket';
-
-	// Étape 2 : Connexion au WebSocket
-	const socket = new WebSocket(socketUrl);
-	
-	socket.onopen = () => {
-	  log.textContent += "✅ Connecté au WebSocket OctoPrint" + "\n";
-
-	  // Étape 3 : Envoi de l'authentification
-	  socket.send(JSON.stringify({ auth }));
-	  log.textContent += "🔑 Auth envoyé" + "\n";
-
-	  // Étape 4 : Abonnement aux événements
-	  socket.send(JSON.stringify({
-		subscribe: {
-		  events: true
-		}
-	  }));
-	  log.textContent += "🔔 Abonnement aux événements" + "\n";
-	  sketchup.octoPrint("updateFiles");
-	};
-
-	socket.onmessage = (event) => {
-	  try {
-		const msg = JSON.parse(event.data);
-
-		// 📌 Cas 1 : message d'événement
-		if (msg.event) {
-		  const type = msg.event.type;
-		  const payload = msg.event.payload || {};
-
-		  switch (type) {
-			case "Connected":
-			  log.textContent += "🔌 Imprimante connectée" + "\n";
-			  sketchup.octoPrint("Connected");
-			  sketchup.octoPrint("updateFiles");
-			  break;
-			case "Disconnected":
-			  log.textContent += "❌ Imprimante déconnectée" + "\n";
-			  sketchup.octoPrint("Disconnected");
-			  sketchup.octoPrint("updateFiles");
-			  break;
-			case "PrintStarted":
-			  log.textContent += "▶️ Impression démarrée : " + payload.name + "\n";
-			  break;
-			case "PrintDone":
-			  log.textContent += "✅ Impression terminée : " + payload.name + "\n";
-			  break;
-			case "PrintFailed":
-			  log.textContent += "⚠️ Impression échouée : " + payload.name + "\n";
-			  break;
-			case "UpdatedFiles":
-			  sketchup.octoPrint("updateFiles");
-			  log.textContent += "⚠️ Updated Files : " + "\n";
-			  break;
-			case "Error":
-			  log.textContent += "💥 Erreur : " + payload.error + "\n";
-			  break;
-			default:
-			  log.textContent += "📩 Autre événement: " + type + "\n";
-			  break;
-		  }
-		}
-
-		// 📌 Cas 2 : données plugin (ex: température)
-		if (msg.plugin === "temperature") {
-		  log.textContent += `🌡 Température : ${JSON.stringify(msg.data)}` + "\n";
-		}
-
-	  } catch (e) {
-		console.error("Erreur parsing WS:", e);
-	  }
-	};
-	socket.onerror = (error) => {
-	  console.error("❌ Erreur WebSocket:", error);
-	};
-
-	socket.onclose = () => {
-	  log.textContent += "🔌 WebSocket fermé" + "\n";
-	};
-  })
-  .catch(err => {
-	console.error("Erreur passive login:", err);
-	alert("Connexion échouée : " + err.message);
-  });
-}
+const buttons = document.getElementById("jog-buttons");
 
 $(document).ready(function(){
 	$("#XStr").val("0.00");
 	$("#YStr").val("0.00");
 	$("#ZStr").val("0.00");
+	$("#jogSpeed").val("0");
 	$("#SpindleSpeed").val("255");
 	mapDataClipPath.forEach((btn, index) => {
 	  const area = document.createElement("button");
@@ -288,12 +184,14 @@ $("#spindleStart1" ).on( "click", function( event ) {
 			  };
 	sketchup.buttonPress(34,val);
 });
+
 $("#spindleStart2" ).on( "click", function( event ) {
 	let val = {
 				"speed":parseInt($("#SpindleSpeed").val(),10)
 			  };
 	sketchup.buttonPress(35,val);
 });
+
 $("#spindleStop" ).on( "click", function( event ) {
 	sketchup.buttonPress(36,0);
 });
@@ -310,6 +208,7 @@ $("#MesureMode" ).on( "click", function( event ) {
     }
 	sketchup.buttonPress(37,milimetre);
 });
+
 $("#MovementStyle" ).on( "click", function( event ) {
     const btn = $(this);
 	let relatif;
@@ -322,13 +221,20 @@ $("#MovementStyle" ).on( "click", function( event ) {
     }
 	sketchup.buttonPress(38,relatif);
 });
+
 // Sur blur (quand on sort du champ)
 $("#XStr, #YStr, #ZStr").on("blur", function() {
   formatToTwoDecimals($(this));
 });
 
-$( "#tabs" ).tabs();
+$("#tabs").tabs();
+$("#tabs").find("li:eq(0)").hide(); // cache le 1er onglet
+$("#tabs").find("li:eq(1)").hide(); // cache le 2e onglet
+$("#tabs").find("li:eq(2)").hide(); // cache le 3e onglet
+$("#tabs").tabs("option", "active", 3); // ouvre l’onglet 4
+
 $( "#setDefault, #cancel, #accept").button();
+
 $( "#setDefault" ).on( "click", function( event ) {
 	obj.api_key = $("#api_key").val();
 	obj.host = $("#host").val();
@@ -336,7 +242,8 @@ $( "#setDefault" ).on( "click", function( event ) {
 	obj.macro2 = $("#Macro2Input").val();
 	obj.macro3 = $("#Macro3Input").val();
 	sketchup.setDefault(obj);
-} );
+});
+
 $( "#accept" ).on( "click", function( event ) {
 	obj.api_key = $("#api_key").val();
 	obj.host = $("#host").val();
@@ -344,11 +251,11 @@ $( "#accept" ).on( "click", function( event ) {
 	obj.macro2 = $("#Macro2Input").val();
 	obj.macro3 = $("#Macro3Input").val();
 	sketchup.accept(obj);
-} );
+});
 
 $( "#cancel" ).on( "click", function( event ) {
 	sketchup.cancel();
-} );
+});
 
 $("#host").change(function(){
   obj.host = $("#host").val();
@@ -362,26 +269,24 @@ $( "#send" ).on( "click", function( event ) {
 $("#Macro1Input").change(function(){
   obj.macro1 = $("#Macro1Input").val();
   sketchup.newValue("Macro1button",obj);
-}); 
+});
+ 
 $("#Macro2Input").change(function(){
   obj.macro2 = $("#Macro2Input").val();
   sketchup.newValue("Macro2button",obj);
-}); 
+});
+ 
 $("#Macro3Input").change(function(){
   obj.macro3 = $("#Macro1Input").val();
   sketchup.newValue("Macro3button",obj);
 }); 
 
-$( "#Macro1button" ).on( "click", function( event ) {
-	sketchup.buttonPress(30,$("#Macro1Input").val());
-});
-$( "#Macro2button" ).on( "click", function( event ) {
-	sketchup.buttonPress(30,$("#Macro2Input").val());
-});
-$( "#Macro3button" ).on( "click", function( event ) {
-	sketchup.buttonPress(30,$("#Macro3Input").val());
-});
 
+$(".macro-btn").on("click", function () {
+  const target = $(this).data("target");     // lit l’attribut data-target
+  const value = $(target).val();             // récupère la valeur de l’input lié
+  sketchup.buttonPress(30, value);
+});
 
 $("#api_key").change(function(){
   obj.api_key = $("#api_key").val();
@@ -428,7 +333,16 @@ function  updateDialog(datajson) {
 	obj =  JSON.parse(datajson);
 	$("#host").val(obj.host);
 	$("#api_key").val(obj.api_key);
-	login();
+	if (obj.ping) {
+	  $("#tabs").find("li:eq(0)").show(); // cache le 1er onglet
+	  $("#tabs").find("li:eq(1)").show(); // cache le 2e onglet
+	  $("#tabs").find("li:eq(2)").show(); // cache le 3e onglet
+	} else {
+	  $("#tabs").find("li:eq(0)").hide(); // cache le 1er onglet
+	  $("#tabs").find("li:eq(1)").hide(); // cache le 2e onglet
+	  $("#tabs").find("li:eq(2)").hide(); // cache le 3e onglet
+	  $("#tabs").tabs("option", "active", 3); // ouvre l’onglet 4
+	}
 	$("#Macro1Input").val(obj.macro1);
 	$("#Macro2Input").val(obj.macro2);
 	$("#Macro3Input").val(obj.macro3);	
@@ -468,7 +382,6 @@ function  updateObjects(dataobjectjson) {
 	});
 	div.appendChild(ul)
 	objectList.appendChild(div);
-
 };
 
 function  updateFiles(datafilejson) {
@@ -499,37 +412,11 @@ function  updateFiles(datafilejson) {
 		link.style.fontSize = "1.5em";   // 40% plus gros
 		link.style.fontWeight = "bold";  // en gras
 		
-		// Gestionnaire d’événement quand on clique sur le lien
 		link.addEventListener("click", async (e) => {
 			e.preventDefault();		// empêche le comportement par défaut du lien (navigation)
-
-			// 🔹 Requête HTTP pour télécharger le fichier depuis OctoPrint
-			const response = await fetch(file.refs.download, {
-				headers: { "X-Api-Key": obj.api_key }
-			});
-			
-			// Vérifie si le téléchargement a échoué (403, 404, etc.)
-			if (!response.ok) {
-				alert("Erreur téléchargement: " + response.status);
-				return;
-			}
-			
-			// Récupération du fichier en tant que "Blob" (binaire brut)
-			const blob = await response.blob();
-			const url = URL.createObjectURL(blob);
-
-			// Création d’un lien invisible <a> qui va déclencher le téléchargement
-			const tempLink = document.createElement("a");
-			tempLink.href = url;
-			tempLink.download = file.name; // force le navigateur à enregistrer sous ce nom
-
-			// Ajout du lien temporaire dans le DOM pour pouvoir le "cliquer"
-			document.body.appendChild(tempLink);
-			tempLink.click(); // déclenche le téléchargement
-			// Nettoyage : on supprime le lien temporaire et on libère l’URL du blob
-			document.body.removeChild(tempLink);
-			URL.revokeObjectURL(url);
+			sketchup.buttonPress(40,file);
 		});
+		
 		li.appendChild(link);
 		// Groupe de boutons sous le nom
 		let btnGroup = document.createElement("div");
@@ -539,115 +426,53 @@ function  updateFiles(datafilejson) {
 		let btnDownload = document.createElement("button");
 		btnDownload.textContent = "⬇️";
 		btnDownload.title = "Télécharger le fichier";
-		btnDownload.addEventListener("click", async () => {
-			const response = await fetch(file.refs.download, {
-				headers: { "X-Api-Key": obj.api_key }
-			});
-
-			if (!response.ok) {
-				alert("Erreur téléchargement: " + response.status);
-				return;
-			}
-
-			const blob = await response.blob();
-			const url = URL.createObjectURL(blob);
-
-			const tempLink = document.createElement("a");
-			tempLink.href = url;
-			tempLink.download = file.name;
-			document.body.appendChild(tempLink);
-			tempLink.click();
-			document.body.removeChild(tempLink);
-			URL.revokeObjectURL(url);
+		btnDownload.addEventListener("click", async (e) => {
+			sketchup.buttonPress(41,file);
 		});
+
 		btnGroup.appendChild(btnDownload);
+
+
+		// --- Bouton "Imprimer"
+		let btnPrint = document.createElement("button");
+		btnPrint.textContent = "🖨️";
+		btnPrint.title = "Impression";
+		btnPrint.addEventListener("click", async (e) => {
+			sketchup.buttonPress(44,file);
+		});
+
+		btnGroup.appendChild(btnPrint);
+
+
 		
 		// --- Bouton "Pause / Resume"
 		let btnPauseResume = document.createElement("button");
 		btnPauseResume.textContent = "⏯️"; // play/pause icon
 		btnPauseResume.title = "Pause / Reprendre l'impression";
-		btnPauseResume.addEventListener("click", async () => {
-		  const response = await fetch("/api/job", {
-			method: "POST",
-			headers: {
-			  "Content-Type": "application/json",
-			  "X-Api-Key": obj.api_key
-			},
-			body: JSON.stringify({ command: "pause", action: "toggle" })
-		  });
-
-		  if (!response.ok) {
-			alert("Erreur Pause/Resume: " + response.status);
-		  } else {
-			alert("✅ Pause/Resume envoyé !");
-		  }
+		btnPauseResume.addEventListener("click", async (e) => {
+			sketchup.buttonPress(42,file);
 		});
+
 		btnGroup.appendChild(btnPauseResume);
 
 		// --- Bouton "Cancel"
 		let btnCancel = document.createElement("button");
 		btnCancel.textContent = "❌";
 		btnCancel.title = "Annuler l'impression";
-		btnCancel.addEventListener("click", async () => {
-		  if (!confirm("Annuler l'impression en cours ?")) return;
-
-		  const response = await fetch("/api/job", {
-			method: "POST",
-			headers: {
-			  "Content-Type": "application/json",
-			  "X-Api-Key": obj.api_key
-			},
-			body: JSON.stringify({ command: "cancel" })
-		  });
-
-		  if (!response.ok) {
-			alert("Erreur Cancel: " + response.status);
-		  } else {
-			alert("⛔ Impression annulée !");
-		  }
+		btnCancel.addEventListener("click", async (e) => {
+			sketchup.buttonPress(43,file);
 		});
+		
 		btnGroup.appendChild(btnCancel);
-		// --- Bouton "Imprimer"
-		let btnPrint = document.createElement("button");
-		btnPrint.textContent = "🖨️";
-		btnPrint.title = "Impression";
-		btnPrint.addEventListener("click", async () => {
-			const response = await fetch(`/api/files/local/${file.name}`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					"X-Api-Key": obj.api_key
-				},
-				body: JSON.stringify({ command: "select", print: true })
-			});
-
-			if (!response.ok) {
-				alert("Erreur impression: " + response.status);
-			} else {
-				alert("Impression démarrée !");
-			}
-		});
-		btnGroup.appendChild(btnPrint);
 
 		// --- Bouton "Supprimer"
 		let btnDelete = document.createElement("button");
 		btnDelete.textContent = "🗑️";
 		btnDelete.title = "effacer fichier";
-		btnDelete.addEventListener("click", async () => {
-			if (!confirm(`Supprimer le fichier "${file.name}" ?`)) return;
-
-			const response = await fetch(file.refs.resource, {
-				method: "DELETE",
-				headers: { "X-Api-Key": obj.api_key }
-			});
-
-			if (!response.ok) {
-				alert("Erreur suppression: " + response.status);
-			} else {
-				alert("Fichier supprimé !");
-				li.remove(); // on enlève la ligne de la liste
-			}
+		btnDelete.addEventListener("click", async (e) => {
+			sketchup.buttonPress(45,file);
 		});
+
 		btnGroup.appendChild(btnDelete);
 		li.appendChild(btnGroup);
 		ul.appendChild(li);

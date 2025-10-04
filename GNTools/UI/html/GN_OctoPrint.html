@@ -77,29 +77,31 @@
 			    </div>
 			    <div class="container"  style="margin: 10px;">
 			      <label>Vitesse: <input id="jogSpeed" type="number" step="1" class="def-cnc-input" min="0" max="255" style="margin: 3px; width: 200px; text-align: right;"></label>
+				  <!-- Ajout du checkbox avec un label -->
+				  <label style="margin-left: 10px;">
+					<input type="checkbox" id="useDefaultSpeed" checked>
+					Default
+				  </label>
 			    </div>
 			  </div>
             </div>
 			<div class="container" style = "width:100%;">
 			  <div class="container"  style="margin: 10px;">
 				<div style="display:flex; align-items:center; gap:8px;">
-				  <input id="sendStr" class="def-cnc-input" style="width: 400px">
+				  <input id="sendStr" class="def-cnc-input" style="margin: 5px; width: 400px">
 				  <button id="send" class="ui-button ui-widget ui-corner-all">Send</button>
 				</div>
 				<div style="display:flex; align-items:center; gap:8px;">
-				  <label for="sendStr">Macro 1:</label>
-				  <input id="Macro1Input" class="def-cnc-input" style="width: 400px">
-				  <button id="Macro1button" class="ui-button ui-widget ui-corner-all">Send</button>
+				  <button id="Macro1button" class="macro-btn"  data-target="#Macro1Input">Macro 1</button>
+				  <input id="Macro1Input" type="text" style="margin: 5px; width: 600px">
 				</div>
 				<div style="display:flex; align-items:center; gap:8px;">
-				  <label for="sendStr">Macro 2:</label>
-				  <input id="Macro2Input" class="def-cnc-input" style="width: 400px">
-				  <button id="Macro2button" class="ui-button ui-widget ui-corner-all">Send</button>
+				  <button id="Macro2button" class="macro-btn"  data-target="#Macro2Input">Macro 2</button>
+				  <input id="Macro2Input" type="text" style="margin: 5px; width: 600px">
 				</div>
 				<div style="display:flex; align-items:center; gap:8px;">
-				  <label for="sendStr">Macro 3:</label>
-				  <input id="Macro3Input" class="def-cnc-input" style="width: 400px">
-				  <button id="Macro3button" class="ui-button ui-widget ui-corner-all">Send</button>
+				  <button id="Macro3button" class="macro-btn"  data-target="#Macro3Input">Macro 3</button>
+				  <input id="Macro3Input" type="text" style="margin: 5px; width: 600px">
 				</div>
 			  </div>	
 		    </div>
@@ -122,12 +124,8 @@
 				<label>Api Key:<br> <textarea id="api_key" style="height: 199px; width: 100%;"></textarea></label>
 			</div>
 			<div class="container" id = "host_available" style="margin: 10px;">
-				
+			Host:
 			</div>
-		    <h1>OctoPrint Push Updates</h1>
-			<div class="spindlecontainer" style="overflow-y: auto; height:80px">
-		      <pre id="log"></pre>
-		    </div>
 		</div>	
 	</div>
 
