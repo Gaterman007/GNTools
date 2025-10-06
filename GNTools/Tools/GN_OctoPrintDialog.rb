@@ -330,9 +330,9 @@ module GNTools
 				pathObj = GNTools.pathObjList[object1["persistent_id"]]
 				gCodeStr = ""
 				gCodeStr = pathObj.createGCode(gCodeStr).gsub(/\R+/, "#r")
-				puts "##### start ######"
-				puts gCodeStr
-				puts "###### end ######"
+#				puts "##### start ######"
+#				puts gCodeStr
+#				puts "###### end ######"
 				if object1
 					GNTools.octoPrint.send_gcodes(gCodeStr)
 				end
@@ -363,7 +363,11 @@ module GNTools
 				GNTools.octoPrint.upload_string(object1["content"], object1["filename"])
 			when 47
 #				puts "G0 X#{object1["X"]} Y#{object1["Y"]} Z#{object1["Z"]}"
-				GNTools.octoPrint.send_gcode("G0 X#{object1["X"]} Y#{object1["Y"]} Z#{object1["Z"]}")
+				if object1.has_key?("F")
+					GNTools.octoPrint.send_gcode("G0 X#{object1["X"]} Y#{object1["Y"]} Z#{object1["Z"]} F#{object1["F"]}")
+				else
+					GNTools.octoPrint.send_gcode("G0 X#{object1["X"]} Y#{object1["Y"]} Z#{object1["Z"]}")
+				end
 			else
 				puts "$$Bouton inconnu : #{value}$$"
 				
