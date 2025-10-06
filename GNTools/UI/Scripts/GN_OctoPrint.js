@@ -131,6 +131,7 @@ $(document).ready(function(){
 	  area.id = `btn-${btn.id}`; // ID pour cibler le pseudo-élément
 	  buttons.appendChild(area);
 	});
+	setupFiles();
 	sketchup.ready();
 	updateTabsHeight(); // Initialiser la hauteur correcte des tabs
 });
@@ -165,6 +166,15 @@ $("#setToZero" ).on( "click", function( event ) {
 				"Z":0.00
 				};
 	sketchup.buttonPress(33,coords);
+});
+
+$("#moveToCoord" ).on( "click", function( event ) {
+	let coords = {
+				"X":$("#XStr").val(),
+				"Y":$("#YStr").val(),
+				"Z":$("#ZStr").val()
+				};
+	sketchup.buttonPress(47,coords);
 });
 
 $("#SpindleSpeed").change(function() {
@@ -377,7 +387,7 @@ function  updateObjects(dataobjectjson) {
 		btnGroup.classList.add("spindlecontainer");
 		// Création d’un élément <li> (un élément de la liste)
 		let li = document.createElement("li");
-		li.innerHTML = objectx
+		li.innerHTML = objectx.name
 		// --- Bouton "Imprimer"
 		let btnPrint = document.createElement("button");
 		btnPrint.textContent = "🖨️";
@@ -436,7 +446,7 @@ function  updateFiles(datafilejson) {
 		btnDownload.textContent = "⬇️";
 		btnDownload.title = "Télécharger le fichier";
 		btnDownload.addEventListener("click", async (e) => {
-			sketchup.buttonPress(41,file);
+			sketchup.buttonPress(40,file);
 		});
 
 		btnGroup.appendChild(btnDownload);
@@ -488,6 +498,10 @@ function  updateFiles(datafilejson) {
 	});
 	div.appendChild(ul)
 	fileDiv.appendChild(div);
+};
+
+
+function  setupFiles() {	
 	let dropZone = document.getElementById("dropZone");
 	let fileInput = document.getElementById("fileInput");
 	let uploadLocation = document.getElementById("uploadLocation");
@@ -498,71 +512,47 @@ function  updateFiles(datafilejson) {
 	// Clique → ouvrir le sélecteur fichier
 	dropZone.addEventListener("click", () => fileInput.click());
 
-	// Highlight quand on survole
-	dropZone.addEventListener("dragover", (e) => {
+	// Drag & Drop
+	dropZone.addEventListener('dragover', e => {
 	  e.preventDefault();
-	  dropZone.classList.add("dragover");
+	  dropZone.style.background = "#eef";
 	});
-	dropZone.addEventListener("dragleave", () => {
-	  dropZone.classList.remove("dragover");
-	});
-
-	// Drop du fichier
-	dropZone.addEventListener("drop", (e) => {
+	dropZone.addEventListener('dragleave', e => {
 	  e.preventDefault();
-	  dropZone.classList.remove("dragover");
-	  let file = e.dataTransfer.files[0];
-	  if (file) uploadFile(file);
+	  dropZone.style.background = "";
+	});
+	dropZone.addEventListener('drop', e => {
+	  e.preventDefault();
+	  dropZone.style.background = "";
+	  if(e.dataTransfer.files.length > 0) {
+		uploadFile(e.dataTransfer.files[0]);
+	  }
 	});
 
 	// Si choisi par clic
 	fileInput.addEventListener("change", () => {
 	  if (fileInput.files.length > 0) {
+		console.log(fileInput.files[0])
 		uploadFile(fileInput.files[0]);
 	  }
 	});
-
-	// Fonction d’upload avec progression
-	function uploadFile(file) {
-	  let location = uploadLocation.value;
-	  let formData = new FormData();
-	  formData.append("file", file);
-
-	  let xhr = new XMLHttpRequest();
-	  xhr.open("POST", `/api/files/${location}`, true);
-	  xhr.setRequestHeader("X-Api-Key", obj.api_key);
-
-	  // Montrer la barre
-	  progressContainer.style.display = "block";
-	  uploadProgress.value = 0;
-	  progressText.textContent = "0%";
-
-	  // Suivi progression
-	  xhr.upload.addEventListener("progress", (e) => {
-		if (e.lengthComputable) {
-		  let percent = Math.round((e.loaded / e.total) * 100);
-		  uploadProgress.value = percent;
-		  progressText.textContent = percent + "%";
-		}
-	  });
-
-	  // Fin de l’upload
-	  xhr.onload = () => {
-		if (xhr.status >= 200 && xhr.status < 300) {
-		  alert(`✅ ${file.name} uploadé sur ${location}`);
-		  updateFileList();
-		} else {
-		  alert("Erreur upload: " + xhr.status);
-		}
-		fileInput.value = "";
-		progressContainer.style.display = "none"; // cacher après upload
-	  };
-
-	  xhr.onerror = () => {
-		alert("Erreur réseau lors de l’upload !");
-		progressContainer.style.display = "none";
-	  };
-
-	  xhr.send(formData);
-	}
 };
+
+// Fonction d’upload avec progression
+function uploadFile(file) {
+  console.log(file.name)
+  const reader = new FileReader();
+  reader.onload = function(e) {
+	const content = e.target.result;
+
+	objet = {}
+	objet["filename"] = file.name
+	objet["content"] = content
+	sketchup.buttonPress(46,objet);
+	document.getElementById("fileInput").value = "";
+//		$("#fileContent").text(content); // Affiche le contenu du fichier
+  };
+
+  reader.readAsText(file); // Lit le fichier comme texte
+};
+

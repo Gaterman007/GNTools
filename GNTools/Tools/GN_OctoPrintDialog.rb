@@ -15,21 +15,27 @@ module GNTools
 		when :print_started
 			puts "UI: impression démarrée -> #{data}"
 		when :joghead
-			puts "UI: joghead"
+			puts "UI: joghead #{data.code} #{data.body}"
 		when :upload
-			puts "upload"
+			puts "upload #{data.code} #{data.body}"
 		when :download
-			puts "download"
+			if data.code == "200"
+				File.open(data["pathname"], "wb") { |f| f.write(data.body) }
+			end
+			puts "download #{data["filename"]} #{data.code}"
 		when :start_print
-			puts "start_print"
+			puts "start_print #{data.code} #{data.body}"
 		when :delete_file
-			puts "delete_file"
+			nil
+#			puts "delete_file #{data.code} #{data.body}"
 		when :GCodeSend
-			puts "GCodeSend"
+			nil
+#			puts "GCodeSend #{data.code} #{data.body}"
 		when :upload_string
-			puts "upload_string"
+			nil
+#			puts "upload_string #{data.code} #{data.body}"
 		when :download_string
-			puts "download_string"
+			puts "download_string #{data.code} #{data.body}"
 		when :pause_print
 			puts "pause_print"
 		when :resume_print
@@ -37,29 +43,31 @@ module GNTools
 		when :cancel_print
 			puts "cancel_print"
 		when :print_status
-			puts "print_status"
+			puts "print_status #{data.code} #{data.body}"
 		when :connection_info
-			puts "connection_info"
+			nil
+#			puts "connection_info #{data.code} #{data.body}"
 		when :connection
 			puts "connection"
 		when :control_print
-			puts "control_print"
+			puts "control_print #{data.code} #{data.body}"
 		when :printer_status
-			puts "printer_status"
+			puts "printer_status #{data.code} #{data.body}"
 		when :list_files
-			puts "list_files"
+			nil
+#			puts "list_files #{data.code}"
 		when :ping
-			puts "ping"
+			puts "ping #{data.code}: #{data.body}"
 		when :reachable_changed
 			update_dialog
 			update_connectionInfo
 			puts "reachable_changed #{data}"
 		when :login
-			puts "login"
+			nil
+#			puts "login #{data.code} #{data.body}"
 		when :closeSocket
 			puts "closeSocket"
 		when :handle_message
-			puts "handle_message"
 			if data.has_key?("event")
 				type    = data["event"]["type"]
 				payload = data["event"]["payload"] || {}
@@ -75,32 +83,49 @@ module GNTools
 				  when "PrintFailed"
 					puts "⚠️ Impression échouée: #{payload['name']}"
 				  when "UpdatedFiles"
-					puts "📂 Fichiers mis à jour"
+#					puts "📂 Fichiers mis à jour"
 					update_fileslist
 				  when "PrinterStateChanged"
-					puts "📩 Event: #{type} #{payload['error']}"
+#					puts "📩 Event: #{type} #{payload['error']}"
 					update_connectionInfo
 				  when "Error"
 					puts "💥 Erreur: #{payload['error']}"
 				  when "PositionUpdate"
 					puts "📍 Position: #{payload["x"]},#{payload["y"]},#{payload["z"]}"
 					update_position(payload["x"],payload["y"],payload["z"])
+				  when "FirmwareData"
+					nil
+#				    puts "#{payload["name"]}"
+#				    puts "FirmwareData #{JSON.pretty_generate(payload)}"
+				  when "plugin_firmware_check_warning"
+					nil
+				  when "FileAdded"
+					nil
+				  when "MetadataAnalysisStarted"
+				    nil
+				  when "Upload"
+				    nil
+				  when "MetadataAnalysisFinished"
+				    nil
+				  when "FileRemoved"
+				    nil
 				else
 				  puts "📩 Event: #{type}  (#{JSON.pretty_generate(payload)})"
 				end
 			elsif data.has_key?("connected")
 				puts "✅ Connecté au serveur OctoPrint, version #{data["connected"]["display_version"]}"
 			elsif data.has_key?("history")
-				puts "⚠️ History:"
+				nil
+#				puts "⚠️ History:"
 	#		    puts "⚠️ History: #{JSON.pretty_generate(data)}"
 			elsif data.has_key?("plugin")
 				puts "🌡 Plugin: #{data["plugin"]}, données: #{data["data"]}"
 			elsif data.has_key?("timelapse")
-				puts "⚠️ Timelapse: #{JSON.pretty_generate(data)}"
+				nil
+#				puts "⚠️ Timelapse: #{JSON.pretty_generate(data)}"
 			else
 				puts "⚠️ Inconnu: #{JSON.pretty_generate(data)}"
 			end
-
 		end
 	  end
 	  if @dialog && @dialog.visible?
@@ -301,17 +326,19 @@ module GNTools
 				end
 			when 39 #object cnc print
 				puts "print objet"
-				puts object1
+				puts object1["persistent_id"]
+				pathObj = GNTools.pathObjList[object1["persistent_id"]]
+				gCodeStr = ""
+				gCodeStr = pathObj.createGCode(gCodeStr).gsub(/\R+/, "#r")
+				puts "##### start ######"
+				puts gCodeStr
+				puts "###### end ######"
 				if object1
-					gcodes = "G21#rG90"
-					GNTools.octoPrint.send_gcodes(gcodes)
+					GNTools.octoPrint.send_gcodes(gCodeStr)
 				end
 			when 40
-#				puts "download file"
-				GNTools.octoPrint.download(object1["name"],object1["name"], object1["origin"])
-			when 41
-#				puts "Télécharger file"
-				GNTools.octoPrint.download(object1["name"],object1["name"], object1["origin"])
+				path_to_save_to = UI.savepanel("Save Download", "", object1["name"])
+				GNTools.octoPrint.download(object1["name"],path_to_save_to, object1["origin"])
 			when 42
 #				puts "Pause / Reprendre l'impression"
 				if @printerPaused
@@ -329,8 +356,14 @@ module GNTools
 				@printerPaused = false
 				GNTools.octoPrint.start_print(object1["name"], object1["origin"])
 			when 45
-				puts "effacer fichier"
+#				puts "effacer fichier"
 				GNTools.octoPrint.delete_file(object1["name"], object1["origin"])
+			when 46
+#				puts "upload file " + object1["filename"]
+				GNTools.octoPrint.upload_string(object1["content"], object1["filename"])
+			when 47
+#				puts "G0 X#{object1["X"]} Y#{object1["Y"]} Z#{object1["Z"]}"
+				GNTools.octoPrint.send_gcode("G0 X#{object1["X"]} Y#{object1["Y"]} Z#{object1["Z"]}")
 			else
 				puts "$$Bouton inconnu : #{value}$$"
 				
@@ -403,6 +436,7 @@ module GNTools
 		  @position = dialog.get_position
 		  @size = dialog.get_size
 		  @dialog = nil # Clear the reference to the dialog
+		  GNTools.octoPrint.closeWebSocket
 		}
 		dialog
 	end
@@ -474,7 +508,7 @@ module GNTools
 
 			if groupName
 				# stocke l'entité par son nom
-				names << entity.name
+				names << { "name" => entity.name, "persistent_id" => entity.persistent_id }
 			end
 		end
 

@@ -163,7 +163,6 @@ module GNTools
 		  response = http.request(request)
 
 #		  puts "Jog -> #{body}"
-#		  puts "Response: #{response.code} #{response.body}"
 		  notify(:joghead, response)
 		  response
 	    end
@@ -173,7 +172,7 @@ module GNTools
 	  def upload(file_path, location = "local")
 	    if @reachable
 		  file_name = File.basename(file_path)
-		  uri = URI.parse("#{@host}/api/files/#{@location}")
+		  uri = URI.parse("#{@host}/api/files/#{location}")
 
 		  boundary = "----SketchupBoundary#{rand(1000000)}"
 		  post_body = []
@@ -192,8 +191,6 @@ module GNTools
 		  http = Net::HTTP.new(uri.host, uri.port)
 		  response = http.request(request)
 		  notify(:upload, response)
-
-#		  puts "Upload: #{response.code} #{response.body}"
 		  response
 		end
 	  end
@@ -208,15 +205,12 @@ module GNTools
 
 	      http = Net::HTTP.new(uri.host, uri.port)
 	      response = http.request(request)
-
+		  response["filename"] = file_name
+		  response["pathname"] = save_path
+		  notify(:download, response)
 	      if response.code == "200"
-	        File.open(save_path, "wb") { |f| f.write(response.body) }
-			notify(:download, response)
-#		    puts "Fichier téléchargé : #{save_path}"
 		    return true
 	      else
-			notify(:download, response)
-#		    puts "Erreur download: #{response.code} #{response.body}"
 		    return false
 	      end
 		end
@@ -235,7 +229,6 @@ module GNTools
 	      http = Net::HTTP.new(uri.host, uri.port)
 	      response = http.request(request)
 		  notify(:start_print, response)
-#	      puts "Print: #{response.code} #{response.body}"
 	      response
 		end
 	  end
@@ -252,8 +245,6 @@ module GNTools
 	    http = Net::HTTP.new(uri.host, uri.port)
 	    response = http.request(request)
 		notify(:delete_file, response)
-
-	#  puts "Delete: #{response.code} #{response.body}"
 	    response
 	  end
 
@@ -277,7 +268,6 @@ module GNTools
 	      http = Net::HTTP.new(uri.host, uri.port)
 	      response = http.request(request)
 		  notify(:GCodeSend, response)
-#	      puts "G-code: #{response.code} #{response.body}"
 	      response
 		end
 	  end
@@ -304,8 +294,6 @@ module GNTools
 	      http = Net::HTTP.new(uri.host, uri.port)
 	      response = http.request(request)
 		  notify(:upload_string, response)
-
-#	      puts "Upload string: #{response.code} #{response.body}"
 	      response
 		end
 	  end
@@ -384,7 +372,6 @@ module GNTools
 
 	      http = Net::HTTP.new(uri.host, uri.port)
 	      response = http.request(request)
-#		  puts response
 	      if response.code == "200"
 	        json = JSON.parse(response.body)
 		    notify(:connection_info, response)
@@ -392,7 +379,6 @@ module GNTools
 		    return json
 	      else
 		    notify(:connection_info, response)
-#		    puts "Erreur status: #{response.code} #{response.body}"
 		    return nil
 	      end
 		end
@@ -501,8 +487,6 @@ module GNTools
 #            puts "Erreur inconnue: #{e.class} - #{e.message}"
             return nil
           end
-#		else
-#		  puts "not reachable"
 	    end
       end
 	  
@@ -714,7 +698,8 @@ module GNTools
 	  end
 
 	  def closeWebSocket
-		UI.stop_timer(@ws_timer)
+		UI.stop_timer(@ws_timer) if @ws_timer
+		@ws_timer = nil
 		@ws.close
 		notify(:closeSocket, nil)
  	  end
