@@ -663,4 +663,12 @@ document.getElementById("runButton").addEventListener("click", () => {
   alert("Exécution :\n" + codeToRun.substring(0, 500) + (codeToRun.length > 500 ? "\n..." : ""));
 });
 
+$('#useG2Code').on('change', function() {
+  if ($(this).is(':checked')) {
+	sketchup.buttonPress(49,true);
+  } else {
+	sketchup.buttonPress(49,false);
+  }
+});
+
 updateLineNumbers();

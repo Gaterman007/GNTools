@@ -9,7 +9,7 @@ module GNTools
 
 		class Hole < PathObj	
 
-			@@useG2Code = false
+			@@useG2Code = true
 
 			attr_accessor :holesize
 			attr_accessor :cutwidth
@@ -328,10 +328,11 @@ module GNTools
 			end
 
 			def createGCodeCirlce(gCodeStr,xpos,ypos,radius,segment)
+				radius_mm = radius
 				if Hole.useG2Code
-					gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f ; point de départ (haut du cercle)" [xpos,starty+radius]
-					gCodeStr = gCodeStr + "G2 X%0.2f Y%0.2f I0 J%0.2f  ; premier demi-cercle (180°)" [xpos,starty-rayon,-rayon]
-					gCodeStr = gCodeStr + "G2 X%0.2f Y%0.2f I0 J%0.2f   ; deuxième demi-cercle (180°)" [xpos,starty+rayon,rayon]
+					gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f ; point de départ (haut du cercle)\n" % [xpos,ypos]
+					gCodeStr = gCodeStr + "G2 X%0.2f Y%0.2f I0 J%0.2f  ; premier demi-cercle (180°)\n" % [xpos,ypos-radius_mm,-radius_mm]
+					gCodeStr = gCodeStr + "G2 X%0.2f Y%0.2f I0 J%0.2f   ; deuxième demi-cercle (180°)\n" % [xpos,ypos+radius_mm,radius_mm]
 				else
 					halfnbOfAngle = segment / 2.0
 					stepAngle = 360.0 / segment

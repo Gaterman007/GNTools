@@ -11,7 +11,8 @@
 			<li><a href="#tabs-1" id = "Command">Files</a></li>
 			<li><a href="#tabs-2" id = "GCode">Control</a></li>
 			<li><a href="#tabs-3" id = "Objects">Objects</a></li>
-			<li><a href="#tabs-4" id = "Config">Config</a></li>
+			<li><a href="#tabs-4" id = "Config">Edit</a></li>
+			<li><a href="#tabs-5" id = "Config">Config</a></li>
 		</ul>
 		<div id="tabs-1" style="display: none;">
 			<div class="container"  style="margin: 10px;">
@@ -118,6 +119,20 @@
 		</div>
 		</div>	
 		<div id="tabs-4" style="display: none;">
+		  <div id="filename-display">Aucun fichier ouvert</div>
+		  <div id="editor-container">
+		    <div id="line-numbers"></div>
+		    <textarea id="editor" spellcheck="false"></textarea>
+		    <div id="editor-buttons">
+			  <button id="newButton" title="Nouveau">🆕</button>
+			  <button id="openButton" title="Ouvrir">📂</button>
+			  <button id="saveButton" title="Sauvegarder">💾</button>
+			  <button id="saveAsButton" title="Sauvegarder sous...">💾📁</button>
+			  <button id="runButton" title="Exécuter">▶️</button>
+		    </div>
+		  </div>
+		</div>	
+		<div id="tabs-5" style="display: none;">
 			<div class="container"  style="margin: 10px;">
 				<label>Host: <input id="host" class="def-cnc-input" style="width: 360px"></label>
 			</div>

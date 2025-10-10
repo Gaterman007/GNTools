@@ -251,7 +251,8 @@ $("#tabs").tabs();
 $("#tabs").find("li:eq(0)").hide(); // cache le 1er onglet
 $("#tabs").find("li:eq(1)").hide(); // cache le 2e onglet
 $("#tabs").find("li:eq(2)").hide(); // cache le 3e onglet
-$("#tabs").tabs("option", "active", 3); // ouvre l’onglet 4
+$("#tabs").find("li:eq(3)").hide(); // cache le 4e onglet
+$("#tabs").tabs("option", "active", 4); // ouvre l’onglet 5
 
 $( "#setDefault, #cancel, #accept").button();
 
@@ -366,11 +367,13 @@ function  updateDialog(datajson) {
 	  $("#tabs").find("li:eq(0)").show(); // cache le 1er onglet
 	  $("#tabs").find("li:eq(1)").show(); // cache le 2e onglet
 	  $("#tabs").find("li:eq(2)").show(); // cache le 3e onglet
+	  $("#tabs").find("li:eq(3)").show(); // cache le 4e onglet
 	} else {
 	  $("#tabs").find("li:eq(0)").hide(); // cache le 1er onglet
 	  $("#tabs").find("li:eq(1)").hide(); // cache le 2e onglet
 	  $("#tabs").find("li:eq(2)").hide(); // cache le 3e onglet
-	  $("#tabs").tabs("option", "active", 3); // ouvre l’onglet 4
+	  $("#tabs").find("li:eq(3)").hide(); // cache le 4e onglet
+	  $("#tabs").tabs("option", "active", 4); // ouvre l’onglet 5
 	}
 	$("#Macro1Input").val(obj.macro1);
 	$("#Macro2Input").val(obj.macro2);
@@ -398,6 +401,7 @@ function  updateObjects(dataobjectjson) {
 		// Création d’un élément <li> (un élément de la liste)
 		let li = document.createElement("li");
 		li.innerHTML = objectx.name
+		btnGroup.appendChild(li);
 		// --- Bouton "Imprimer"
 		let btnPrint = document.createElement("button");
 		btnPrint.textContent = "🖨️";
@@ -405,8 +409,15 @@ function  updateObjects(dataobjectjson) {
 		btnPrint.addEventListener("click", async () => {
 			sketchup.buttonPress(39,objectx);
 		});
-		btnGroup.appendChild(li);
 		btnGroup.appendChild(btnPrint);
+		// --- Bouton "Envoie a l editeur"
+		let btnSendToText = document.createElement("button");
+		btnSendToText.textContent = "💾";
+		btnSendToText.title = "Envoie a l editeur";
+		btnSendToText.addEventListener("click", async () => {
+			sketchup.buttonPress(48,objectx);
+		});
+		btnGroup.appendChild(btnSendToText);
 		ul.appendChild(btnGroup);
 	});
 	div.appendChild(ul)
@@ -566,3 +577,90 @@ function uploadFile(file) {
   reader.readAsText(file); // Lit le fichier comme texte
 };
 
+
+const editor = document.getElementById("editor");
+const lineNumbers = document.getElementById("line-numbers");
+
+let currentFileName = null; // pour tracking du fichier actuel
+
+
+function updateLineNumbers() {
+  const lines = editor.value.split("\n").length;
+  let numbers = "";
+  for (let i = 1; i <= lines; i++) numbers += i + "\n";
+  lineNumbers.textContent = numbers;
+}
+
+// Scroll synchronisé
+editor.addEventListener("scroll", () => {
+  lineNumbers.scrollTop = editor.scrollTop;
+});
+
+// Tabulation
+editor.addEventListener("keydown", e => {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    editor.value = editor.value.substring(0, start) + "  " + editor.value.substring(end);
+    editor.selectionStart = editor.selectionEnd = start + 2;
+    updateLineNumbers();
+  }
+});
+
+editor.addEventListener("input", updateLineNumbers);
+updateLineNumbers();
+
+// 🔹 Bouton “Ouvrir fichier”
+document.getElementById("openButton").addEventListener("click", () => {
+	sketchup.loadText(currentFileName); // hook Ruby
+});
+
+// Met à jour l'affichage du nom du fichier
+function updateFilenameDisplay(setFileName) {
+  if (setFileName != "") {
+      currentFileName = setFileName
+  }
+  document.getElementById("filename-display").textContent = currentFileName || "Aucun fichier ouvert";
+}
+
+function loadEditor(filename,content) {
+	if (content != null) {
+      editor.value = content;
+      updateLineNumbers();
+      currentFileName = filename;
+	  updateFilenameDisplay(currentFileName)
+	} else {
+	  currentFileName = "";
+	  updateFilenameDisplay(currentFileName)
+    }
+};
+
+document.getElementById("saveButton").addEventListener("click", () => {
+  if (!currentFileName) {
+	currentFileName = "undefined"
+  }
+  sketchup.saveText(currentFileName, editor.value,false); // hook Ruby
+});
+
+document.getElementById("saveAsButton").addEventListener("click", () => {
+  if (!currentFileName) {
+	currentFileName = "undefined"
+  }
+  sketchup.saveText(currentFileName, editor.value,true); // hook Ruby
+});
+
+document.getElementById("newButton").addEventListener("click", () => {
+  currentFileName = null
+  editor.value = "";
+  updateFilenameDisplay(currentFileName)
+});
+
+// 🔹 Exécuter : sélection ou tout
+document.getElementById("runButton").addEventListener("click", () => {
+  const selection = editor.value.substring(editor.selectionStart, editor.selectionEnd);
+  const codeToRun = selection || editor.value;
+  alert("Exécution :\n" + codeToRun.substring(0, 500) + (codeToRun.length > 500 ? "\n..." : ""));
+});
+
+updateLineNumbers();
