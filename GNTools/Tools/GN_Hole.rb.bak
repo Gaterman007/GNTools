@@ -8,21 +8,13 @@ module GNTools
 
 
 		class Hole < PathObj	
-
-			@@useG2Code = false
-
+			
 			attr_accessor :holesize
 			attr_accessor :cutwidth
 			attr_accessor :holeposition
 			attr_accessor :nbdesegment
 			
-		    def self.useG2Code=(val)
-			  @@useG2Code = val
-		    end
-
-		    def self.useG2Code
-			  @@useG2Code
-		    end
+			
 
 			def initialize(group = nil)
 				@cutwidth = 3.175
@@ -328,24 +320,18 @@ module GNTools
 			end
 
 			def createGCodeCirlce(gCodeStr,xpos,ypos,radius,segment)
-				if Hole.useG2Code
-					gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f ; point de départ (haut du cercle)" [xpos,starty+radius]
-					gCodeStr = gCodeStr + "G2 X%0.2f Y%0.2f I0 J%0.2f  ; premier demi-cercle (180°)" [xpos,starty-rayon,-rayon]
-					gCodeStr = gCodeStr + "G2 X%0.2f Y%0.2f I0 J%0.2f   ; deuxième demi-cercle (180°)" [xpos,starty+rayon,rayon]
-				else
-					halfnbOfAngle = segment / 2.0
-					stepAngle = 360.0 / segment
-					(0..halfnbOfAngle).each{ |angle|
-						sinus = (Math.sin((angle * stepAngle) * Math::PI / 180.0) * radius) + xpos
-						cosine = (Math.cos((angle * stepAngle) * Math::PI / 180.0) * radius) + ypos
-						gCodeStr = gCodeStr + "G1 X%0.2f Y%0.2f  ;circle angle %0.2f\n" % [sinus,cosine, angle * stepAngle]
-					}
-					(halfnbOfAngle - 1).step(0,-1) { |angle|
-						sinus = (-(Math.sin((angle * stepAngle) * Math::PI / 180.0) * radius)) + xpos
-						cosine = (Math.cos((angle * stepAngle) * Math::PI / 180.0) * radius) + ypos
-						gCodeStr = gCodeStr + "G1 X%0.2f Y%0.2f  ;circle angle %0.2f\n" % [sinus,cosine, (360 - (angle * stepAngle))]
-					}
-				end
+				halfnbOfAngle = segment / 2.0
+				stepAngle = 360.0 / segment
+				(0..halfnbOfAngle).each{ |angle|
+					sinus = (Math.sin((angle * stepAngle) * Math::PI / 180.0) * radius) + xpos
+					cosine = (Math.cos((angle * stepAngle) * Math::PI / 180.0) * radius) + ypos
+					gCodeStr = gCodeStr + "G1 X%0.2f Y%0.2f  ;circle angle %0.2f\n" % [sinus,cosine, angle * stepAngle]
+				}
+				(halfnbOfAngle - 1).step(0,-1) { |angle|
+					sinus = (-(Math.sin((angle * stepAngle) * Math::PI / 180.0) * radius)) + xpos
+					cosine = (Math.cos((angle * stepAngle) * Math::PI / 180.0) * radius) + ypos
+					gCodeStr = gCodeStr + "G1 X%0.2f Y%0.2f  ;circle angle %0.2f\n" % [sinus,cosine, (360 - (angle * stepAngle))]
+				}
                 gCodeStr
 			end
 

@@ -179,3 +179,75 @@ progress {
   padding: 8px;              /* espace interne */
   border-radius: 6px;        /* coins arrondis (optionnel) */
 }
+
+/* Nom du fichier */
+#filename-display {
+  font-family: monospace;
+  font-size: 14px;
+  background: #eaeaea;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#editor-container {
+  display: flex;
+  position: relative;
+  border: 1px solid #888;
+  font-family: monospace;
+  max-height: 400px;
+  overflow: hidden;
+}
+
+#line-numbers {
+  white-space: pre;      /* important pour respecter les sauts de ligne */
+  background: #f0f0f0;
+  color: #666;
+  font-family: monospace;
+  text-align: right;
+  padding: 5px 8px 0 8px;
+  border-right: 1px solid #ccc;
+  user-select: none;
+  line-height: 1.4em;
+  font-size: 14px;
+  overflow: hidden;
+}
+
+#editor {
+  flex: 1;
+  margin: 0;
+  padding: 5px 8px 0 8px;
+  border: none;
+  outline: none;
+  resize: none;
+  line-height: 1.4em;
+  font-family: monospace;
+  font-size: 14px;
+  overflow: auto;
+  max-height: 400px;
+  box-sizing: border-box;
+}
+
+#editor-buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  border-left: 1px solid #ccc;
+  background: #fafafa;
+}
+#editor-buttons button {
+  border: none;
+  background: #eaeaea;
+  cursor: pointer;
+  padding: 6px;
+  margin: 2px;
+  font-size: 16px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+#editor-buttons button:hover {
+  background: #d0d0d0;
+}

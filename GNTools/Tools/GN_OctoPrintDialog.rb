@@ -202,6 +202,30 @@ module GNTools
 			end
 			nil
 		}
+		
+		@dialog.add_action_callback("saveText") do |dlg, filename, content, saveas|
+			filename = filename.to_s
+			if saveas || filename == "undefined"
+				filename = UI.savepanel("Save File", "", filename)
+			end
+			if filename && !filename.empty?
+				File.open(filename, "w") { |f| f.write(content) }
+				scriptStr = "updateFilenameDisplay(#{filename.to_json})"
+				@dialog.execute_script(scriptStr)
+			end
+		end
+
+		@dialog.add_action_callback("loadText") do |dlg, filename|
+			filename = UI.openpanel("Load File", "", filename.to_s)
+		    if !filename.empty? && File.exist?(filename)
+				content = File.read(filename)
+				scriptStr = "loadEditor(#{filename.to_json}, #{content.to_json})"
+				@dialog.execute_script(scriptStr)
+			else
+				nil
+			end
+		end
+		
 		# when a new value is entered
 		@dialog.add_action_callback("buttonPress") { |action_context, value, object1|
 			case value
@@ -325,14 +349,9 @@ module GNTools
 					GNTools.octoPrint.send_gcode("G90")
 				end
 			when 39 #object cnc print
-				puts "print objet"
-				puts object1["persistent_id"]
 				pathObj = GNTools.pathObjList[object1["persistent_id"]]
 				gCodeStr = ""
 				gCodeStr = pathObj.createGCode(gCodeStr).gsub(/\R+/, "#r")
-#				puts "##### start ######"
-#				puts gCodeStr
-#				puts "###### end ######"
 				if object1
 					GNTools.octoPrint.send_gcodes(gCodeStr)
 				end
@@ -368,6 +387,13 @@ module GNTools
 				else
 					GNTools.octoPrint.send_gcode("G0 X#{object1["X"]} Y#{object1["Y"]} Z#{object1["Z"]}")
 				end
+			when 48
+				pathObj = GNTools.pathObjList[object1["persistent_id"]]
+				gCodeStr = ""
+				gCodeStr = pathObj.createGCode(gCodeStr)
+				filename = ""
+				scriptStr = "loadEditor(#{filename.to_json}, #{gCodeStr.to_json})"
+				@dialog.execute_script(scriptStr)
 			else
 				puts "$$Bouton inconnu : #{value}$$"
 				

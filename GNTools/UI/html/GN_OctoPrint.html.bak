@@ -38,6 +38,7 @@
 					<progress id="uploadProgress" value="0" max="100"></progress>
 					<span id="progressText">0%</span>
 				  </div>
+				  <pre id="fileContent"></pre>
 				</div>
 			</div>
 		</div>
@@ -45,6 +46,7 @@
 			<div style="display: flex; gap: 20px; align-items: flex-start;">
 			  <div class="container"  style="margin: 10px;">
 				<div class="spindlecontainer" style = "width:240px;">
+					<button id="moveToCoord" class="def-button">Move To:</button>
 					<button id="setToCoord" class="def-button">Set To:</button><br>
 					<div style="display:flex; align-items:center; gap:8px;">
 						<label>X: <input id="XStr" type="number" step="0.01" class="def-cnc-input" style="margin: 3px; width: 200px; text-align: right;"></label>

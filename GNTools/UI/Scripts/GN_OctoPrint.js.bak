@@ -85,7 +85,7 @@ $(document).ready(function(){
 	$("#XStr").val("0.00");
 	$("#YStr").val("0.00");
 	$("#ZStr").val("0.00");
-	$("#jogSpeed").val("0");
+	$("#jogSpeed").val("6000");
 	$("#SpindleSpeed").val("255");
 	mapDataClipPath.forEach((btn, index) => {
 	  const area = document.createElement("button");
@@ -174,6 +174,16 @@ $("#moveToCoord" ).on( "click", function( event ) {
 				"Y":$("#YStr").val(),
 				"Z":$("#ZStr").val()
 				};
+	
+	console.log($("#useDefaultSpeed").is(":checked"))
+	if ($('#useDefaultSpeed').is(":checked")) {
+		coords = {
+				"X":$("#XStr").val(),
+				"Y":$("#YStr").val(),
+				"Z":$("#ZStr").val(),
+				"F":$("#jogSpeed").val()
+				};
+	}
 	sketchup.buttonPress(47,coords);
 });
 
