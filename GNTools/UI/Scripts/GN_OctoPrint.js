@@ -173,6 +173,7 @@ $("#moveToCoord" ).on( "click", function( event ) {
 				"X":$("#XStr").val(),
 				"Y":$("#YStr").val(),
 				"Z":$("#ZStr").val()
+				"F":$("#jogSpeed").val()
 				};
 	
 	console.log($("#useDefaultSpeed").is(":checked"))
@@ -180,8 +181,7 @@ $("#moveToCoord" ).on( "click", function( event ) {
 		coords = {
 				"X":$("#XStr").val(),
 				"Y":$("#YStr").val(),
-				"Z":$("#ZStr").val(),
-				"F":$("#jogSpeed").val()
+				"Z":$("#ZStr").val()
 				};
 	}
 	sketchup.buttonPress(47,coords);
@@ -660,7 +660,10 @@ document.getElementById("newButton").addEventListener("click", () => {
 document.getElementById("runButton").addEventListener("click", () => {
   const selection = editor.value.substring(editor.selectionStart, editor.selectionEnd);
   const codeToRun = selection || editor.value;
-  alert("Exécution :\n" + codeToRun.substring(0, 500) + (codeToRun.length > 500 ? "\n..." : ""));
+  let val = {
+			  "code":codeToRun
+			};
+  sketchup.buttonPress(50,val);
 });
 
 $('#useG2Code').on('change', function() {

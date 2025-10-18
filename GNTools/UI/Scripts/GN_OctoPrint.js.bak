@@ -660,7 +660,18 @@ document.getElementById("newButton").addEventListener("click", () => {
 document.getElementById("runButton").addEventListener("click", () => {
   const selection = editor.value.substring(editor.selectionStart, editor.selectionEnd);
   const codeToRun = selection || editor.value;
-  alert("Exécution :\n" + codeToRun.substring(0, 500) + (codeToRun.length > 500 ? "\n..." : ""));
+  let val = {
+			  "code":codeToRun
+			};
+  sketchup.buttonPress(50,val);
+});
+
+$('#useG2Code').on('change', function() {
+  if ($(this).is(':checked')) {
+	sketchup.buttonPress(49,true);
+  } else {
+	sketchup.buttonPress(49,false);
+  }
 });
 
 updateLineNumbers();

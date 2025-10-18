@@ -394,6 +394,9 @@ module GNTools
 				filename = ""
 				scriptStr = "loadEditor(#{filename.to_json}, #{gCodeStr.to_json})"
 				@dialog.execute_script(scriptStr)
+			when 49
+				puts object1
+				GNTools::Paths::Hole.useG2Code = object1
 			else
 				puts "$$Bouton inconnu : #{value}$$"
 				
