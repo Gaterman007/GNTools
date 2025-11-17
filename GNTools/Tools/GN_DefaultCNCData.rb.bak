@@ -45,7 +45,7 @@ module GNTools
 			@defaultDepthLenght = 0.5
 			@safeHeight = 6
 			@material_width = 2
-			@material_thickness = 20
+			@material_thickness = 3
 			@material_depth = 4
 			@safeZoneHeight = 20
 			@safeZoneDepth = 170

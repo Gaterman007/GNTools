@@ -19,3 +19,4 @@
 {"Name":"#19","Cut_Types":"Down","Cut_Diameter":5,"units":"mm","Cutting_Length":43.4,"Drill_Size":2.1,"Shank_Height":1.1,"Shank_Diam":9.4,"Shoulder_Lenght":22.1,"Number_of_Flutes":6.3,"Cutting":7.1}
 {"Name":"#20","Cut_Types":"Down","Cut_Diameter":5,"units":"mm","Cutting_Length":43.4,"Drill_Size":2.1,"Shank_Height":1.1,"Shank_Diam":9.4,"Shoulder_Lenght":22.1,"Number_of_Flutes":6.3,"Cutting":7.1}
 {"Name":"#21","Cut_Types":"Down","Cut_Diameter":5,"units":"mm","Cutting_Length":43.4,"Drill_Size":2.1,"Shank_Height":1.1,"Shank_Diam":9.4,"Shoulder_Lenght":22.1,"Number_of_Flutes":6.3,"Cutting":7.1}
+{"Name":"#22","Cut_Types":"Down","Cut_Diameter":20,"units":"mm","Cutting_Length":15,"Drill_Size":20,"Shank_Height":15,"Shank_Diam":6,"Shoulder_Lenght":12,"Number_of_Flutes":2,"Cutting":1}

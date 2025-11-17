@@ -111,27 +111,23 @@ module GNTools
 		
 		
 		def self.load_drillBitsTbl
-			@@drillbitTbl.push(DrillBit.new("Default","Up"	,3.175,"mm"  ,10  ,3.175,22  ,3.175,0   ,2  ,0))
-			@@drillbitTbl.push(DrillBit.new("#2"	 ,"Up"	,3.175,"mm"  ,10  ,3.175,22  ,3.175,0   ,2  ,0))
-			@@drillbitTbl.push(DrillBit.new("#3"	 ,"Up"	,6	  ,"mm"  ,13  ,6    ,57  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#4"	 ,"Up"	,5.5  ,"mm"  ,13  ,6    ,57  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#5"	 ,"Up"	,5 	  ,"mm"  ,13  ,6    ,57  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#6"	 ,"Up"	,4.5  ,"mm"  ,12  ,6    ,56  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#7"	 ,"Up"	,4	  ,"mm"  ,11  ,6    ,55  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#8"	 ,"Up"	,3.5  ,"mm"  ,3   ,6    ,55  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#9"	 ,"Up"	,3	  ,"mm"  ,8   ,6    ,45  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#10"	 ,"Up"	,2.5  ,"mm"  ,7   ,6    ,52  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#11"	 ,"Up"	,2	  ,"mm"  ,7   ,6    ,51  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#12"    ,"Down",1.5  ,"mm"  ,43.4,6    ,1.1 ,6    ,22.1,6.3,0))
-			@@drillbitTbl.push(DrillBit.new("#13"    ,"Down",5    ,"inch",43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#14"    ,"Down",4    ,"inch",43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#15"    ,"Down",7    ,"inch",43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#16"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#17"    ,"Up"  ,5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#18"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#19"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#20"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#21"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
+			@@drillbitTbl.push(DrillBit.new("Default","Up",3.175,"mm",3.175,3.175,22,3.175,0,2,0))
+			@@drillbitTbl.push(DrillBit.new("#2","Down",3.175,"mm",3.175, 3.175,22,3.175,0,2,0))
+			@@drillbitTbl.push(DrillBit.new("#3","Up",6,"mm",6,6,13,57,0,2,0))
+			@@drillbitTbl.push(DrillBit.new("#4","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#7","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#7","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#7","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#5","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#9","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#6","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#8","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#10","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#13","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#11","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#12","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#15","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
+			@@drillbitTbl.push(DrillBit.new("#14","Down",5,"mm",43.4,2.10,1.1,9.4,22.10,6.3,7.10))
 			nil
 		end
 		
@@ -196,17 +192,6 @@ module GNTools
 					DrillBits.saveToFile(File.join(GNTools::PATH, "DrillBits.txt"))
 					nil
 				}
-				@dialog.add_action_callback("tableAdjust") { |action_context, value,row|
-					if @newdrillbitTbl.count - 1 < row
-						@newdrillbitTbl.push(DrillBit.new())
-						scriptStr = "delRowsTable()"
-						@dialog.execute_script(scriptStr)
-						@newdrillbitTbl.each { |oneDrill|
-							scriptStr = "addRowToTable(\'#{oneDrill.to_Json()}\')"
-							@dialog.execute_script(scriptStr)
-						}
-					end
-				}
 				@dialog.add_action_callback("changeValue") { |action_context, value,row|
 #					@@drillbitTbl[row-1].from_Hash(value);
 					@newdrillbitTbl[row-1].from_Hash(value);
@@ -219,7 +204,7 @@ module GNTools
 		end
 
 		def create_dialog
-			html_file = File.join(GNTools::PATH, 'ui', 'html', 'DrillBits.html') # Use external HTML
+			html_file = File.join(__dir__, 'html', 'DrillBits.html') # Use external HTML
 			options = {
 			  :dialog_title => "DrillBits Settings",
 			  :resizable => true,

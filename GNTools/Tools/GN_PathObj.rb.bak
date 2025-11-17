@@ -50,6 +50,8 @@ module GNTools
 					moved_lines = []
 					pface.each_with_index do |start_pt,index|
 						end_pt = pface[(index + 1) % pface.count]
+#						start_pt = start_pt.transform! transformation
+#						end_pt = end_pt.transform! transformation
 				# Vecteur directionnel de l'arête
 						edge_vector = Geom::Vector3d.new(end_pt - start_pt)
 						edge_vectors << edge_vector
@@ -382,25 +384,25 @@ module GNTools
 				nil
 			end
 			def createEdge(group,start,finish)
-#				puts "edge %f,%f,%f : %f,%f,%f" % [start[0] , start[1], start[2], finish[0] , finish[1], finish[2]]
+				puts "edge %f,%f,%f : %f,%f,%f" % [start[0] , start[1], start[2], finish[0] , finish[1], finish[2]]
 				edge = group.entities.add_edges(start,finish)
 				@lastPosition = finish
 			end
 			
 			def nextEdge(group,newPosition)
-#				puts "edge %f,%f,%f : %f,%f,%f" % [@lastPosition[0] , @lastPosition[1], @lastPosition[2], newPosition[0] , newPosition[1], newPosition[2]]
+				puts "edge %f,%f,%f : %f,%f,%f" % [@lastPosition[0] , @lastPosition[1], @lastPosition[2], newPosition[0] , newPosition[1], newPosition[2]]
 				edge = group.entities.add_edges(@lastPosition,newPosition)
 				@lastPosition = newPosition
 			end
 			
 			def nextEdgeXY(group,newXPosition,newYPosition)
-#				puts "edge %f,%f,%f : %f,%f,%f" % [@lastPosition[0] , @lastPosition[1], @lastPosition[2], newXPosition,newYPosition,@lastPosition[2]]
+				puts "edge %f,%f,%f : %f,%f,%f" % [@lastPosition[0] , @lastPosition[1], @lastPosition[2], newXPosition,newYPosition,@lastPosition[2]]
 				edge = group.entities.add_edges(@lastPosition,[newXPosition,newYPosition,@lastPosition[2]])
 				@lastPosition = [newXPosition,newYPosition,@lastPosition[2]]
 			end
 
 			def nextEdgeZ(group,newPosition)
-#				puts "edge %f,%f,%f : %f,%f,%f" % [@lastPosition[0] , @lastPosition[1], @lastPosition[2], @lastPosition[0],@lastPosition[1],newPosition]
+				puts "edge %f,%f,%f : %f,%f,%f" % [@lastPosition[0] , @lastPosition[1], @lastPosition[2], @lastPosition[0],@lastPosition[1],newPosition]
 				edge = group.entities.add_edges(@lastPosition,[@lastPosition[0],@lastPosition[1],newPosition])
 				@lastPosition = [@lastPosition[0],@lastPosition[1],newPosition]
 			end

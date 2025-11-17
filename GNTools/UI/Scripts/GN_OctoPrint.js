@@ -172,7 +172,7 @@ $("#moveToCoord" ).on( "click", function( event ) {
 	let coords = {
 				"X":$("#XStr").val(),
 				"Y":$("#YStr").val(),
-				"Z":$("#ZStr").val()
+				"Z":$("#ZStr").val(),
 				"F":$("#jogSpeed").val()
 				};
 	

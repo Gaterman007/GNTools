@@ -171,7 +171,7 @@ tr:nth-child(even) {
 	$("#addRow").button().on("click", function () {
 		tableRefObj = document.getElementById('drilbitstbl');
 
-		// Nouveau modÃ¨le par dÃ©faut
+		// Nouveau modèle par défaut
 		var newObj = {
 			Name: "",
 			Cut_Types: "Up",
@@ -190,7 +190,7 @@ tr:nth-child(even) {
 		newRow.setAttribute("onclick", "clickOnTable(this);");
 		setRowData(newRow, newObj);
 
-		// Auto-sÃ©lection de la nouvelle ligne
+		// Auto-sélection de la nouvelle ligne
 		resetRowTableInput(rowSelectedObj);
 		rowSelectedObj = newRow;
 		rowSelected = newRow.rowIndex;
@@ -205,13 +205,13 @@ tr:nth-child(even) {
 		tableRefObj = document.getElementById('drilbitstbl');
 
 		if (tableRefObj.rows.length <= 2) {
-			alert("Impossible de supprimer la derniÃ¨re ligne.");
+			alert("Impossible de supprimer la dernière ligne.");
 			return;
 		}
 
 		tableRefObj.deleteRow(rowSelected);
 
-		// Ajuster la sÃ©lection aprÃ¨s suppression
+		// Ajuster la sélection après suppression
 		if (rowSelected >= tableRefObj.rows.length)
 			rowSelected = tableRefObj.rows.length - 1;
 

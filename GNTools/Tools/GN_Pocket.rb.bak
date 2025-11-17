@@ -14,71 +14,11 @@ module GNTools
 			attr_accessor :pocket_faces_normal
 			attr_accessor :pocket_faces_vertices
 			
-			class PocketData
-				attr_accessor :loopFace
-				attr_accessor :drillbitSize
-				attr_accessor :drillBitRayon
-				attr_accessor :safeHeight
-				attr_accessor :material_thickness
-				attr_accessor :down_slow
-				attr_accessor :height_pass
-				attr_accessor :down_slow
-				attr_accessor :defaultFeedRate
-				attr_accessor :pocketsize
-				attr_accessor :holeBottom
-					
-				def getPocketData(pocketObj)
-					@loopFace = LoopFace.new()
-					@loopFace.pfaces_vertices = pocketObj.getGlobal()
-					@loopFace.pfaces_normal = pocketObj.pocket_faces_normal
-					@drillbitSize = DrillBits.getDrillBit(pocketObj.drillBitName).cut_Diameter			# diametre de la drill
-					@drillBitRayon = (@drillbitSize/2.0)											# ()rayon de la drill	drillBitRayon = drillBitRayon.mm
-					@safeHeight = GNTools.getSafeHeight()
-					@material_thickness = GNTools.material_Height()
-					@down_slow = pocketObj.depthstep
-					# height_pass start at end go down_slow
-					if pocketObj.multipass
-						@height_pass = @material_thickness
-					else
-						@height_pass = @material_thickness - pocketObj.depth
-					end
-					if @safeHeight == nil
-						@safeHeight = DefaultCNCDialog.def_CNCData.safeHeight
-					end
-					if @material_thickness == nil
-						@material_thickness = DefaultCNCDialog.def_CNCData.material_thickness
-					end
-					@defaultFeedRate = pocketObj.feedrate
-					if @defaultFeedRate == nil
-						@defaultFeedRate = DefaultCNCData.getFromModel("defaultFeedRate")			# la vitesse par default
-					end
-					boundingbox = pocketObj.pathEntitie.bounds
-					@holeBottom = @material_thickness - pocketObj.depth
-					@pocketsize = boundingbox.width
-					if @pocketsize < boundingbox.height
-						@pocketsize = boundingbox.height
-					end
-				end
-				
-				def to_str
-				  string =
-					"Loops : #{loopFace}\n" \
-					"Drill bits : #{drillbitSize} : #{drillBitRayon}\n" \
-					"Safe Height : #{safeHeight}\n" \
-					"material_thickness : #{material_thickness}\n" \
-					"down_slow : #{down_slow}\n" \
-					"height_pass : #{height_pass}\n" \
-					"defaultFeedRate : #{defaultFeedRate}\n" \
-					"pocketsize : #{pocketsize}\n" \
-					"holeBottom : #{holeBottom}\n"
-				  string
-				end
-			end
+			
 			# Définition privée du EdgeStruct
 			# Définition d'une class qui imite Sketchup::Edge
 			
 			def initialize(group = nil)
-				@pd = PocketData.new
 				@cutwidth = 3.175
 				@pocket_faces_normal = []
 				@pocket_faces_vertices = []
@@ -100,7 +40,7 @@ module GNTools
 		    end			
 
 			def createDynamiqueModel
-				@pd.getPocketData(self)
+			
 			    drillbitSize = DrillBits.getDrillBit(@drillBitName).cut_Diameter			# diametre de la drill 
 			    drillBitRayon = (drillbitSize/2.0)								# rayon de la drill
 
@@ -298,8 +238,8 @@ module GNTools
 							(0..loop_arr.size).each do |index_horaire|
 								edge1 = loop_arr[(index_horaire) % loop_arr.size]
 								edge2 = loop_arr[(index_horaire + 1) % loop_arr.size]
-								edge1[2] = offset_height.mm
-								edge2[2] = offset_height.mm									
+								edge1[2] = offset_height
+								edge2[2] = offset_height									
 								edgearray_big.concat(pathGroup.entities.add_edges(edge1,edge2))
 							end
 						end
@@ -309,30 +249,48 @@ module GNTools
 			
 			def createPath()
 				super()
+				loopFace = LoopFace.new()
+				loopFace.pfaces_vertices = self.getGlobal()
+				loopFace.pfaces_normal = @pocket_faces_normal
+
 				pathGroup = Sketchup.active_model.entities.add_group()
-				pathGroup.name = "PocketView"
-				@pd.getPocketData(self)
-				while @pd.height_pass >= @pd.holeBottom
-					puts "Creating layer #{methodType} at #{@pd.height_pass}"
+                drillbitSize = DrillBits.getDrillBit(@drillBitName).cut_Diameter			# diametre de la drill
+			    drillBitRayon = (drillbitSize/2.0)											# rayon de la drill	
+				drillBitRayon = drillBitRayon.mm
+				safeHeight = DefaultCNCData.getFromModel("safeHeight")						# la hauteur que l on peut faire un travel sans toucher a la piece
+				if safeHeight == nil
+					safeHeight = DefaultCNCDialog.def_CNCData.safeHeight
+				end
+				safeHeight = safeHeight.mm
+				material_thickness = DefaultCNCData.getFromModel("height")						# la hauteur du materiel
+				if material_thickness == nil
+					material_thickness = DefaultCNCDialog.def_CNCData.material_thickness
+				end
+				material_thickness = material_thickness.mm
+				defaultFeedRate = DefaultCNCData.getFromModel("defaultFeedRate")			# la vitesse par default
+				boundingbox = pathEntitie.bounds
+				pocketsize = boundingbox.width
+				if pocketsize < boundingbox.height
+					pocketsize = boundingbox.height
+				end
+				offset_height = 0.0
+				while offset_height > -self["depth"].mm
 					if methodType == "Pocket"
-						offset_loop = @pd.pocketsize.to_mm
-						while offset_loop > @pd.drillBitRayon.mm
-							loopsleft = @pd.loopFace.deplacer(-offset_loop)
-							self.createPathLoop(pathGroup,loopsleft,@pd.height_pass)
-							offset_loop -= @pd.drillBitRayon.mm
+						offset_loop = pocketsize.to_mm
+						while offset_loop > 0.0
+							loopsleft = loopFace.deplacer(-offset_loop)
+							self.createPathLoop(pathGroup,loopsleft,offset_height)
+							offset_loop -= drillBitRayon
 						end
-						loopsleft = @pd.loopFace.deplacer(-@pd.drillBitRayon.mm)
-						self.createPathLoop(pathGroup,loopsleft,@pd.height_pass)
-						
 					elsif methodType == "Inside"
-						loopsleft = @pd.loopFace.deplacer(-@pd.drillBitRayon.mm)
-						self.createPathLoop(pathGroup,@pd.loopsleft,@pd.height_pass)
+						loopsleft = loopFace.deplacer(-drillBitRayon)
+						self.createPathLoop(pathGroup,loopsleft,offset_height)
 					elsif methodType == "Outside"
-						offset_loop = @pd.pocketsize.mm
-						loopsleft = @pd.loopFace.deplacer(@pd.drillBitRayon.mm)
-						self.createPathLoop(pathGroup,loopsleft,@pd.height_pass)
+						offset_loop = pocketsize.mm
+						loopsleft = loopFace.deplacer(drillBitRayon)
+						self.createPathLoop(pathGroup,loopsleft,offset_height)
 					end
-					@pd.height_pass -= @pd.down_slow
+					offset_height -= depthstep.mm
 				end
 			end
 			
@@ -373,6 +331,7 @@ module GNTools
 							edgearray_big = []
 							edge1 = loop_arr[0]
 							gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f\n" % [edge1[0].to_mm , edge1[1].to_mm]
+							gCodeStr = gCodeStr + "G0 Z%0.2f\n" % [offset_height.to_mm]
 							(0..loop_arr.size).each do |index_horaire|
 								edge2 = loop_arr[(index_horaire + 1) % loop_arr.size]
 								edge2[2] = offset_height									
@@ -386,34 +345,58 @@ module GNTools
 			end
 			
 			def createGCode(gCodeStr)
-				@pd.getPocketData(self)
+				loopFace = LoopFace.new()
+				loopFace.pfaces_vertices = self.getGlobal()
+				loopFace.pfaces_normal = @pocket_faces_normal
+                drillbitSize = DrillBits.getDrillBit(@drillBitName).cut_Diameter			# diametre de la drill
+			    drillBitRayon = (drillbitSize/2.0)											# rayon de la drill	
+				drillBitRayon = drillBitRayon.mm
+				safeHeight = DefaultCNCData.getFromModel("safeHeight")						# la hauteur que l on peut faire un travel sans toucher a la piece
+				if safeHeight == nil
+					safeHeight = DefaultCNCDialog.def_CNCData.safeHeight
+				end
+				safeHeight = safeHeight.mm
+				material_thickness = DefaultCNCData.getFromModel("height")						# la hauteur du materiel
+				if material_thickness == nil
+					material_thickness = DefaultCNCDialog.def_CNCData.material_thickness
+				end
+				material_thickness = material_thickness.mm
+				defaultFeedRate = DefaultCNCData.getFromModel("defaultFeedRate")			# la vitesse par default
+				boundingbox = pathEntitie.bounds
+				pocketsize = boundingbox.width
+				if pocketsize < boundingbox.height
+					pocketsize = boundingbox.height
+				end
+
 				gCodeStr = gCodeStr + "; create a pocket\n"
 				gCodeStr = gCodeStr + "; pocket Name : %s\n" % [@pathName]
-				gCodeStr = gCodeStr + "G0  Z%0.2f ; goto safe height\n" % [@pd.safeHeight]
-				gCodeStr = gCodeStr + "; drill %s pocket bit size, %0.2f\n" % [@methodType, @pd.drillbitSize]
-				gCodeStr = gCodeStr + "; Top,Bottom %0.2f %0.2f\n" % [@pd.material_thickness,@pd.holeBottom]
-				while @pd.height_pass >= @pd.holeBottom
-					puts "Creating layer #{methodType} at #{@pd.height_pass}"
-					gCodeStr = gCodeStr + "G0 Z%0.2f\n" % [@pd.height_pass]
+				gCodeStr = gCodeStr + "G0  Z%0.2f ; goto safe height\n" % [safeHeight.to_mm]
+				gCodeStr = gCodeStr + "; drill %s pocket bit size, %0.2f\n" % [@methodType, drillbitSize]
+				holeBottom = material_thickness - @depth.mm
+				if holeBottom < 0 
+					holeBottom = 0.0
+				end
+				if @multipass
+					downslow = material_thickness
+				else
+					downslow = holeBottom
+				end
+				while (downslow >= holeBottom) do
 					if methodType == "Pocket"
-						offset_loop = @pd.pocketsize.to_mm
-						while offset_loop > @pd.drillBitRayon.mm
-							loopsleft = @pd.loopFace.deplacer(-offset_loop)
-							gCodeStr = self.createGCodeLoop(loopsleft,@pd.height_pass,gCodeStr)
-							offset_loop -= @pd.drillBitRayon.mm
+						offset_loop = pocketsize.to_mm
+						while offset_loop > 0.0
+							loopsleft = loopFace.deplacer(-offset_loop)
+							gCodeStr = self.createGCodeLoop(loopsleft,downslow,gCodeStr)
+							offset_loop -= drillBitRayon
 						end
-						loopsleft = @pd.loopFace.deplacer(-@pd.drillBitRayon.mm)
-						gCodeStr = self.createGCodeLoop(loopsleft,@pd.height_pass,gCodeStr)
 					elsif methodType == "Inside"
-						gCodeStr = gCodeStr + "G0 Z%0.2f\n" % [@pd.height_pass]
-						loopsleft = @pd.loopFace.deplacer(-@pd.drillBitRayon.mm)
-						gCodeStr = self.createGCodeLoop(loopsleft,@pd.height_pass,gCodeStr)
+						loopsleft = loopFace.deplacer(-drillBitRayon)
+						gCodeStr = self.createGCodeLoop(loopsleft,downslow,gCodeStr)
 					elsif methodType == "Outside"
-						gCodeStr = gCodeStr + "G0 Z%0.2f\n" % [@pd.height_pass]
-						loopsleft = @pd.loopFace.deplacer(@pd.drillBitRayon.mm)
-						gCodeStr = self.createGCodeLoop(loopsleft,@pd.height_pass,gCodeStr)
+						loopsleft = loopFace.deplacer(drillBitRayon)
+						gCodeStr = self.createGCodeLoop(loopsleft,downslow,gCodeStr)
 					end
-					@pd.height_pass -= @pd.down_slow
+					downslow = downslow - @depthstep.mm
 				end
                 gCodeStr
             end

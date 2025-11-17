@@ -176,9 +176,6 @@ module GNTools
 					}
 					# when the button "Accept" is press "OK"
 					@dialog.add_action_callback("accept") { |action_context, value|
-						if @observer
-							@observer.commitOperation = true
-						end
 						@dialog.close
 						Sketchup.active_model.select_tool(nil)
 							
