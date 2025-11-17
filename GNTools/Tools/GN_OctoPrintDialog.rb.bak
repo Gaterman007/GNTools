@@ -397,6 +397,9 @@ module GNTools
 			when 49
 				puts object1
 				GNTools::Paths::Hole.useG2Code = object1
+			when 50
+				codeToRun = object1["code"]
+				GNTools.octoPrint.send_gcodes(codeToRun)
 			else
 				puts "$$Bouton inconnu : #{value}$$"
 				

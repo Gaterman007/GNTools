@@ -24,30 +24,26 @@ module GNTools
 			  @@useG2Code
 		    end
 
-			def initialize(group = nil)
-				@cutwidth = 3.175
-				@holesize = 5.0
-				@holeposition = [0,0,0]
-				@nbdesegment = 24
-				super("Hole",group)
-				if self.methodType == ""
-					self.methodType = "Pocket"				#  'Inside','Outside','Pocket'
-				end					
-			end
+			@@derivedType = @@defaultType.merge({
+			  "holesize" => 5.0,
+			  "methodType" => "Pocket",
+			  "dictionaryName" => "Hole",
+			  "nbdesegment" => 24,
+			  "cutwidth" => 3.175
+			})
 
-		    @@derivedType = @@defaultType.merge(
-			  {
-					"holesize":5.0,
-					"methodType":"Pocket",
-					"nbdesegment":24,
-					"cutwidth":3.175
-			  }
-		    )
+
+			def initialize(group = nil)
+				@@derivedType.each do |key, value|
+				  instance_variable_set("@#{key}", value)
+				end
+				@holeposition = [0,0,0]
+				super("Hole",group)			
+			end
 
 		    def defaultType
 			  @@derivedType
 		    end
-
 
 			def createDynamiqueModel
 				positionHole = self.getGlobal()

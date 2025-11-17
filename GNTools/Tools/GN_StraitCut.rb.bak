@@ -9,21 +9,21 @@ module GNTools
       attr_accessor :cutwidth, :startPosition, :endPosition, :nbdesegment
 
       # Configuration par défaut spécifique à StraitCut
-	  @@derivedType = @@defaultType.merge({
-        "methodType" => "Ramp",
-        "cutwidth" => 5.3,
-		"dictionaryName" => "StraitCut",
-		"nbdesegment" => 24
-	  })
-
+      @@derivedType = @@defaultType.merge({
+        methodType: "Ramp",
+        cutwidth: 5.3
+      }).freeze
 
       def initialize(group = nil)
-		@@derivedType.each do |key, value|
-			instance_variable_set("@#{key}", value)
-		end
+        @cutwidth = 5.3
         @startPosition = [0, 0, 0]
-        @endPosition = [0, 0, 0]        
+        @endPosition = [0, 0, 0] 
+        @nbdesegment = 24
+        
         super("StraitCut", group)
+        
+        # Définir la méthode par défaut si non définie
+        self.methodType = "Ramp" if self.methodType.empty?
       end
 
       def defaultType

@@ -13,6 +13,12 @@ module GNTools
 			attr_accessor :loopSegment
 			attr_accessor :pocket_faces_normal
 			attr_accessor :pocket_faces_vertices
+
+			@@derivedType = @@defaultType.merge({
+			  "methodType" => "Pocket",
+			  "dictionaryName" => "Pocket",
+			  "cutwidth" => 3.175
+			})
 			
 			class PocketData
 				attr_accessor :loopFace
@@ -78,22 +84,17 @@ module GNTools
 			# Définition d'une class qui imite Sketchup::Edge
 			
 			def initialize(group = nil)
+				puts "initialize pocket"
+				@@derivedType.each do |key, value|
+				  instance_variable_set("@#{key}", value)
+				  puts "@#{key} = #{value}"
+				end
+				puts "initialize pocket Done"
 				@pd = PocketData.new
-				@cutwidth = 3.175
 				@pocket_faces_normal = []
 				@pocket_faces_vertices = []
 				super("Pocket",group)
-				if self.methodType == ""
-					self.methodType = "Pocket"				# 'Pocket','Inside','Outside'											
-				end
 			end
-
-		    @@derivedType = @@defaultType.merge(
-			  {
-					"methodType":"Pocket",
-					"cutwidth":3.175
-			  }
-		    )
 
 		    def defaultType
 			  @@derivedType
@@ -101,13 +102,14 @@ module GNTools
 
 			def createDynamiqueModel
 				@pd.getPocketData(self)
+				puts "Create Dynamique Model"
 			    drillbitSize = DrillBits.getDrillBit(@drillBitName).cut_Diameter			# diametre de la drill 
 			    drillBitRayon = (drillbitSize/2.0)								# rayon de la drill
 
 				loopFace = LoopFace.new()
 				loopFace.pfaces_vertices = self.getGlobal()
 				loopFace.pfaces_normal = @pocket_faces_normal
-
+				puts "Model Type = #{@methodType}"
 				if methodType == "Pocket"
 					loopsleft = loopFace.deplacer(0.mm)
 					loopsleft.each do |loop_array|
@@ -247,12 +249,17 @@ module GNTools
 			end
 			
 			def self.Create(faces,hash)
+				puts "on est dans Create"
 				newinstance = new()
+				puts "entite #{newinstance.pathEntitie}"
+				puts "Methode #{newinstance.methodType}"
 				GNTools.toolDefaultNo["Pocket"] = GNTools.toolDefaultNo["Pocket"] + 1
 				newinstance.pathName = "Pocket_#{GNTools.toolDefaultNo["Pocket"]}"
+				puts "pathName #{newinstance.pathName}"
 				newinstance.from_Hash(hash)
 				newinstance.set_To_Attribute(newinstance.pathEntitie)
 				group = newinstance.pathEntitie
+				puts "faces Count #{faces.count}"
 				faces.each do |face|
 					face_vertices = []
 					face.outer_loop.vertices.each do |vertex|
@@ -262,6 +269,8 @@ module GNTools
 					newinstance.pocket_faces_normal << face.normal
 				end
 
+				puts "faces vertex #{newinstance.pocket_faces_vertices.count}"
+				
 				newinstance.createDynamiqueModel
 				newinstance
 			end
