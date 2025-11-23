@@ -3,6 +3,11 @@ require 'json'
 require 'GNTools/Tools/GN_DefaultCNCData.rb'
 require 'GNTools/Tools/GN_GCodeGenerate.rb'
 
+Dir[File.join("GNTools/Tools/", "Paths", "*.rb")].each {|f| 
+	puts f 
+	require f  
+}
+
 module GNTools
 
 	module Paths
@@ -304,231 +309,67 @@ module GNTools
 
 		end
 
-		class PathObjObserver < Sketchup::EntityObserver
 
-			def self.add_group(path_obj)
-				if path_obj
-					path_obj.pathEntitie.add_observer(PathObjObserver.new(path_obj))
-				end
-			end
-		
-			def initialize(path_obj)
-				super()
-				@path_obj = path_obj  # Garde une référence vers l'instance complète
-				@group = path_obj.pathEntitie
-			end
 
-			def onChangeEntity(entity)
-				if @group.valid?
-#					puts "PathObjObserver.onChangeEntity #{@group} #{@path_obj.pathName}"
-#					@path_obj.changed()
-#				else # va passer par onEraseEntity
-#					puts "PathObjObserver.onChangeEntity deleted #{@group} #{@path_obj.pathName}"
-					nil
-				end
-			end
+		@@groupobj = {
+			"Hole" => "Hole",
+			"StraitCut" => "StraitCut",
+			"Pocket" => "Pocket"
+		}
 
-			def onEraseEntity(entity)
-				if !@group.valid?  #ne devrait jamais etre valid car deja effacer
-#					puts "PathObjObserver.onEraseEntity #{@group} #{@path_obj.pathName}"
-#				else
-#					puts "PathObjObserver.onEraseEntity deleted #{@group} #{@path_obj.pathName}"
-					GNTools.pathObjList.delete(@path_obj.pathID)
-					@path_obj = nil
+
+		def self.loadPaths
+			model = Sketchup.active_model
+			model.entities.each {|ent|
+				recursiveLoadPaths(ent)
+			}
+			nil
+		end
+
+		def self.recursiveLoadPaths(ent)
+			newPath = createFromEnt(ent)
+			if newPath == nil
+				if ent.is_a?Sketchup::Group
+					ent.entities.each { |entRecusive|
+						recursiveLoadPaths(entRecusive)
+					}
 				end
 			end
 		end
 
-
-		class PathObj
-			attr_accessor :pathEntitie
-			attr_accessor :pathID
-			attr_accessor :pathName
-			attr_accessor :drillBitName
-			attr_accessor :methodType
-			attr_accessor :depth
-			attr_accessor :feedrate
-			attr_accessor :multipass
-			attr_accessor :depthstep
-			attr_accessor :overlapPercent
-
-			@@defaultType = {
-							  "pathName" => "",
-							  "dictionaryName" => "PathObj",
-							  "drillBitName" => "Default",
-							  "methodType" => "",
-							  "depth" => 4.0,
-							  "feedrate" => 5.0,
-							  "multipass" => true,
-							  "depthstep" => 0.2,
-							  "overlapPercent" => 50
-			}
-			
-			def initialize(pathObjType,group)
-				unless instance_variable_defined?("@methodType")
-					@@defaultType.each do |key, value|
-						instance_variable_set("@#{key}", value)
-					end
-				end				
-				if group				# group != nil  peut etre 0 ou peut etre un group
-					if group == 0		# group = 0		cree sans group car utiliser pour sauver donner seulement
-						self.pathEntitie = nil					
-					else				# group   aller chercher dans le group les infos
-						self.pathEntitie = group
-						self.get_From_Attributs(group)
-					end
-				else					# group == nil	cree avec les infos par defaut
-					self.pathEntitie = Sketchup.active_model.active_entities.add_group()
-					self.set_To_Attribute(self.pathEntitie)
-				end
-			end
-
-		    def defaultType
-			  @@defaultType
-		    end
-
-			def pathEntitie
-				@pathEntitie
-			end
-			
-			def pathEntitie=(group)
-				if group
-					@pathEntitie = group
-					@pathID = group.persistent_id
-					GNTools.pathObjList[group.persistent_id] = self
-					GNTools::Paths::PathObjObserver.add_group(self)
-				else
-					@pathEntitie = nil
-					@pathID = nil
-				end
-			end
-
-			def pathName
-				@pathName
-			end
-			
-			def pathName=(v)
-				@pathName = v
-				if @pathEntitie
-					@pathEntitie.name = v
-				end
-			end
-
-		    # Accéder à la variable d'instance
-		    def [](key)
-			  # On utilise `instance_variable_get` pour récupérer la valeur de la variable d'instance
-			  if @pathEntitie
-				@pathEntitie.get_attribute( @dictionaryName,"#{key}" )
-			  else
-			    instance_variable_defined?("@#{key}") ? instance_variable_get("@#{key}") : nil
-			  end
-		    end
-
-		    # Modifier la variable d'instance
-		    def []=(key, value)
-			  if instance_variable_defined?("@#{key}") 
-				  if !self.defaultType[key.to_sym].is_a?(String) #&& !self.defaultType[key.to_sym].is_a?(Array)
-					  if value == nil
-						if self.defaultType[key.to_sym].is_a?(Float)
-						   value = 0.0
-						elsif self.defaultType[key.to_sym].is_a?(Integer)
-						   value = 0
-						end
-					  end
-				  end
-			  end	
-			  # On utilise `instance_variable_set` pour modifier la variable d'instance
-			  instance_variable_set("@#{key}", value) if instance_variable_defined?("@#{key}")
-		  
-			  if @pathEntitie
-				@pathEntitie.set_attribute( @dictionaryName,"#{key}", value )
-				self.changed()
-			  end
-		    end
-
-			def changed(create_undo = false)
-				nil
-			end
-			def createEdge(group,start,finish)
-#				puts "edge %f,%f,%f : %f,%f,%f" % [start[0] , start[1], start[2], finish[0] , finish[1], finish[2]]
-				edge = group.entities.add_edges(start,finish)
-				@lastPosition = finish
-			end
-			
-			def nextEdge(group,newPosition)
-#				puts "edge %f,%f,%f : %f,%f,%f" % [@lastPosition[0] , @lastPosition[1], @lastPosition[2], newPosition[0] , newPosition[1], newPosition[2]]
-				edge = group.entities.add_edges(@lastPosition,newPosition)
-				@lastPosition = newPosition
-			end
-			
-			def nextEdgeXY(group,newXPosition,newYPosition)
-#				puts "edge %f,%f,%f : %f,%f,%f" % [@lastPosition[0] , @lastPosition[1], @lastPosition[2], newXPosition,newYPosition,@lastPosition[2]]
-				edge = group.entities.add_edges(@lastPosition,[newXPosition,newYPosition,@lastPosition[2]])
-				@lastPosition = [newXPosition,newYPosition,@lastPosition[2]]
-			end
-
-			def nextEdgeZ(group,newPosition)
-#				puts "edge %f,%f,%f : %f,%f,%f" % [@lastPosition[0] , @lastPosition[1], @lastPosition[2], @lastPosition[0],@lastPosition[1],newPosition]
-				edge = group.entities.add_edges(@lastPosition,[@lastPosition[0],@lastPosition[1],newPosition])
-				@lastPosition = [@lastPosition[0],@lastPosition[1],newPosition]
-			end
-
-			def createPath()
-				nil
-			end
-			# ===== Modules =====
-			module AttrPersistence			
-				def set_To_Attribute(group)
-					group.set_attribute( @dictionaryName,"drillBitName", @drillBitName )
-					group.set_attribute( @dictionaryName,"methodType", @methodType )
-					group.set_attribute( @dictionaryName,"depth", @depth )
-					group.set_attribute( @dictionaryName,"feedrate", @feedrate )
-					group.set_attribute( @dictionaryName,"depthstep", @depthstep )
-					group.set_attribute( @dictionaryName,"multipass", @multipass )
-					group.set_attribute( @dictionaryName,"overlapPercent",@overlapPercent )
-				end
-				
-				def get_From_Attributs(group)
-					@pathEntitie = group
-					@pathName = group.name
-					@depth = group.get_attribute( @dictionaryName,"depth" )
-					@methodType = group.get_attribute( @dictionaryName,"methodType" )
-					@feedrate = group.get_attribute( @dictionaryName,"feedrate" )
-					@depthstep = group.get_attribute( @dictionaryName,"depthstep" )
-					@multipass = group.get_attribute( @dictionaryName,"multipass" )
-					@overlapPercent = group.get_attribute( @dictionaryName,"overlapPercent" )
-					@drillBitName = group.get_attribute( @dictionaryName,"drillBitName" )
-				end
-			end
-			
-			module HashConversion
-				def from_Hash(hash)
-					self.drillBitName = hash["drillBitName"]["Value"] || ""
-					self.depth = hash["depth"]["Value"] || 0
-					self.methodType = hash["methodType"]["Value"] || ""
-					self.feedrate = hash["feedrate"]["Value"] || 0
-					self.overlapPercent = hash["overlapPercent"]["Value"] || 0
-					self.depthstep = hash["depthstep"]["Value"] || 0
-					if hash["multipass"]["Value"]
-						self.multipass = true
-					else
-						self.multipass = false
+		def self.isGroupObj(ent)
+			groupObjName = nil
+			if ent.typename == "Group"
+				if ent.attribute_dictionaries  != nil
+					if (ent.attribute_dictionaries.count == 1)
+						ent.attribute_dictionaries.each {|dictionary| 
+							groupObjName = dictionary.name
+						}
 					end
 				end
-				
-				def to_Hash(hashTable)
-					hashTable["drillBitName"] = {"Value" => self["drillBitName"], "type" => "dropdown","multiple" => false}
-					hashTable["depth"] = {"Value" => self["depth"], "type" => "spinner","multiple" => false}
-					hashTable["methodType"] = {"Value" => self["methodType"], "type" => "dropdown","multiple" => false}
-					hashTable["feedrate"] = {"Value" => self["feedrate"], "type" => "spinner","multiple" => false}
-					hashTable["overlapPercent"] = {"Value" => self["overlapPercent"], "type" => "spinner","multiple" => false}
-					hashTable["depthstep"] = {"Value" => self["depthstep"], "type" => "spinner","multiple" => false}
-					hashTable["multipass"] = {"Value" => self["multipass"], "type" => "multipass","multiple" => false}
-					hashTable
-				end
 			end
-			include AttrPersistence
-			include HashConversion
+			if (@@groupobj.has_key?(groupObjName))
+				return groupObjName
+			else
+				return nil
+			end
+		end # isGroupObj
+			
+		#GNTools::Paths.createFromEnt(ent)
+		def self.createFromEnt(ent)
+			groupName = isGroupObj(ent)
+			case groupName
+			when "Hole"
+				pathObj = Paths::Hole.new(ent)
+				return pathObj
+			when "StraitCut"
+				pathObj = Paths::StraitCut.new(ent)
+				return pathObj
+			when "Pocket"
+				pathObj = Paths::Pocket.new(ent)
+				return pathObj
+			end
+			return nil
 		end
 
 	end # module Paths

@@ -24,6 +24,12 @@
 	<div class="container">
 		<label>Width: <input id="Width" class="def-cnc-input" style="width: 100px;" readonly></label>
 	</div>
+	<div class="container" style="margin: 5px;">
+		<button onclick="setViewMode('original')">Original</button>
+		<button onclick="setViewMode('current')">Actuel</button>
+		<button onclick="setViewMode('path')">Chemin</button>
+		<button onclick="setViewMode('simulation')">Simulation</button>
+	</div>
 	<div class="container" id="ui-footer">
 	  <div style="width: 100%; background-color: #e3e3e3; border-top: solid #C5C5C5 1px">
 		<div style="float: left; margin: 10px">
@@ -90,6 +96,10 @@
 		$( "#material_type" ).val(obj.material_type);
 		$( "#material_type" ).selectmenu("refresh");
 	};
+	
+	function setViewMode(mode) {
+		sketchup.applyViewMode(mode);
+	}
 	</script>
 
 </body>

@@ -624,6 +624,19 @@ function updateFilenameDisplay(setFileName) {
   document.getElementById("filename-display").textContent = currentFileName || "Aucun fichier ouvert";
 }
 
+function addToEditor(filename,content) {
+	if (content != null) {
+	  editValue = editor.value
+      editor.value = editValue + content;
+      updateLineNumbers();
+      currentFileName = filename;
+	  updateFilenameDisplay(currentFileName)
+	} else {
+	  currentFileName = "";
+	  updateFilenameDisplay(currentFileName)
+    }
+};
+
 function loadEditor(filename,content) {
 	if (content != null) {
       editor.value = content;

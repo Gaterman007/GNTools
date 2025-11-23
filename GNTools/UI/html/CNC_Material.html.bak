@@ -4,16 +4,14 @@
   <link href="../js/jquery-ui.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/Sketchup.css" type="text/css" charset="utf-8" />
 </head>
-<body class="bg-panel-background">
-
-	<div class="container" style ="margin = 5px;">
+<body class="bg-panel-background" style="height: 130px; width: 460px;">
 	<select name="material_type" id="material_type" class = "def-cnc-input">
 		<option value="Acrylic">Acrylic</option>
 		<option value="Aluminum">Aluminum</option>
 		<option value="Birch_Plywood">Birch Plywood</option>
 		<option value="Cherry_Plywood">Cherry Plywood</option>
 	</select>
-	</div>
+
 	<div class="container">
 		<label>Safe Height: <input id="safeHeight" class="def-cnc-input" style="width: 100px;"></label>
 	</div>

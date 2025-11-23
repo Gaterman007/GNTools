@@ -172,7 +172,7 @@ module GNTools
 				GNTools::activate_PathTool
 			end
 #		else
-#			puts "Retour au modèle principal ou sortir du groupe"
+#			puts "Retour au modèle principal"
 		end
 	  end
 	  
@@ -304,7 +304,7 @@ module GNTools
 			GNTools::ObserverModule.allPoints = nil
 			GNTools::ObserverModule.hasPaths = false
 			GNTools::ObserverModule.hasCircle = false
-			combineDia = GNTools::Paths::GN_PathObjTool.combineDia
+			combineDia = GNTools::Paths::CombineTool.combineDia
 			combineDia.resetModiHashMultiple()
 			modiHash = combineDia.modiHash
 		

@@ -90,6 +90,10 @@ module GNTools
 #		group.set_attribute(MATERIAL_DICT, "safeHeight", @safeHeight)
 #		group.set_attribute(MATERIAL_DICT, "material_type", @material_type)
 
+		sousgroups = Sketchup.active_model.entities.grep(Sketchup::Group)
+		path_obj_list = sousgroups.select { |g| GNTools::Paths.isGroupObj(g) }
+#		path_obj_list.each{|sousgroup| sousgroup.visible = false}
+
 		group.entities.each do |entity|
 		  if entity.is_a?(Sketchup::Edge) && entity.curve &&
 			 (entity.curve.is_a?(Sketchup::ArcCurve) || entity.curve.is_a?(Sketchup::Curve))
@@ -125,7 +129,9 @@ module GNTools
 		  elsif entity.is_a?(Sketchup::ComponentInstance)
 			components << { definition_name: entity.definition.name }
 		  elsif entity.is_a?(Sketchup::Group)
-			groups << self.save_group_data(entity) # récursif
+			if GNTools::Paths::isGroupObj(entity) == nil
+				groups << self.save_group_data(entity) # récursif
+			end
 		  end
 		end
 
@@ -136,8 +142,63 @@ module GNTools
 		group_data["arcs"] = arcs
 		group_data["curves"] = curves
 
-		group.set_attribute(MATERIAL_DICT, "groupData", JSON.generate(group_data))
+		json_data = JSON.generate(group_data)
+
+		group.set_attribute(MATERIAL_DICT, "groupData", JSON.generate(json_data))
+		# Sauvegarde l’état original une seule fois
+		unless group.get_attribute(MATERIAL_DICT, "originalData")
+			group.set_attribute(MATERIAL_DICT, "originalData", json_data)
+		end
+
+#		path_obj_list.each{|sousgroup| sousgroup.visible = true}
+
 		group_data
+	  end
+
+  	  def self.clear_all_geometry_except_paths(group)
+	    group.entities.each do |e|
+		  if e.is_a?(Sketchup::Group)
+		    # On laisse intacts les groupes PATH
+		    next if GNTools::Paths.isGroupObj(e)
+		    # Nettoyer récursivement
+		    clear_all_geometry_except_paths(e)
+		  elsif e.is_a?(Sketchup::Face) || e.is_a?(Sketchup::Edge)
+		    e.erase!
+		  end
+	    end
+	  end
+
+	  def self.create_from_json(group,json)
+	    # Reconstruire comme dans "create_group_from_data" mais sans recréer un nouveau group
+	    group_data = JSON.parse(json)
+	    self.build_group_entities(group.entities, group_data)
+	    group.set_attribute(MATERIAL_DICT, "groupData", json)
+	  end
+
+
+	  def self.restore_original(group)
+		  original_json = group.get_attribute(MATERIAL_DICT, "originalData")
+		  return nil unless original_json
+
+		  sousgroups = group.entities.grep(Sketchup::Group)
+		  path_obj_list = sousgroups.select { |g| GNTools::Paths.isGroupObj(g) }
+		  path_obj_list.each{|sousgroup| sousgroup.visible = false}
+#		  Sketchup.active_model.start_operation(GNTools::traduire("Restore Original"), true)
+
+		  # Supprimer la géométrie actuelle
+#		  group.entities.clear!
+		  clear_all_geometry_except_paths(group)
+
+
+		  # Reconstruire comme dans "create_group_from_data" mais sans recréer un nouveau group
+		  group_data = JSON.parse(original_json)
+		  self.build_group_entities(group.entities, group_data)
+
+		  # Mettre groupData = originalData (réinitialisation)
+		  group.set_attribute(MATERIAL_DICT, "groupData", original_json)
+#		  Sketchup.active_model.commit_operation()
+		  path_obj_list.each{|sousgroup| sousgroup.visible = true}
+		  group
 	  end
 
 	  # ------------------------
@@ -219,7 +280,11 @@ module GNTools
 			entities  = model.entities
 
 			@title = "Material Settings"
-
+			@undoRedoName = ""
+			@undoRedoDepth = -1
+			
+			@viewMode = "current"   # "original", "current", "path", "simulation"
+			
 			# -----------------------------
 			# 1. Déterminer le groupe cible
 			# -----------------------------
@@ -237,37 +302,48 @@ module GNTools
 				@group = entities.add_group(selection.to_a)
 			end
 
-			# -----------------------------
-			# 2. Vérifier le type CNC
-			# -----------------------------
-			dict_type = GNTools.is_cnc_group(@group)
 
+			show_dialog
+		end
+		
+		def dialog_ready
+			dict_type = GNTools.is_cnc_group(@group)
 			if dict_type == MATERIAL_DICT
+				Sketchup.active_model.start_operation(GNTools::traduire("Edit Material"), true)
+				@undoRedoName = GNTools::OperationTracker.current_op
+				@undoRedoDepth = GNTools::OperationTracker.stack_depth
 				# Cas : déjà un groupe CNC/Material → on recharge les données
 				@material_type  = @group.get_attribute(MATERIAL_DICT, "material_type")
 				@safeHeight     = @group.get_attribute(MATERIAL_DICT, "safeHeight")
 				@materialHeight = @group.get_attribute(MATERIAL_DICT, "material_Height")
+				unless @group.get_attribute(MATERIAL_DICT, "originalData")
+					@group.delete_attribute(MATERIAL_DICT, "originalData")
+				end
+				Material::save_group_data(@group)
 			else
+				Sketchup.active_model.start_operation(GNTools::traduire("Create Material"), true)
+				@undoRedoName = GNTools::OperationTracker.current_op
+				@undoRedoDepth = GNTools::OperationTracker.stack_depth
 				# Cas : pas CNC, ou CNC/Autre → créer/convertir en CNC/Material
 				if dict_type && dict_type != MATERIAL_DICT
 					# C’était un CNC/Autre → on crée un nouveau groupe vide pour isoler
 					@group = entities.add_group
 				end
-
 				@group.name = "Material CNC"
 				@material_type = "Acrylic"
 				@safeHeight    = 5
+				@materialHeight = 4
 				@group.set_attribute(MATERIAL_DICT, "safeHeight", @safeHeight)
 				@group.set_attribute(MATERIAL_DICT, "material_type", @material_type)
 				@group.set_attribute(MATERIAL_DICT, "material_Height",@materialHeight)
+				unless @group.get_attribute(MATERIAL_DICT, "originalData")
+					@group.delete_attribute(MATERIAL_DICT, "originalData")
+				end
 				Material::save_group_data(@group)
 			end
+			@newData = [@material_type, @safeHeight, @materialHeight]
 
-			# -----------------------------
-			# 3. Finalisation
-			# -----------------------------
-			@newData = [@material_type, @safeHeight]
-			show_dialog
+			self.update_dialog
 			attach_selection_observer
 		end
 	
@@ -280,21 +356,28 @@ module GNTools
 				# not when creating it, to be able to use the same dialog again.
 				@dialog ||= self.create_dialog
 				@dialog.add_action_callback("ready") { |action_context|
-					self.update_dialog
+					self.dialog_ready
 					nil
 				}
 				# set to model only
 				@dialog.add_action_callback("accept") { |action_context, value|
 					@material_type = @newData[0]
 					@safeHeight = @newData[1]
+					@materialHeight = @newData[2]
 					@group.set_attribute(MATERIAL_DICT, "safeHeight", @safeHeight)
 					@group.set_attribute(MATERIAL_DICT, "material_type", @material_type)
 					@group.set_attribute(MATERIAL_DICT, "material_Height",@materialHeight)
+					if @undoRedoName == GNTools::OperationTracker.current_op and @undoRedoDepth == GNTools::OperationTracker.stack_depth
+						Sketchup.active_model.commit_operation()
+					end
 					close_dialog
 					Sketchup.active_model.tools.pop_tool
 					nil
 				}
 				@dialog.add_action_callback("cancel") { |action_context, value|
+					if @undoRedoName == GNTools::OperationTracker.current_op and @undoRedoDepth == GNTools::OperationTracker.stack_depth
+						Sketchup.active_model.abort_operation()
+					end
 					close_dialog
 					Sketchup.active_model.tools.pop_tool
 					nil
@@ -309,10 +392,57 @@ module GNTools
 					end
 					nil
 				}
-				@dialog.set_size(460,305)
+				@dialog.add_action_callback("applyViewMode") { |action_context, mode|
+					self.applyViewMode(mode)
+					nil
+				}
+				@dialog.set_size(470,365)
 				@dialog.show
 			end
 			
+		end
+
+		def applyViewMode(mode)
+		    groups = Sketchup.active_model.entities.grep(Sketchup::Group)
+			path_obj_list = groups.select { |g| GNTools::Paths.isGroupObj(g) }
+			case mode
+			when "original"
+				Material::restore_original(@group)
+				Sketchup.active_model.active_view.refresh
+			when "current"
+				Material::recreate_from_groupData(@group)
+			when "path"
+#				Material::restore_original(@group)
+				Material::clear_all_geometry_except_paths(@group)
+				original_json = @group.get_attribute(MATERIAL_DICT, "originalData")
+				return nil unless original_json
+				Material::create_from_json(@group,original_json)
+				# Créer une face dans le groupe
+				face = @group.entities.add_face([0,0,0],[50.mm,0,0],[50.mm,50.mm,0],[0,50.mm,0])
+				# Faire un pushpull
+				face.pushpull(-10.mm)  # fonctionne parfaitement
+#				path_obj_list.each do |obj|
+#				  obj.createPath(@group)  # applique juste la géométrie
+#				end
+				Sketchup.active_model.active_view.refresh
+			when "simulation"
+				original_json = @group.get_attribute(MATERIAL_DICT, "originalData")
+				return nil unless original_json
+				Material::clear_all_geometry_except_paths(@group)
+				sousgroup = @group.entities.add_group
+				Material::create_from_json(sousgroup,original_json)
+				until_index = path_obj_list.count
+				puts "index = #{until_index}"
+				puts "objet deleted #{@group.deleted?}"
+				puts "objet #{@group}"
+#				path_obj_list[0..until_index].each do |obj|		
+#				  puts "objet #{@group} - #{obj}"			
+#				  sousgroup.subtract(obj)
+#				  Sketchup.active_model.active_view.refresh
+#				end
+				@group.entities.each {|entity| puts entity.inspect}
+				sousgroup.explode
+			end
 		end
 
 		def create_dialog
@@ -324,8 +454,8 @@ module GNTools
 			options = {
 			  :dialog_title => @title,
 			  :resizable => true,
-			  :width => 460,
-			  :height => 305,
+			  :width => 470,
+			  :height => 365,
 			  :preferences_key => "example.htmldialog.materialinspector",
 			  :style => UI::HtmlDialog::STYLE_UTILITY  # New feature!
 			}
@@ -357,6 +487,10 @@ module GNTools
 		
 		def close_dialog
 			if @dialog
+				if @undoRedoName == GNTools::OperationTracker.current_op and @undoRedoDepth == GNTools::OperationTracker.stack_depth
+					Sketchup.active_model.abort_operation()
+				end
+				detach_selection_observer
 				@dialog.set_can_close { true }
 				@dialog.close
 			end
@@ -390,6 +524,8 @@ module GNTools
 				private
 
 				def check_selection(selection)
+					puts selection
+					puts @target_group
 					unless selection.include?(@target_group)
 						@dialog.close_dialog
 					end

@@ -35,6 +35,38 @@ module GNTools
 		html_content
 	end
 
+	def self.findMaterial
+		group_Material = Sketchup.active_model.entities.grep(Sketchup::Group).find { |cp| cp.attribute_dictionaries && cp.attribute_dictionaries[MATERIAL_DICT] }
+		return group_Material
+	end
+
+	def self.getSafeHeight
+		group_Material = findMaterial
+		if group_Material != nil
+			return group_Material.get_attribute(MATERIAL_DICT, "safeHeight")
+		else
+			return nil
+		end
+	end
+
+	def self.material_type
+		group_Material = findMaterial
+		if group_Material != nil
+			return group_Material.get_attribute(MATERIAL_DICT, "material_type")
+		else
+			return nil
+		end
+	end
+
+	def self.material_Height
+		group_Material = findMaterial
+		if group_Material != nil
+			return group_Material.get_attribute(MATERIAL_DICT, "material_Height")
+		else
+			return nil
+		end
+	end
+
 	class Material
       @material_type = "Acrylic"
       @safeHeight = 5
@@ -120,14 +152,20 @@ module GNTools
 		self.build_group_entities(new_group.entities, group_data)
 
 		# Copier aussi les attributs de matériau s’ils existent
-		mat_type    = source_group.get_attribute(MATERIAL_DICT, "material_type")
+		mat_type       = source_group.get_attribute(MATERIAL_DICT, "material_type")
+		materialHeight = source_group.get_attribute(MATERIAL_DICT, "material_Height")
+		
 		new_group.set_attribute(MATERIAL_DICT, "safeHeight", safe_height)
 		new_group.set_attribute(MATERIAL_DICT, "material_type", mat_type)
+		new_group.set_attribute(MATERIAL_DICT, "material_Height",materialHeight)
 		new_group.set_attribute(MATERIAL_DICT, "groupData", group_data_json)
 		material_type = source_group.get_attribute(MATERIAL_DICT, "material_type")
 		safeHeight = source_group.get_attribute(MATERIAL_DICT, "safeHeight")
+		materialHeight = source_group.get_attribute(MATERIAL_DICT, "material_Height")
 		new_group.set_attribute(MATERIAL_DICT, "safeHeight", @safeHeight)
 		new_group.set_attribute(MATERIAL_DICT, "material_type", @material_type)
+		new_group.set_attribute(MATERIAL_DICT, "material_Height",@materialHeight)
+
 		new_group
 	  end
 
@@ -206,9 +244,9 @@ module GNTools
 
 			if dict_type == MATERIAL_DICT
 				# Cas : déjà un groupe CNC/Material → on recharge les données
-				@material_type = @group.get_attribute(MATERIAL_DICT, "material_type")
-				@safeHeight    = @group.get_attribute(MATERIAL_DICT, "safeHeight")
-
+				@material_type  = @group.get_attribute(MATERIAL_DICT, "material_type")
+				@safeHeight     = @group.get_attribute(MATERIAL_DICT, "safeHeight")
+				@materialHeight = @group.get_attribute(MATERIAL_DICT, "material_Height")
 			else
 				# Cas : pas CNC, ou CNC/Autre → créer/convertir en CNC/Material
 				if dict_type && dict_type != MATERIAL_DICT
@@ -221,6 +259,7 @@ module GNTools
 				@safeHeight    = 5
 				@group.set_attribute(MATERIAL_DICT, "safeHeight", @safeHeight)
 				@group.set_attribute(MATERIAL_DICT, "material_type", @material_type)
+				@group.set_attribute(MATERIAL_DICT, "material_Height",@materialHeight)
 				Material::save_group_data(@group)
 			end
 
@@ -246,10 +285,11 @@ module GNTools
 				}
 				# set to model only
 				@dialog.add_action_callback("accept") { |action_context, value|
-						@material_type = @newData[0]
-						@safeHeight = @newData[1]
-						@group.set_attribute(MATERIAL_DICT, "safeHeight", @safeHeight)
-						@group.set_attribute(MATERIAL_DICT, "material_type", @material_type)
+					@material_type = @newData[0]
+					@safeHeight = @newData[1]
+					@group.set_attribute(MATERIAL_DICT, "safeHeight", @safeHeight)
+					@group.set_attribute(MATERIAL_DICT, "material_type", @material_type)
+					@group.set_attribute(MATERIAL_DICT, "material_Height",@materialHeight)
 					close_dialog
 					Sketchup.active_model.tools.pop_tool
 					nil
@@ -264,6 +304,8 @@ module GNTools
 						@newData[0] = value["material_type"]
 					elsif valueName == "safeHeight"
 						@newData[1] = value["safeHeight"]
+					elsif valueName == "material_Height"
+						@newData[2] = value["material_Height"]
 					end
 					nil
 				}
@@ -296,12 +338,18 @@ module GNTools
 		end
 
 		def update_dialog
+			boundingbox = @group.bounds
+			if @safeHeight < boundingbox.depth.to_mm
+				@safeHeight = boundingbox.depth.to_mm + 5.mm
+			end
+			@materialHeight = boundingbox.depth.to_mm
 			jsonStr = JSON.generate({
 				'material_type' => @material_type,
 				'safeHeight' => @safeHeight,
-				'width' => 0.0,
-				'height' => 0.0,
-				'depth' => 0.0,
+				'materialHeight' => @materialHeight,
+				'width' => boundingbox.width,
+				'height' => boundingbox.height,
+				'depth' => boundingbox.depth,
 			})
 			scriptStr = "updateDialog(\'#{jsonStr}\')"
 			@dialog.execute_script(scriptStr)

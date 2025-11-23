@@ -9,7 +9,7 @@ require 'fiddle'
 require 'fiddle/import'
 require 'fiddle/types'
 require 'sketchup.rb'
-require File.join(GNTools::PATH_TOOLS, "GN_CombineTool.rb")
+require File.join(GNTools::PATH_TOOLS, "GN_PathObj.rb")
 require File.join(GNTools::PATH_TOOLS, "GN_materialTool.rb")
 require File.join(GNTools::PATH_TOOLS, "GN_OctoPrintDialog.rb")
 require File.join(GNTools::PATH_TOOLS, "octoPrint.rb")
@@ -49,9 +49,14 @@ module GNTools
 				model = Sketchup.active_model
 				selection = model.selection
 				groups = selection.grep(Sketchup::Group)
-
-				if groups.count == 1 && groups[0].manifold?
-					MF_ENABLED
+				
+				if groups.count == 1 
+					dict_type = GNTools.is_cnc_group(groups[0])
+					if dict_type == MATERIAL_DICT || groups[0].manifold?
+						MF_ENABLED
+					else
+						MF_GRAYED
+					end
 				else
 					MF_GRAYED
 				end
@@ -154,17 +159,18 @@ module GNTools
 		end	# initialize
 	end		# class
 
-	# Initialisation unique des singletons
-	unless defined?(@@menu_initialized) && @@menu_initialized
-	  @@combineTool = Paths::CombineTool.new()
-	  @@defaultCNCTool = GNTools::DefaultCNCTool.new()
-	  @@activeToolID = nil
-	  @@commandClass = GNTools::CommandClass.new()
-	  @@menu_initialized    = true
-	  @@octoPrintDiag = GNTools::OctoPrintDialog.new
-	  @@octoPrint = GNTools::OctoPrint.new()
+	def self.initMenu
+		# Initialisation unique des singletons
+		unless defined?(@@menu_initialized) && @@menu_initialized
+		  @@gn_PathObjTool = Paths::GN_PathObjTool.new()
+		  @@defaultCNCTool = GNTools::DefaultCNCTool.new()
+		  @@activeToolID = nil
+		  @@commandClass = GNTools::CommandClass.new()
+		  @@menu_initialized = true
+		  @@octoPrintDiag = GNTools::OctoPrintDialog.new
+		  @@octoPrint = GNTools::OctoPrint.new()
+		end
 	end
-
 	def self.octoPrint
 		@@octoPrint
 	end
@@ -181,8 +187,8 @@ module GNTools
 		@@defaultCNCTool
 	end
 
-	def self.combineTool
-		@@combineTool
+	def self.gn_PathObjTool
+		@@gn_PathObjTool
 	end
 
 	def self.activeToolID
@@ -223,7 +229,7 @@ module GNTools
 	end
     	
 	def self.activate_PathTool
-		Sketchup.active_model.tools.push_tool(GNTools::combineTool)
+		Sketchup.active_model.tools.push_tool(GNTools::gn_PathObjTool)
 	end
 	
 	def self.activate_CreateTool
@@ -232,39 +238,33 @@ module GNTools
 		edges = select.grep(Sketchup::Edge)
 		if circles.count > 0
 			circles.each do |circle|
-				defaultHoleData = GNTools::Paths::CombineDialog.defaultHoleData
-				defaultHoleData["holesize"] = circle.radius.to_mm * 2.0
-				hash = {}
-				defaultHoleData.to_Hash(hash)
+				defaultHoleData = GNTools::Paths::PathObj.defaults_for("Hole")
+#				puts "defaultHoleData"
+				defaultHoleData["holesize"]["Value"] = circle.radius.to_mm * 2.0
+#				defaultHoleData.holesize = circle.radius.to_mm * 2.0
 				Sketchup.active_model.start_operation('createHole', true)
-				GNTools::Paths::Hole.Create(circle.center,hash)
+				GNTools::Paths::PathObj.create_pathobj("Hole",circle.center,defaultHoleData)
 				Sketchup.active_model.commit_operation
 			end
 		end
-		defaultStraitCutData = GNTools::Paths::CombineDialog.defaultStraitCutData
-		defaultPocketData = GNTools::Paths::CombineDialog.defaultPocketData
+		defaultStraitCutData = GNTools::Paths::PathObj.defaults_for("StraitCut")
+		defaultPocketData = GNTools::Paths::PathObj.defaults_for("Pocket")
 		if edges.count > 0
 			edges.each do |edge|
 				if not (edge.is_a?(Sketchup::Edge) && edge.curve && edge.curve.is_a?(Sketchup::ArcCurve))
 					line = [edge.start.position,edge.end.position]
-					hash = {}
-					defaultStraitCutData.to_Hash(hash)
 					Sketchup.active_model.start_operation('createLine', true)
-					GNTools::Paths::StraitCut.Create(line,hash)
+					GNTools::Paths::PathObj.create_pathobj("StraitCut",line,defaultStraitCutData)
 					Sketchup.active_model.commit_operation
 				end
 			end
 		end
 		faces = select.grep(Sketchup::Face)
 		if faces.count > 0
-			hash = {}
-			defaultPocketData.to_Hash(hash)
 			Sketchup.active_model.start_operation(GNTools.traduire('createPocket'), true)
-			GNTools::Paths::Pocket.Create(faces,hash)
+			GNTools::Paths::PathObj.create_pathobj("Pocket",faces,defaultPocketData)
 			Sketchup.active_model.commit_operation
 		end
-
-
 	end
 	
 	def self.activate_Material

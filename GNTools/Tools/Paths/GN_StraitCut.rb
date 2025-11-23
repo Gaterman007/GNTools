@@ -5,45 +5,49 @@ require 'GNTools/Tools/GN_PathObj.rb'
 module GNTools
   module Paths
 
-    class StraitCut < PathObj
-      attr_accessor :cutwidth, :startPosition, :endPosition, :nbdesegment
+	class GN_StraitCutData < GN_PathObjData
+		attr_accessor :cutwidth
+		attr_accessor :nbdesegment
 
-      # Configuration par défaut spécifique à StraitCut
-	  @@derivedType = @@defaultType.merge({
-        "methodType" => "Ramp",
-        "cutwidth" => 5.3,
-		"dictionaryName" => "StraitCut",
-		"nbdesegment" => 24
-	  })
+		@defaultType = GN_PathObjData.defaultType.merge({
+		  "dictionaryName" => { "Value" => "StraitCut", "type" => "text",     "multiple" => false },
+		  "methodType"     => { "Value" => "Ramp",      "type" => "dropdown", "multiple" => false },
+		  "cutwidth"       => { "Value" => 5.3,         "type" => "spinner",  "multiple" => false },
+		  "nbdesegment"    => { "Value" => 24,          "type" => "spinner",  "multiple" => false }
+		})			
+		
+		def self.defaultType
+		  @defaultType 
+		end
+	end
+
+    class StraitCut < PathObj
+      attr_accessor :startPosition, :endPosition
+
 
 
       def initialize(group = nil)
-		@@derivedType.each do |key, value|
-			instance_variable_set("@#{key}", value)
-		end
+        super(group)
         @startPosition = [0, 0, 0]
         @endPosition = [0, 0, 0]        
-        super("StraitCut", group)
       end
 
       def defaultType
         @@derivedType
       end
-
+			
       # Création d'une nouvelle instance avec ligne et paramètres
       def self.Create(line, hash)
         return nil unless line && line.size >= 2
         
         begin
           newinstance = new()
+          newinstance.from_Hash(hash) if hash
           GNTools.toolDefaultNo["StraitCut"] = GNTools.toolDefaultNo["StraitCut"] + 1
           newinstance.pathName = "StraitCut_#{GNTools.toolDefaultNo["StraitCut"]}"
-          newinstance.from_Hash(hash) if hash
-          newinstance.set_To_Attribute(newinstance.pathEntitie)
           newinstance.startPosition = line[0]
           newinstance.endPosition = line[1]
           newinstance.createDynamiqueModel
-          
           puts GNTools.traduire("StraitCut créé: %{name}", name: newinstance.pathName)
           newinstance
         rescue => e
@@ -80,11 +84,11 @@ module GNTools
           startPos, endPos = getGlobal()
           return if startPos == endPos
           
-          drillbit = DrillBits.getDrillBit(@drillBitName)
+          drillbit = DrillBits.getDrillBit(drillBitName)
           return unless drillbit
           
           drillbitSize = drillbit.cut_Diameter.mm
-          lineWidth = [@cutwidth.mm, drillbitSize].max
+          lineWidth = [cutwidth.mm, drillbitSize].max
           
           # Calcul des vecteurs
           vector_line = endPos - startPos
@@ -92,7 +96,7 @@ module GNTools
           
           inverse_vector_line = startPos - endPos
           
-          case @methodType
+          case methodType
           when "Ramp"
             create_ramp_model(startPos, endPos, vector_line, inverse_vector_line, lineWidth, drillbitSize)
           when "Spiral"
@@ -106,13 +110,17 @@ module GNTools
           Sketchup.active_model.active_view.invalidate
           
         rescue => e
-          puts GNTools.traduire("Erreur création modèle dynamique: %{error}", error: e.message)
+			puts "------ ERREUR -----"
+			puts "Message : #{e.message}"
+			puts "Ligne   : #{e.backtrace[0]}"
+			puts "Stack :"
+			puts e.backtrace.join("\n")        
+			puts GNTools.traduire("Erreur création modèle dynamique: %{error}", error: e.message)
         end
       end
 
       # Notification de changement - recrée le modèle
       def changed(create_undo = false)
-        super(create_undo)
         return unless @pathEntitie&.valid?
         
         begin
@@ -138,7 +146,7 @@ module GNTools
           startPos, endPos = getGlobal()
           pathGroup = Sketchup.active_model.entities.add_group()
           
-          drillbit = DrillBits.getDrillBit(@drillBitName)
+          drillbit = DrillBits.getDrillBit(drillBitName)
           drillbitSize = drillbit.cut_Diameter
           drillBitRayon = (drillbitSize / 2.0).mm
           
@@ -146,7 +154,7 @@ module GNTools
           cnc_params = get_cnc_parameters()
           holeBottom = -@depth.mm
           
-          case @methodType
+          case methodType
           when "Ramp"
             create_ramp_path(pathGroup, startPos, endPos, drillbitSize, cnc_params, holeBottom)
           when "Spiral"
@@ -168,7 +176,7 @@ module GNTools
         
         begin
           startPos, endPos = getGlobal()
-          drillbit = DrillBits.getDrillBit(@drillBitName)
+          drillbit = DrillBits.getDrillBit(drillBitName)
           drillbitSize = drillbit.cut_Diameter
           
           def_CNCData = DefaultCNCDialog.def_CNCData
@@ -182,7 +190,7 @@ module GNTools
           gCodeStr += "G0 Z%.2f ; #{GNTools.traduire('aller hauteur sécurité')}\n" % [safeHeight]
           
           # Générer le G-Code selon la méthode
-          case @methodType
+          case methodType
           when "Ramp"
             gCodeStr = generate_ramp_gcode(gCodeStr, startPos, endPos, drillbitSize, def_CNCData)
           when "Spiral"
@@ -197,50 +205,18 @@ module GNTools
         gCodeStr
       end
 
-      # Sauvegarde des attributs
-      def set_To_Attribute(group)
-        super(group)
-        return unless group&.valid?
-        
-        group.set_attribute("StraitCut", "cutwidth", @cutwidth)
-        group.set_attribute("StraitCut", "startPosition", @startPosition)
-        group.set_attribute("StraitCut", "endPosition", @endPosition)
-        group.set_attribute("StraitCut", "nbdesegment", @nbdesegment)
-      end
-
-      # Chargement des attributs
-      def get_From_Attributs(ent)
-        super(ent)
-        return unless ent&.valid?
-        
-        @cutwidth = ent.get_attribute("StraitCut", "cutwidth") || @cutwidth
-        @startPosition = ent.get_attribute("StraitCut", "startPosition") || @startPosition
-        @endPosition = ent.get_attribute("StraitCut", "endPosition") || @endPosition
-        @nbdesegment = ent.get_attribute("StraitCut", "nbdesegment") || @nbdesegment
-      end
-
-      # Conversion depuis Hash
-      def from_Hash(hash)
-        super(hash)
-        return unless hash.is_a?(Hash)
-        
-        @cutwidth = hash.dig("cutwidth", "Value") || @cutwidth
-      end
-
-      # Conversion vers Hash
-      def to_Hash(hashTable = {})
-        super(hashTable)
-        hashTable["cutwidth"] = {"Value" => @cutwidth, "type" => "spinner", "multiple" => false}
-        hashTable
-      end
-
       private
+
+	  
+	  def createPathData
+		GN_StraitCutData.new
+	  end
 
       # Vérifie si le drill bit est valide
       def valid_drill_bit?
-        drillbit = DrillBits.getDrillBit(@drillBitName)
+        drillbit = DrillBits.getDrillBit(drillBitName)
         unless drillbit
-          puts GNTools.traduire("Drill bit non trouvé: %{name}", name: @drillBitName)
+          puts GNTools.traduire("Drill bit non trouvé: %{name}", name: drillBitName)
           return false
         end
         true
@@ -303,7 +279,7 @@ module GNTools
           face = @pathEntitie.entities.grep(Sketchup::Face).find(&:valid?)
           
           if face
-            distance = self["depth"].mm
+            distance = depth.mm
             distance = -distance if face.normal.z > 0.0
             face.pushpull(distance)
           end
@@ -312,9 +288,9 @@ module GNTools
 
       # Génère l'en-tête G-Code
       def generate_gcode_header(startPos, endPos, drillbitSize)
-        header = "; #{GNTools.traduire('Coupe Droite')}: #{@pathName}\n"
-        header += "; #{GNTools.traduire('Drill bit')}: #{@drillBitName}\n"
-        header += "; #{GNTools.traduire('Méthode')}: #{@methodType}\n"
+        header = "; #{GNTools.traduire('Coupe Droite')}: #{pathName}\n"
+        header += "; #{GNTools.traduire('Drill bit')}: #{drillBitName}\n"
+        header += "; #{GNTools.traduire('Méthode')}: #{methodType}\n"
         header += "; #{GNTools.traduire('Taille drill bit')}: %.2fmm\n" % [drillbitSize]
         header += "; #{GNTools.traduire('Ligne de')} X%.2f Y%.2f #{GNTools.traduire('à')} X%.2f Y%.2f\n" % [
           startPos.x.to_mm, startPos.y.to_mm, endPos.x.to_mm, endPos.y.to_mm
@@ -324,11 +300,11 @@ module GNTools
 
       # Génère le G-Code pour la méthode Ramp
       def generate_ramp_gcode(gCodeStr, startPos, endPos, drillbitSize, def_CNCData)
-        defRayon = [@cutwidth - drillbitSize, 0.0].max
+        defRayon = [cutwidth - drillbitSize, 0.0].max
         material_thickness = def_CNCData.material_thickness
-        holeBottom = [material_thickness - @depth, 0.0].max
+        holeBottom = [material_thickness - depth, 0.0].max
         
-        downslow = @multipass ? material_thickness : holeBottom
+        downslow = multipass ? material_thickness : holeBottom
         
         gCodeStr += "G0 X%.2f Y%.2f ; #{GNTools.traduire('aller position départ')}\n" % [startPos.x.to_mm, startPos.y.to_mm]
         gCodeStr += "G0 Z%.2f ; #{GNTools.traduire('aller dessus matériel')}\n" % [material_thickness]
@@ -337,7 +313,7 @@ module GNTools
           gCodeStr += "G0 X%.2f Y%.2f ; #{GNTools.traduire('position départ')}\n" % [startPos.x.to_mm, startPos.y.to_mm]
           gCodeStr += "G1 Z%.2f F%.0f ; #{GNTools.traduire('descendre lentement')}\n" % [downslow, def_CNCData.defaultPlungeRate]
           gCodeStr = lineGCode(startPos, endPos, defRayon, gCodeStr)
-          downslow -= @depthstep
+          downslow -= depthstep
         end
         
         gCodeStr += "G0 Z%.2f ; #{GNTools.traduire('remonter')}\n" % [def_CNCData.safeHeight]
@@ -347,9 +323,9 @@ module GNTools
       # Génère le G-Code pour la méthode Spiral
       def generate_spiral_gcode(gCodeStr, startPos, endPos, drillbitSize, def_CNCData)
         material_thickness = def_CNCData.material_thickness
-        holeBottom = [material_thickness - @depth, 0.0].max
+        holeBottom = [material_thickness - depth, 0.0].max
         
-        if @multipass
+        if multipass
           downslow = material_thickness
           gCodeStr += "G0 Z%.2f ; #{GNTools.traduire('dessus matériel')}\n" % [material_thickness]
           
@@ -357,13 +333,13 @@ module GNTools
             gCodeStr += "G0 X%.2f Y%.2f ; #{GNTools.traduire('position départ')}\n" % [startPos.x.to_mm, startPos.y.to_mm]
             gCodeStr += "G1 Z%.2f F%.0f ; #{GNTools.traduire('descendre')}\n" % [downslow, def_CNCData.defaultPlungeRate]
             gCodeStr += "G1 X%.2f Y%.2f F%.0f ; #{GNTools.traduire('aller fin')}\n" % [endPos.x.to_mm, endPos.y.to_mm, @feedrate]
-            downslow -= @depthstep
+            downslow -= depthstep
           end
         else
           gCodeStr += "G0 Z%.2f ; #{GNTools.traduire('dessus matériel')}\n" % [material_thickness]
           gCodeStr += "G0 X%.2f Y%.2f ; #{GNTools.traduire('position départ')}\n" % [startPos.x.to_mm, startPos.y.to_mm]
           gCodeStr += "G1 Z%.2f F%.0f ; #{GNTools.traduire('descendre')}\n" % [holeBottom, def_CNCData.defaultPlungeRate]
-          gCodeStr += "G1 X%.2f Y%.2f F%.0f ; #{GNTools.traduire('aller fin')}\n" % [endPos.x.to_mm, endPos.y.to_mm, @feedrate]
+          gCodeStr += "G1 X%.2f Y%.2f F%.0f ; #{GNTools.traduire('aller fin')}\n" % [endPos.x.to_mm, endPos.y.to_mm, feedrate]
         end
         
         gCodeStr += "G0 Z%.2f ; #{GNTools.traduire('remonter')}\n" % [def_CNCData.safeHeight]
@@ -372,12 +348,12 @@ module GNTools
 
       # Crée le chemin Ramp
       def create_ramp_path(pathGroup, startPos, endPos, drillbitSize, cnc_params, holeBottom)
-        defRayon = [@cutwidth - drillbitSize, 0.0].max
-        downslow = @multipass ? 0.0 : holeBottom
+        defRayon = [cutwidth - drillbitSize, 0.0].max
+        downslow = multipass ? 0.0 : holeBottom
         
         while downslow >= holeBottom
           createLinePath(pathGroup, startPos, endPos, defRayon, downslow)
-          downslow -= @depthstep.mm
+          downslow -= depthstep.mm
         end
       end
 
@@ -395,7 +371,7 @@ module GNTools
           startX, startY = startPos.x.to_mm, startPos.y.to_mm
           endX, endY = endPos.x.to_mm, endPos.y.to_mm
           
-          pas = DrillBits.getDrillBit(@drillBitName).cut_Diameter
+          pas = DrillBits.getDrillBit(drillBitName).cut_Diameter
           direction = Geom::Vector3d.new(endX - startX, endY - startY, 0)
           
           return if direction.length == 0
@@ -405,13 +381,13 @@ module GNTools
           
           while Geom::Point3d.new(currentX, currentY, downslow).distance(Geom::Point3d.new(endX, endY, downslow)) >= pas
             pathGroup.entities.add_cpoint(Geom::Point3d.new(currentX.mm, currentY.mm, downslow))
-            createCirlcePath(pathGroup, currentX, currentY, defRayon, @nbdesegment, downslow.to_mm)
+            createCirlcePath(pathGroup, currentX, currentY, defRayon, nbdesegment, downslow.to_mm)
             
             currentX += direction.x * pas
             currentY += direction.y * pas
           end
           
-          createCirlcePath(pathGroup, endX, endY, defRayon, @nbdesegment, downslow.to_mm)
+          createCirlcePath(pathGroup, endX, endY, defRayon, nbdesegment, downslow.to_mm)
           
         rescue => e
           puts GNTools.traduire("Erreur création chemin ligne: %{error}", error: e.message)
@@ -450,7 +426,7 @@ module GNTools
           startX, startY = startPos.x.to_mm, startPos.y.to_mm
           endX, endY = endPos.x.to_mm, endPos.y.to_mm
           
-          pas = DrillBits.getDrillBit(@drillBitName).cut_Diameter
+          pas = DrillBits.getDrillBit(drillBitName).cut_Diameter
           direction = Geom::Vector3d.new(endX - startX, endY - startY, 0)
           
           return gCodeStr if direction.length == 0
@@ -459,12 +435,12 @@ module GNTools
           currentX, currentY = startX, startY
           
           while Geom::Point3d.new(currentX, currentY).distance(Geom::Point3d.new(endX, endY)) >= pas
-            gCodeStr = createGCodeCirlce(gCodeStr, currentX, currentY, defRayon, @nbdesegment)
+            gCodeStr = createGCodeCirlce(gCodeStr, currentX, currentY, defRayon, nbdesegment)
             currentX += direction.x * pas
             currentY += direction.y * pas
           end
           
-          gCodeStr = createGCodeCirlce(gCodeStr, endX, endY, defRayon, @nbdesegment)
+          gCodeStr = createGCodeCirlce(gCodeStr, endX, endY, defRayon, nbdesegment)
           
         rescue => e
           puts GNTools.traduire("Erreur G-Code ligne: %{error}", error: e.message)
@@ -502,5 +478,8 @@ module GNTools
       end
 
     end # class StraitCut
+
+	PathObj.register_class("StraitCut", GN_StraitCutData.defaultType, ->(*args){ StraitCut.Create(*args) })
+
   end # module Paths
 end # module GNTools

@@ -392,7 +392,7 @@ module GNTools
 				gCodeStr = ""
 				gCodeStr = pathObj.createGCode(gCodeStr)
 				filename = ""
-				scriptStr = "loadEditor(#{filename.to_json}, #{gCodeStr.to_json})"
+				scriptStr = "addToEditor(#{filename.to_json}, #{gCodeStr.to_json})"
 				@dialog.execute_script(scriptStr)
 			when 49
 				puts object1

@@ -525,30 +525,32 @@ module GNTools
 		scriptStr = "updateDialog(\'#{JSON.generate(updateHash)}\')"
 		@dialog.execute_script(scriptStr)
 	end
-	
-	def get_ObjectList
-		names = []
-	    model = Sketchup.active_model
-		return {} unless model
 
-		ents = model.active_entities
-		return {} unless ents
-		
+	def get_ObjectList
+	  model = Sketchup.active_model
+	  return {} unless model
+	  ents = model.active_entities
+	  return {} unless ents
+	  { "objet" => get_object_list_recursive(ents) }
+	end
+	
+	def get_object_list_recursive(ents)
+		names = []
 		ents.each do |entity|
 			next unless entity.respond_to?(:name) && entity.name && !entity.name.empty?
 
 			groupName = nil
-			if defined?(Paths) && Paths.respond_to?(:isGroupObj)
-				groupName = Paths::isGroupObj(entity)
-			end
-
-			if groupName
+			if defined?(Paths) && Paths.respond_to?(:isGroupObj) && Paths::isGroupObj(entity)
 				# stocke l'entité par son nom
 				names << { "name" => entity.name, "persistent_id" => entity.persistent_id }
 			end
-		end
 
-		return {"objet" => names}
+			# Si c'est un groupe, descendre dedans
+			if entity.respond_to?(:entities)
+			  names.concat(get_object_list_recursive(entity.entities))
+			end
+		end
+		names
 	end
   end # class OctoPrintDialog
 end # module GNTools

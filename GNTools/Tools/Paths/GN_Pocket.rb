@@ -6,20 +6,27 @@ module GNTools
 
 	module Paths
 
+		class GN_PocketData < GN_PathObjData
+			attr_accessor :cutwidth
+
+			@defaultType = GN_PathObjData.defaultType.merge({
+			  "dictionaryName" => { "Value" => "Pocket",  "type" => "text",     "multiple" => false },
+			  "methodType"     => { "Value" => "Pocket",  "type" => "dropdown", "multiple" => false },
+			  "cutwidth"       => { "Value" => 3.175,     "type" => "spinner",  "multiple" => false }
+			})	
+			
+			def self.defaultType
+			  @defaultType 
+		    end
+		end
+
 
 		class Pocket < PathObj
 			
-			attr_accessor :cutwidth
 			attr_accessor :loopSegment
 			attr_accessor :pocket_faces_normal
 			attr_accessor :pocket_faces_vertices
 
-			@@derivedType = @@defaultType.merge({
-			  "methodType" => "Pocket",
-			  "dictionaryName" => "Pocket",
-			  "cutwidth" => 3.175
-			})
-			
 			class PocketData
 				attr_accessor :loopFace
 				attr_accessor :drillbitSize
@@ -41,6 +48,9 @@ module GNTools
 					@drillBitRayon = (@drillbitSize/2.0)											# ()rayon de la drill	drillBitRayon = drillBitRayon.mm
 					@safeHeight = GNTools.getSafeHeight()
 					@material_thickness = GNTools.material_Height()
+					if @material_thickness == nil
+						@material_thickness = DefaultCNCDialog.def_CNCData.material_thickness
+					end
 					@down_slow = pocketObj.depthstep
 					# height_pass start at end go down_slow
 					if pocketObj.multipass
@@ -50,9 +60,6 @@ module GNTools
 					end
 					if @safeHeight == nil
 						@safeHeight = DefaultCNCDialog.def_CNCData.safeHeight
-					end
-					if @material_thickness == nil
-						@material_thickness = DefaultCNCDialog.def_CNCData.material_thickness
 					end
 					@defaultFeedRate = pocketObj.feedrate
 					if @defaultFeedRate == nil
@@ -84,16 +91,14 @@ module GNTools
 			# Définition d'une class qui imite Sketchup::Edge
 			
 			def initialize(group = nil)
-				puts "initialize pocket"
-				@@derivedType.each do |key, value|
-				  instance_variable_set("@#{key}", value)
-				  puts "@#{key} = #{value}"
-				end
-				puts "initialize pocket Done"
+				super(group)
+#				# ---> ICI : afficher la stack d'appel
+#				puts "\n[CALL STACK]"
+#				puts caller.join("\n")
+#				puts "[END CALL STACK]\n"
 				@pd = PocketData.new
 				@pocket_faces_normal = []
 				@pocket_faces_vertices = []
-				super("Pocket",group)
 			end
 
 		    def defaultType
@@ -102,14 +107,12 @@ module GNTools
 
 			def createDynamiqueModel
 				@pd.getPocketData(self)
-				puts "Create Dynamique Model"
-			    drillbitSize = DrillBits.getDrillBit(@drillBitName).cut_Diameter			# diametre de la drill 
+			    drillbitSize = DrillBits.getDrillBit(drillBitName).cut_Diameter			# diametre de la drill 
 			    drillBitRayon = (drillbitSize/2.0)								# rayon de la drill
 
 				loopFace = LoopFace.new()
 				loopFace.pfaces_vertices = self.getGlobal()
 				loopFace.pfaces_normal = @pocket_faces_normal
-				puts "Model Type = #{@methodType}"
 				if methodType == "Pocket"
 					loopsleft = loopFace.deplacer(0.mm)
 					loopsleft.each do |loop_array|
@@ -127,7 +130,7 @@ module GNTools
 					end
 					face_remaining = pathEntitie.entities.grep(Sketchup::Face).find { |f| f.valid? }
 					if face_remaining
-						distance = self["depth"].mm
+						distance = depth.mm
 						if face_remaining.normal.z > 0.0
 							distance = -distance
 						end
@@ -169,7 +172,7 @@ module GNTools
 					end
 					face_remaining = pathEntitie.entities.grep(Sketchup::Face).find { |f| f.valid? }
 					if face_remaining
-						distance = self["depth"].mm
+						distance = depth.mm
 						if face_remaining.normal.z > 0.0
 							distance = -distance
 						end
@@ -211,7 +214,7 @@ module GNTools
 					end
 					face_remaining = pathEntitie.entities.grep(Sketchup::Face).find { |f| f.valid? }
 					if face_remaining
-						distance = self["depth"].mm
+						distance = depth.mm
 						if face_remaining.normal.z > 0.0
 							distance = -distance
 						end
@@ -221,46 +224,22 @@ module GNTools
 				Sketchup.active_model.active_view.invalidate
 			end
 			
-			def self.CreateFromLoop(loop,hash)
-				newinstance = new()
-				GNTools.toolDefaultNo["Pocket"] = GNTools.toolDefaultNo["Pocket"] + 1
-				newinstance.pathName = "Pocket_#{GNTools.toolDefaultNo["Pocket"]}"
-				newinstance.from_Hash(hash)
-				newinstance.set_To_Attribute(newinstance.pathEntitie)
-				face_vertices = []
-				loop.each do |edge|
-					face_vertices << edge.start.position
-				end
-				newinstance.pocket_faces_vertices << face_vertices
-				sum_direction = 0
-				(0..loop.size).each do |index_horaire|
-					edge1 = loop[(index_horaire) % loop.size].start.position.to_a
-					edge2 = loop[(index_horaire + 1) % loop.size].start.position.to_a
-					edge3 = loop[(index_horaire + 2) % loop.size].start.position.to_a
-					sum_direction += (edge2[0] - edge1[0]) * (edge3[1] - edge1[1]) - (edge2[1] - edge1[1]) * (edge3[0] - edge1[0])
-				end
-				if sum_direction > 0
-					newinstance.pocket_faces_normal << Geom::Vector3d.new(0.0,0.0,1.0)
-				else
-					newinstance.pocket_faces_normal << Geom::Vector3d.new(0.0,0.0,-1.0)
-				end
-				newinstance.createDynamiqueModel
-				newinstance
+			def self.Create(faces_or_loop, hash)
+			  if faces_or_loop.is_a?(Array) && faces_or_loop.all? { |e| e.is_a?(Sketchup::Face) }
+				newinstance = CreateFromFaces(faces_or_loop, hash)
+			  else
+				newinstance = CreateFromLoop(faces_or_loop, hash)
+			  end
+			  newinstance
 			end
 			
-			def self.Create(faces,hash)
-				puts "on est dans Create"
+			
+			def self.CreateFromFaces(faces_or_loop,hash)
 				newinstance = new()
-				puts "entite #{newinstance.pathEntitie}"
-				puts "Methode #{newinstance.methodType}"
+				newinstance.from_Hash(hash)
 				GNTools.toolDefaultNo["Pocket"] = GNTools.toolDefaultNo["Pocket"] + 1
 				newinstance.pathName = "Pocket_#{GNTools.toolDefaultNo["Pocket"]}"
-				puts "pathName #{newinstance.pathName}"
-				newinstance.from_Hash(hash)
-				newinstance.set_To_Attribute(newinstance.pathEntitie)
-				group = newinstance.pathEntitie
-				puts "faces Count #{faces.count}"
-				faces.each do |face|
+				faces_or_loop.each do |face|
 					face_vertices = []
 					face.outer_loop.vertices.each do |vertex|
 						face_vertices << vertex.position
@@ -268,9 +247,6 @@ module GNTools
 					newinstance.pocket_faces_vertices << face_vertices
 					newinstance.pocket_faces_normal << face.normal
 				end
-
-				puts "faces vertex #{newinstance.pocket_faces_vertices.count}"
-				
 				newinstance.createDynamiqueModel
 				newinstance
 			end
@@ -288,7 +264,6 @@ module GNTools
 			end
 			
 			def changed(create_undo = false)
-				super(create_undo)
 				transformation = GNTools::Paths::TransformPoint.getGlobalTransform(pathEntitie.parent)
 
 				# effacer le model
@@ -299,30 +274,13 @@ module GNTools
 				self.createDynamiqueModel
 			end
 			
-			def createPathLoop(pathGroup,loopsleft,offset_height)
-				loopsleft.each do |loop_array|
-					loop_array.each do |loop_arr|
-						if loop_arr.size > 0
-							edgearray_big = []
-							(0..loop_arr.size).each do |index_horaire|
-								edge1 = loop_arr[(index_horaire) % loop_arr.size]
-								edge2 = loop_arr[(index_horaire + 1) % loop_arr.size]
-								edge1[2] = offset_height.mm
-								edge2[2] = offset_height.mm									
-								edgearray_big.concat(pathGroup.entities.add_edges(edge1,edge2))
-							end
-						end
-					end
-				end
-			end
-			
 			def createPath()
 				super()
 				pathGroup = Sketchup.active_model.entities.add_group()
 				pathGroup.name = "PocketView"
 				@pd.getPocketData(self)
 				while @pd.height_pass >= @pd.holeBottom
-					puts "Creating layer #{methodType} at #{@pd.height_pass}"
+					puts "Creating layer #{@methodType} at #{@pd.height_pass}"
 					if methodType == "Pocket"
 						offset_loop = @pd.pocketsize.to_mm
 						while offset_loop > @pd.drillBitRayon.mm
@@ -345,61 +303,12 @@ module GNTools
 				end
 			end
 			
-			def distance_point_to_edge(point, edge)
-			  a = edge.start.position
-			  b = edge.end.position
-			  ab = b - a
-			  ap = point - a
-
-			  # Projection scalaire du point sur la ligne
-			  t = ap.dot(ab) / ab.dot(ab)
-
-			  # Vérification si la projection est sur l'arête
-			  if t < 0
-				return ap.length  # Distance à A
-			  elsif t > 1
-				return (point - b).length  # Distance à B
-			  else
-				# Point projeté sur l'arête	
-				projection = a.offset(ab, t)
-				return (point - projection).length
-			  end
-			end
-
-			def faceGCode(newEdges,gCodeStr)
-			  # dessine la face
-			  newEdges.each_with_index do |cline, i|
-				gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f\n" % [cline.finish.position.x.to_mm , cline.finish.position.y.to_mm]
-			  end
- 			  gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f\n" % [newEdges[0].start.position.x.to_mm , newEdges[0].start.position.y.to_mm]
-			  gCodeStr
-			end
-            
-			def createGCodeLoop(loopsleft,offset_height,gCodeStr)
-				loopsleft.each do |loop_array|
-					loop_array.each do |loop_arr|
-						if loop_arr.size > 0
-							edgearray_big = []
-							edge1 = loop_arr[0]
-							gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f\n" % [edge1[0].to_mm , edge1[1].to_mm]
-							(0..loop_arr.size).each do |index_horaire|
-								edge2 = loop_arr[(index_horaire + 1) % loop_arr.size]
-								edge2[2] = offset_height									
-								gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f\n" % [edge2[0].to_mm , edge2[1].to_mm]
-							end
-							gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f\n" % [edge1[0].to_mm , edge1[1].to_mm]
-						end
-					end
-				end
-				gCodeStr
-			end
-			
 			def createGCode(gCodeStr)
 				@pd.getPocketData(self)
 				gCodeStr = gCodeStr + "; create a pocket\n"
-				gCodeStr = gCodeStr + "; pocket Name : %s\n" % [@pathName]
+				gCodeStr = gCodeStr + "; pocket Name : %s\n" % [pathName]
 				gCodeStr = gCodeStr + "G0  Z%0.2f ; goto safe height\n" % [@pd.safeHeight]
-				gCodeStr = gCodeStr + "; drill %s pocket bit size, %0.2f\n" % [@methodType, @pd.drillbitSize]
+				gCodeStr = gCodeStr + "; drill %s pocket bit size, %0.2f\n" % [methodType, @pd.drillbitSize]
 				gCodeStr = gCodeStr + "; Top,Bottom %0.2f %0.2f\n" % [@pd.material_thickness,@pd.holeBottom]
 				while @pd.height_pass >= @pd.holeBottom
 					puts "Creating layer #{methodType} at #{@pd.height_pass}"
@@ -449,27 +358,9 @@ module GNTools
 #			end
 
 
-			
-			def set_To_Attribute(group)
-				super(group)
-				group.set_attribute( "Pocket","cutwidth", self.cutwidth )
-			end
-			
-			def get_From_Attributs(ent)
-				super(ent)
-				@cutwidth = ent.get_attribute( "Pocket","cutwidth" )
-			end
-			
-			# set Pocket data from hash
-			def from_Hash(hash)
-				super(hash)
-				self.cutwidth = hash["cutwidth"]["Value"]
-			end
-
 			# set hash from Pocket data
 			def to_Hash(hashTable)
 				super(hashTable)
-				hashTable["cutwidth"] = {"Value" => @cutwidth, "type" => "spinner","multiple" => false}
 				if @pathEntitie
 					faces = @pathEntitie.entities.grep(Sketchup::Face)
 					hashTable["numOfEdge"] = {"Value" => faces.count(), "numOfEdge" => "label","multiple" => false}
@@ -478,9 +369,109 @@ module GNTools
 				end
 				hashTable
 			end
-		end # Pocket
-		
-		
+
+
+			private
+
 			
+			def self.CreateFromLoop(loop,hash)
+				newinstance = new()
+				newinstance.from_Hash(hash)
+				GNTools.toolDefaultNo["Pocket"] = GNTools.toolDefaultNo["Pocket"] + 1
+				newinstance.pathName = "Pocket_#{GNTools.toolDefaultNo["Pocket"]}"
+				face_vertices = []
+				loop.each do |edge|
+					face_vertices << edge.start.position
+				end
+				newinstance.pocket_faces_vertices << face_vertices
+				sum_direction = 0
+				(0..loop.size).each do |index_horaire|
+					edge1 = loop[(index_horaire) % loop.size].start.position.to_a
+					edge2 = loop[(index_horaire + 1) % loop.size].start.position.to_a
+					edge3 = loop[(index_horaire + 2) % loop.size].start.position.to_a
+					sum_direction += (edge2[0] - edge1[0]) * (edge3[1] - edge1[1]) - (edge2[1] - edge1[1]) * (edge3[0] - edge1[0])
+				end
+				if sum_direction > 0
+					newinstance.pocket_faces_normal << Geom::Vector3d.new(0.0,0.0,1.0)
+				else
+					newinstance.pocket_faces_normal << Geom::Vector3d.new(0.0,0.0,-1.0)
+				end
+				newinstance.createDynamiqueModel
+				newinstance
+			end
+			
+			def createPathData
+			  GN_PocketData.new
+			end
+			
+			def createPathLoop(pathGroup,loopsleft,offset_height)
+				loopsleft.each do |loop_array|
+					loop_array.each do |loop_arr|
+						if loop_arr.size > 0
+							edgearray_big = []
+							(0..loop_arr.size).each do |index_horaire|
+								edge1 = loop_arr[(index_horaire) % loop_arr.size]
+								edge2 = loop_arr[(index_horaire + 1) % loop_arr.size]
+								edge1[2] = offset_height.mm
+								edge2[2] = offset_height.mm									
+								edgearray_big.concat(pathGroup.entities.add_edges(edge1,edge2))
+							end
+						end
+					end
+				end
+			end
+
+			def distance_point_to_edge(point, edge)
+			  a = edge.start.position
+			  b = edge.end.position
+			  ab = b - a
+			  ap = point - a
+
+			  # Projection scalaire du point sur la ligne
+			  t = ap.dot(ab) / ab.dot(ab)
+
+			  # Vérification si la projection est sur l'arête
+			  if t < 0
+				return ap.length  # Distance à A
+			  elsif t > 1
+				return (point - b).length  # Distance à B
+			  else
+				# Point projeté sur l'arête	
+				projection = a.offset(ab, t)
+				return (point - projection).length
+			  end
+			end
+
+			def faceGCode(newEdges,gCodeStr)
+			  # dessine la face
+			  newEdges.each_with_index do |cline, i|
+				gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f\n" % [cline.finish.position.x.to_mm , cline.finish.position.y.to_mm]
+			  end
+ 			  gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f\n" % [newEdges[0].start.position.x.to_mm , newEdges[0].start.position.y.to_mm]
+			  gCodeStr
+			end
+            
+			def createGCodeLoop(loopsleft,offset_height,gCodeStr)
+				loopsleft.each do |loop_array|
+					loop_array.each do |loop_arr|
+						if loop_arr.size > 0
+							edgearray_big = []
+							edge1 = loop_arr[0]
+							gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f\n" % [edge1[0].to_mm , edge1[1].to_mm]
+							(0..loop_arr.size).each do |index_horaire|
+								edge2 = loop_arr[(index_horaire + 1) % loop_arr.size]
+								edge2[2] = offset_height									
+								gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f\n" % [edge2[0].to_mm , edge2[1].to_mm]
+							end
+							gCodeStr = gCodeStr + "G0 X%0.2f Y%0.2f\n" % [edge1[0].to_mm , edge1[1].to_mm]
+						end
+					end
+				end
+				gCodeStr
+			end
+		end # Pocket
+
+		PathObj.register_class("Pocket", GN_PocketData.defaultType, ->(*args){ Pocket.Create(*args) })
+
 	end # module Paths
 end  #module GNTools

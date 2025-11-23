@@ -198,7 +198,7 @@ progress {
   position: relative;
   border: 1px solid #888;
   font-family: monospace;
-  max-height: 400px;
+  max-height: 550px;
   overflow: hidden;
 }
 
@@ -227,7 +227,7 @@ progress {
   font-family: monospace;
   font-size: 14px;
   overflow: auto;
-  max-height: 400px;
+  max-height: 550px;
   box-sizing: border-box;
 }
 
