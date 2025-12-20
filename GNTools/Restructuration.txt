@@ -1,0 +1,197 @@
+Module: GNTools
+  Class: CommandClass                   (GN_Menus.rb)
+  Class: GN3DToolbars                   (GN_Toolbars.rb)
+
+  Class: Material                       (GN_materialTool.rb)
+  Class: MaterialDialog                 (GN_materialTool.rb)
+
+  Module: Paths
+    Class: CombineDialog                (GN_CombineTool.rb)
+    Class: CombineTool                  (GN_CombineTool.rb)
+    Class: LoopFace                     (GN_PathObj.rb)
+    Class: TransformPoint               (GN_PathObj.rb)
+	Class: EdgeOffsetter                (GN_PathObj.rb)
+	Class: EdgeIntersector              (GN_PathObj.rb)
+	Class: LoopRebuilder                (GN_PathObj.rb)
+	Class: PathObjObserver              (GN_PathObj.rb)
+	Class: PathObj                      (GN_PathObj.rb)
+	  Module: AttrPersistence           (GN_PathObj.rb)
+	  Module: HashConversion            (GN_PathObj.rb)
+    Class: Hole                         (GN_Hole.rb)
+    Class: StraitCut                    (GN_StraitCut.rb)
+    Class: Pocket                       (GN_Pocket.rb)
+      Class: PocketData                 (GN_Pocket.rb)
+
+  Class: GCodeGenerate                  (GN_GCodeGenerate.rb)
+
+  Class: DefaultCNCData                 (GN_DefaultCNCData.rb)
+  Class: DefaultCNCDialog               (GN_DefaultCNCData.rb)
+  Class: DefaultCNCTool                 (GN_DefaultCNCData.rb)
+
+  Class: DrillBit                       (GN_DrillBits.rb)
+  Class: DrillBits                      (GN_DrillBits.rb)
+
+  Module: ObserverModule                (GN_Observers.rb)
+  Class: ModelSpy                       (GN_Observers.rb)
+  Class: MySelectionObserver            (GN_Observers.rb)
+  
+  Class: OctoPrintDialog                (GN_OctoPrintDialog.rb)
+  Class: OctoPrint                      (octoprint.rb)
+  Class: WebSocketGN                    (GN_WebSocketGN.rb)
+
+
+
+
+
+
+Module: GNTools
+
+
+un dialog devrait avoir 3 class la class pour le dialog le tool pour montré et 
+travailler avec le dialog et les data pour le dialog
+
+
+Class: CommandClass (GN_Menus.rb)
+Rôle: Encapsule les commandes SketchUp pour le menu du plugin.
+Définit les actions disponibles et leur liaison avec les callbacks des menus.
+
+Class: GN3DToolbars (GN_Toolbars.rb)
+Rôle: Crée et gère les toolbars personnalisées pour les outils CNC et 3D.
+Fournit l’interface de lancement rapide des outils.
+
+Class: Material (GN_materialTool.rb)
+Rôle: Identifier un groupe comme matériau – en utilisant le dictionnaire d’attributs MATERIAL_DICT.
+Stocker les paramètres CNC associés au matériau, comme :
+material_type (ex: Acrylic),
+safeHeight (hauteur de sécurité pour la fraise),
+material_Height (épaisseur réelle du matériau).
+Sauvegarder et reconstruire la géométrie du groupe, via save_group_data et create_group_from_data.
+Cela permet de persister des objets complexes (edges, faces, arcs, courbes, sous-groupes) tout en restant attaché au matériau.
+
+Class: MaterialDialog (GN_materialTool.rb)
+Rôle: Fournir une interface utilisateur avec MaterialDialog pour visualiser et modifier ces données via un HTML Dialog.
+Observer la sélection pour fermer automatiquement le dialogue si l’utilisateur change de groupe sélectionné.
+
+Module: Paths
+
+	Class: CombineDialog (GN_CombineTool.rb)
+	Rôle: Dialog des chemins de type PathObj.
+
+	Class: CombineTool (GN_CombineTool.rb)
+	Rôle: Outil pour visualisation du Dialog de type PathObj dans SketchUp.
+
+	Class: LoopFace (GN_PathObj.rb)
+	Rôle: Représente de plusieur face définie par une boucle de segments pour le CNC que PathObj a besoin (chemin).
+
+		Class: TransformPoint (GN_PathObj.rb)
+		Rôle: Transforme un point ou un ensemble de points dans l’espace 3D.
+
+		Class: EdgeOffsetter (GN_PathObj.rb)
+		Rôle: Décale les arêtes pour créer des chemins offset.
+
+		Class: EdgeIntersector (GN_PathObj.rb)
+		Rôle: Détecte les intersections entre arêtes pour valider les géométries.
+
+		Class: LoopRebuilder (GN_PathObj.rb)
+		Rôle: Reconstruit les boucles de points ou segments pour former des faces valides.
+
+	Class: PathObjObserver (GN_PathObj.rb)
+	Rôle: Observer pour détecter les changements sur des objets de type PathObj.
+
+	Class: PathObj (GN_PathObj.rb)
+	Rôle: Objet de base pour représenter un chemin ou entité CNC.
+
+		Module: AttrPersistence (GN_PathObj.rb)
+		Rôle: Gère la sauvegarde/lecture d’attributs des objets SketchUp.
+
+		Module: HashConversion (GN_PathObj.rb)
+		Rôle: Convertit les objets en Hash pour stockage ou sérialisation.
+
+	Class: Hole (GN_Hole.rb) derivé de PathObj
+	Rôle: Représente un trou ou un cercle pour usinage CNC.
+
+	Class: StraitCut (GN_StraitCut.rb) derivé de PathObj
+	Rôle: Représente une ligne droite pour usinage CNC.
+
+	Class: Pocket (GN_Pocket.rb) derivé de PathObj
+	Rôle: Représente une poche pour usinage CNC.
+
+		Class: PocketData (GN_Pocket.rb)
+		Rôle: Regroupe les données pour cree une poche.
+
+Classe GCode et CNC
+
+Class: GCodeGenerate (GN_GCodeGenerate.rb)
+Rôle: Génère le GCode à partir des objets PathObj et paramètres CNC.
+
+
+
+Class: DefaultCNCData (GN_DefaultCNCData.rb)
+Rôle: Contient les paramètres CNC par défaut.
+
+Class: DefaultCNCDialog (GN_DefaultCNCData.rb)
+Rôle: Interface pour afficher et modifier les paramètres CNC par défaut.
+
+Class: DefaultCNCTool (GN_DefaultCNCData.rb)
+Rôle: Outil pour appliquer ou manipuler les paramètres CNC.
+
+
+
+
+
+Classe Drill Bits
+
+Class: DrillBit (GN_DrillBits.rb)
+Rôle: Représente un foret individuel (diamètre, type).
+
+Class: DrillBits (GN_DrillBits.rb)
+Rôle: Fournir une interface utilisateur pour l ensemble de forets.
+
+Module Observer
+
+Module: ObserverModule (GN_Observers.rb)
+Rôle: Contient les observers pour surveiller le modèle.
+
+Class: ModelSpy (GN_Observers.rb)
+Rôle: Observe les changements dans le modèle SketchUp.
+
+Class: MySelectionObserver (GN_Observers.rb)
+Rôle: Observe les sélections pour détecter les modifications d’objets.
+
+Intégration réseau / dialogues
+
+Class: OctoPrintDialog (GN_OctoPrintDialog.rb)
+Rôle: Fenêtre pour configurer OctoPrint et lancer l’impression.
+
+Class: OctoPrint (octoprint.rb)
+Rôle: Gestion de la communication avec OctoPrint.
+
+Class: WebSocketGN (GN_WebSocketGN.rb)
+Rôle: Communication via WebSocket pour le plugin (ex: retour CNC en temps réel).
+
+
+
+
+1. Contours simples
+	Straitcut / Profil : coupe droite le long d’un contour défini.
+	Offset / Contour multiple : coupe autour d’un contour avec plusieurs passes décalées.
+	Perçage (Hole) : point unique avec ou sans multi-passage.
+	Slot / Fente : un rectangle ou une fente sur un chemin linéaire.
+2. Cavités
+	Pocket (carrée ou rectangulaire) : enlèvement de matière à l’intérieur d’un contour fermé.
+	Circular Pocket : poche circulaire avec passages concentriques.
+	Helical Pocket : descente hélicoïdale pour réduire la contrainte sur l’outil.
+3. Stratégies avancées
+	Ramp / Plunge : descente progressive pour éviter les chocs sur l’outil.
+	Contour avec Lead-in / Lead-out : ajoute des entrées et sorties douces pour un meilleur fini.
+	Trochoidal / Spiral : pour matériaux durs, enlèvement plus constant et moins d’effort sur l’outil.
+	Adaptive Clearing : chemins optimisés pour des cavités complexes (comme Fusion360).
+4. Formes complexes
+	3D Surface / Z-contour : suit un maillage 3D pour usiner une forme libre.
+	Engraving / Gravure : suit une trajectoire vectorielle avec profondeur constante.
+	V-Carving : gravure avec outil en V, profondeur dépend de la largeur du trait.
+	Thread / Helix : pour vis, ressorts, spirales.
+5. Optimisations CNC
+	Chain / Multiple contour chaining : regrouper plusieurs contours pour réduire les déplacements à vide.
+	Offset en escalier : pour des cavités profondes, créer plusieurs passes à différentes profondeurs.
+	Drill Pattern : perçages répétitifs avec espacement prédéfini.

@@ -396,7 +396,7 @@ module GNTools
 				@dialog.execute_script(scriptStr)
 			when 49
 				puts object1
-				GNTools::Paths::Hole.useG2Code = object1
+				GNTools::Paths::GN_Hole.useG2Code = object1
 			when 50
 				codeToRun = object1["code"]
 				GNTools.octoPrint.send_gcodes(codeToRun)

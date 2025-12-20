@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OctoPrint WebSocket Example</title>
+</head>
+<body>
+  <h1>OctoPrint Push Updates</h1>
+  <pre id="log"></pre>
+
+  <script>
+    // 🔧 Remplace par l'adresse de ton OctoPrint
+    const host = "10.0.0.108:5000";  
+    const apiKey = "w3hB9JoyaOEj07EWqCLUbpjrsPtbYXp7cbkw8MqT_x4";  
+
+    // Création de la connexion
+   // WebSocket OctoPrint avec API key dans l’URL
+    const wsUrl = `ws://${host}/sockjs/websocket?apikey=${apiKey}`;
+    const socket = new WebSocket(wsUrl);
+
+    const log = document.getElementById("log");
+
+    socket.onopen = () => {
+      log.textContent += "✅ Connecté au WebSocket OctoPrint\n";
+	  
+	  // Auth doit être envoyé dans un tableau à cause de SockJS
+	  socket.send(JSON.stringify([{ auth: apiKey }]));
+	  // Étape 4 : Abonnement aux événements
+      socket.send(JSON.stringify({
+        subscribe: {
+          events: true
+        }
+      }));
+	  // Auth obligatoire
+	  //socket.send(JSON.stringify({ auth: apiKey }));
+	  log.textContent += "🔑 Auth envoyé\n";
+    };
+
+    socket.onmessage = (event) => {
+	  log.textContent += "📩 message recu\n";
+      try {
+        // Avec SockJS, le payload arrive comme `a["..."]`
+        let data = event.data;
+
+        // Si c’est un tableau JSON encodé par SockJS → parse le premier élément
+        if (data.startsWith("a")) {
+          const arr = JSON.parse(data.substring(1));
+          data = arr[0]; 
+        }
+
+        const parsed = JSON.parse(data);
+        log.textContent += "📩 " + JSON.stringify(parsed, null, 2) + "\n";
+      } catch (e) {
+        log.textContent += "📩 " + event.data + "\n";
+      }
+    };
+
+    socket.onclose = (event) => {
+      log.textContent += `🔌 Connexion fermée (code ${event.code})\n`;
+    };
+    socket.onerror = (error) => {
+      log.textContent += "⚠️ Erreur: " + error.message + "\n";
+    };
+  </script>
+</body>
+</html>

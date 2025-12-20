@@ -172,6 +172,11 @@ module GNTools
             pathobj.createPath()
             preview_count += 1
           rescue => e
+		    puts "------ ERREUR -----"
+		    puts "Message : #{e.message}"
+		    puts "Ligne   : #{e.backtrace[0]}"
+		    puts "Stack :"
+		    puts e.backtrace.join("\n") 
             puts GNTools.traduire("Erreur création chemin pour %{key}: %{error}", key: key, error: e.message)
           end
         end

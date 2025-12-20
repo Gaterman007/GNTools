@@ -182,7 +182,7 @@ module GNTools
 					nil
 				}
 				@dialog.add_action_callback("apply") { |action_context, value|
-					DrillBits.loadFromFile(File.join(GNTools::PATH, "DrillBits.txt"))
+					DrillBits.loadFromFile(File.join(GNTools::PATH_ROOT, "DrillBits.txt"))
 					scriptStr = "delRowsTable()"
 					@dialog.execute_script(scriptStr)
 					self.update_dialog
@@ -193,7 +193,7 @@ module GNTools
 					(0 .. @newdrillbitTbl.count - 1).each { |index|
 						@@drillbitTbl[index] = @newdrillbitTbl[index].dup
 					}
-					DrillBits.saveToFile(File.join(GNTools::PATH, "DrillBits.txt"))
+					DrillBits.saveToFile(File.join(GNTools::PATH_ROOT, "DrillBits.txt"))
 					nil
 				}
 				@dialog.add_action_callback("tableAdjust") { |action_context, value,row|
@@ -219,7 +219,7 @@ module GNTools
 		end
 
 		def create_dialog
-			html_file = File.join(GNTools::PATH, 'ui', 'html', 'DrillBits.html') # Use external HTML
+			html_file = File.join(GNTools::PATH_ROOT, 'ui', 'html', 'DrillBits.html') # Use external HTML
 			options = {
 			  :dialog_title => "DrillBits Settings",
 			  :resizable => true,

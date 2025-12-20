@@ -116,7 +116,7 @@ module GNTools
 		@macro1 = ""
 		@macro2 = ""
 		@macro3 = ""
-		@filename = File.join(GNTools::PATH, "OctoPrintData.txt")
+		@filename = File.join(GNTools::PATH_ROOT, "OctoPrintData.txt")
 		if File.exist? @filename
 			loadFromFile()
 		else

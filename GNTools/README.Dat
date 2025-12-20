@@ -1,0 +1,1958 @@
+fichier 
+GNToolsMain.rb
+	Module GNTools
+		(no classes)
+		(no methods)
+		constante : PLUGIN
+
+GNTools/GN_ToolsCore.rb
+	Module GNTools
+		constante : PATH_ROOT
+		constante : PATH_UI
+		constante : PATH_TOOLS
+		constante : PATH_IMAGES
+		constante : PATH_HTML
+
+		méthode : self.init
+		méthode : self.create_menus_and_toolbars
+		méthode : self.post_init_actions
+		méthode : self.parse_ruby_file
+		méthode : self.print_structure
+
+		(no classes)
+		
+GNTools/GN_command_class.rb
+	Module GNTools
+
+		class CommandClass
+			attr_accessor :cmd_circle3x3Tool
+			attr_accessor :cmd_Add_Material
+			attr_accessor :cmdCNCTools
+			attr_accessor :cmdCreatePath
+			attr_accessor :cmdparamGCode
+			attr_accessor :cmdGCode
+			attr_accessor :cmdDemoMat
+			attr_accessor :cmdSaveGCode
+			attr_accessor :cmdDrillBits
+			attr_accessor :cmdConstructionLine
+			attr_accessor :cmdCNCNewTools
+
+			méthode : initialize
+		end
+
+		méthode : self.octoPrint
+		méthode : self.octoPrintDiag
+		méthode : self.commandClass
+		méthode : self.defaultCNCTool
+		méthode : self.gn_PathObjTool
+		méthode : self.activeToolID
+		méthode : self.activeToolID=
+		méthode : self.activate_PathTool
+		méthode : self.activate_CreateTool
+		méthode : self.activate_Material
+		méthode : self.activate_GCodeGenerate
+		méthode : self.activate_callTools	
+
+GNTools/GN_Menus.rb
+	Module GNTools
+
+		Class GNMenu
+			méthode : self.menu
+			méthode : self.load
+			méthode : self.reload
+		end
+
+		méthode : self.initMenu
+		méthode : self.getCursorPos
+		méthode : self.setCursorPos
+		méthode : self.fixCursorDisplay
+		méthode : self.getActiveWindow
+		méthode : self.getWindowName
+		méthode : self.create_Menus
+		méthode : self.reload
+
+GNTools/GN_OverlayManager.rb
+	Module GNTools
+
+		CONSTANTE : OVERLAY_ID
+		CONSTANTE : OVERLAY_NAME
+
+		Class ToolpathObserver < Sketchup::Overlay
+			méthode : initialize
+			méthode : set_collection
+			méthode : getTextBox
+			méthode : draw
+
+		Class OverlayManager < Sketchup::AppObserver
+			class_variable : @@instance
+
+			méthode_de_classe : self.instance
+			attribute_accessor : model_overlay
+
+			méthode (private_class_method) : new
+
+			méthode : initialize
+			méthode : onExtensionsLoaded
+			méthode : onNewModel
+			méthode : onOpenModel
+			méthode : onQuit
+			méthode : onUnloadExtension
+			méthode : register_overlay
+
+			méthode_de_classe : self.set_collection
+
+			méthode : set_overlay
+			méthode : remove_overlay
+
+		variable locale : manager (instance de OverlayManager)
+		appel : manager.set_overlay
+
+GNTools/GN_Toolbars.rb
+	Module GNTools
+
+		Class GN3DToolbars
+			variable de classe : @toolbar
+			variable de classe : @loaded
+
+			méthode_de_classe : self.toolbar
+			méthode_de_classe : self.load
+			méthode_de_classe : self.reload
+			méthode_de_classe : self.dump_items
+
+GNTools/Geometrie/GNWin32.rb
+	Module Win32API2
+
+		Module ComDlg32
+			extend Fiddle::Importer
+			constante : dlload 'Comdlg32'
+			constante : typealias 'LPCWSTR'
+			constante : typealias 'LPWSTR'
+			struct : OpenFileName
+			extern : GetOpenFileName
+			extern : GetSaveFileName
+			extern : CommDlgExtendedError
+
+		Module User32
+			extend Fiddle::Importer
+			constante : CF_TEXT
+			struct :CursorPoint
+			extern :GetParent
+			extern :FindWindowA
+			extern :GetCursorPos
+			extern :SetCursorPos
+			extern :OpenClipboard
+			extern :CloseClipboard
+			extern :EmptyClipboard
+			extern :GetClipboardData
+			extern :SetClipboardData
+			extern :GetMenu
+			extern :GetActiveWindow
+			extern :GetWindowText
+			extern :GetWindowTextLength
+			extern :GetMenuItemCount
+			struct :MenuItemInfo
+			extern :GetMenuItemInfo
+			extern :GetSystemMetrics
+			extern :GetDpiForWindow
+			extern :GetActiveWindow
+			constante :SM_CXSCREEN
+			constante :SM_CYSCREEN
+			méthode_de_module : screen_size_dpi_aware
+			méthode_de_module : screen_width
+			méthode_de_module : screen_height
+
+		Module CursorPos
+			class << self
+				include User32
+				méthode :setcursorpos
+				méthode :getcursorpos
+
+		Module FileName
+			class << self
+				include ComDlg32
+				méthode :getOpenFileName
+				méthode :getSaveFileName
+
+GNTools/Geometrie/Circle3X3DPoints.rb
+	Module GNTools
+
+		Class Circle3X3DPoints
+			méthode_d_instance : initialize
+			méthode_d_instance : activate
+			méthode_d_instance : deactivate
+			méthode_d_instance : onMouseMove
+			méthode_d_instance : onLButtonDown
+			méthode_d_instance : onLButtonUp
+			méthode_d_instance : onKeyDown
+			méthode_d_instance : onKeyUp
+			méthode_d_instance : draw
+			méthode_d_instance : onCancel
+			méthode_d_instance : reset
+			méthode_d_instance : midpoint_of_3Dpoints
+			méthode_d_instance : circleCenterVectorAndRadius
+			méthode_d_instance : perpendicular_bisector
+			méthode_d_instance : create_geometry
+			méthode_d_instance : draw_geometry
+
+GNTools/Geometrie/LineTool.rb
+	Module GNTools
+
+		Class LineTool
+			constante_de_classe : DRAG_THRESHOLD
+			variable_de_classe : @@cursorNumber
+
+			méthode_d_instance : activate
+			méthode_d_instance : deactivate
+			méthode_d_instance : resume
+			méthode_d_instance : suspend
+			méthode_d_instance : onCancel
+			méthode_d_instance : onLButtonDown
+			méthode_d_instance : onMouseMove
+			méthode_d_instance : onLButtonUp
+			méthode_d_instance : onSetCursor
+			méthode_d_instance : draw
+			méthode_d_instance : getExtents
+
+			méthode_privée_d_instance : update_ui
+			méthode_privée_d_instance : reset_tool
+			méthode_privée_d_instance : picked_first_point?
+			méthode_privée_d_instance : picked_points
+			méthode_privée_d_instance : draw_preview
+			méthode_privée_d_instance : create_edge
+
+
+GNTools/Tools/GN_DefaultCNCData.rb
+	Module GNTools
+
+		Class DefaultCNCData
+			attribut_d_instance :project_Name
+			attribut_d_instance :material_type
+			attribut_d_instance :defaultFeedRate
+			attribut_d_instance :defaultPlungeRate
+			attribut_d_instance :defaultDepthLenght
+			attribut_d_instance :safeHeight
+			attribut_d_instance :material_width
+			attribut_d_instance :material_thickness
+			attribut_d_instance :material_depth
+			attribut_d_instance :startGCode
+			attribut_d_instance :endGCode
+			attribut_d_instance :safeZoneHeight
+			attribut_d_instance :safeZoneDepth
+			attribut_d_instance :safeZoneWidth
+			attribut_d_instance :materialObjet
+			attribut_d_instance :show_Material
+			attribut_d_instance :LengthPrecision
+			constante_de_classe :DefautDictName
+
+			méthode_d_instance :initialize
+			méthode_d_instance :initCNCData
+			méthode_d_instance :dup
+			méthode_d_instance :to_model
+			méthode_de_classe :self.getFromModel
+			méthode_d_instance :find_entity_by_persistent_id
+			méthode_d_instance :find_entity_by_persistent_id_recursive
+			méthode_d_instance :from_model
+			méthode_d_instance :to_Json
+			méthode_d_instance :fromJson
+			méthode_d_instance :from_Hash
+			méthode_d_instance :create_Hash
+
+		Class DefaultCNCDialog
+			variable_de_classe :@@default_FileName
+			variable_de_classe :@@def_CNCData
+
+			méthode_de_classe :self.set_defaults
+			méthode_de_classe :self.def_CNCData
+			méthode_de_classe :self.CNCData
+			méthode_d_instance :show_dialog
+			méthode_d_instance :create_cube
+			méthode_d_instance :modify_cube
+			méthode_d_instance :close_dialog
+			méthode_d_instance :create_dialog
+			méthode_d_instance :update_dialog
+			méthode_de_classe :self.saveToFile
+			méthode_de_classe :self.loadFromFile
+
+		Class DefaultCNCTool
+			variable_de_classe :@@DefaultCNCDia
+
+			méthode_d_instance :activate
+			méthode_d_instance :deactivate
+			méthode_d_instance :resume
+			méthode_d_instance :suspend
+			méthode_d_instance :onCancel
+			méthode_d_instance :onLButtonDown
+			méthode_d_instance :onMouseMove
+			méthode_d_instance :onLButtonUp
+			méthode_d_instance :onSetCursor
+			méthode_d_instance :draw
+			méthode_d_instance :draw_preview
+			méthode_d_instance :picked_points
+			méthode_d_instance :reset_tool
+			méthode_d_instance :show_dialog
+			méthode_d_instance :close_dialog
+			méthode_d_instance :create_dialog
+			méthode_d_instance :update_dialog
+
+GNTools/Tools/GN_DrillBits.rb
+	Module GNTools
+		Class DrillBits
+
+		Variables de classe
+			@@drillbitTbl
+			@@drillbitSel
+
+		Méthodes de classe :
+			self.drillbitSel
+			self.drillbitTbl
+			self.show
+			self.isDrillBit(name)
+			self.getDrillBit(name)
+			self.load_drillBitsTbl
+			self.saveToFile(filename)
+			self.loadFromFile(filename, append = false)
+
+files_classes_hierarchical = {
+  "GNToolsMain.rb" => {
+		"Modules" {
+			"name" => "GNTools",
+			"Constants"=>["PLUGIN"],
+			"Classes"=>{}
+		},
+		"Classes"=>{},
+  },
+  "GNTools" => {
+	"GN_Menus.rb" => {
+	  "Modules" => [
+		{
+		  "Name" => "GNTools",
+		  "Constants" => [],
+		  "ClassVars" => ["@@menu_initialized",
+						  "@@gn_PathObjTool", 
+						  "@@defaultCNCTool", 
+						  "@@activeToolID", 
+						  "@@commandClass", 
+						  "@@octoPrintDiag", 
+						  "@@octoPrint"],
+		  "Methods" => [
+			"self.initMenu",
+			"self.getCursorPos",
+			"self.setCursorPos",
+			"self.fixCursorDisplay",
+			"self.getActiveWindow",
+			"self.getWindowName",
+			"self.create_Menus",
+			"self.reload"
+		  ],
+		  "Classes" => [
+			{
+			  "Name" => "GNMenu",
+			  "Constants" => [],
+			  "ClassVars" => ["@menu", 
+							  "@loaded"],
+			  "Methods" => [ "self.menu", 
+							 "self.load",
+							 "self.reload"],
+			  "Classes" => []
+			}
+		  ]
+		}
+	  ],
+	  "Classes" => []
+	},
+	"GN_OverlayManager.rb" => {
+	  "Modules" => [
+		{
+		  "Name" => "GNTools",
+		  "Constants" => ["OVERLAY_ID", 
+						  "OVERLAY_NAME"],
+		  "ClassVars" => [],
+		  "Methods" => [],
+		  "Classes" => [
+			{
+			  "Name" => "ToolpathObserver",
+			  "Constants" => [],
+			  "ClassVars" => [],
+			  "Methods" => ["initialize", 
+							"set_collection", 
+							"getTextBox", 
+							"draw"],
+			  "Classes" => []
+			},
+			{
+			  "Name" => "OverlayManager",
+			  "Constants" => [],
+			  "ClassVars" => ["@@instance"],
+			  "Methods" => [
+				"self.instance",
+				"initialize",
+				"onExtensionsLoaded",
+				"onNewModel",
+				"onOpenModel",
+				"onQuit",
+				"onUnloadExtension",
+				"register_overlay",
+				"self.set_collection",
+				"set_overlay",
+				"remove_overlay"
+			  ],
+			  "Classes" => []
+			}
+		  ]
+		}
+	  ],
+	  "Classes" => []
+	},
+	"GN_Toolbars.rb" => {
+	  "Modules" => [
+		{
+		  "Name" => "GNTools",
+		  "Constants" => [],
+		  "ClassVars" => [],
+		  "Methods" => [],
+		  "Classes" => [
+			{
+			  "Name" => "GN3DToolbars",
+			  "Constants" => [],
+			  "ClassVars" => ["@toolbar", 
+							  "@loaded"],
+			  "Methods" => ["self.toolbar", 
+							"self.load", 
+							"self.reload", 
+							"self.dump_items"],
+			  "Classes" => []
+			}
+		  ]
+		}
+	  ],
+	  "Classes" => []
+	},
+    "GN_command_class.rb" => {
+	  "Modules" => [
+		{
+		  "Name" => "GNTools",
+		  "Constants" => [],
+		  "ClassVars" => ["@@octoPrint", 
+						  "@@octoPrintDiag", 
+						  "@@commandClass", 
+						  "@@defaultCNCTool", 
+						  "@@gn_PathObjTool", 
+						  "@@activeToolID"],
+		  "Methods" => [
+			"self.octoPrint",
+			"self.octoPrintDiag",
+			"self.commandClass",
+			"self.defaultCNCTool",
+			"self.gn_PathObjTool",
+			"self.activeToolID",
+			"self.activeToolID=",
+			"self.activate_PathTool",
+			"self.activate_CreateTool",
+			"self.activate_Material",
+			"self.activate_GCodeGenerate",
+			"self.activate_callTools"
+		  ],
+		  "Classes" => [
+			{
+			  "Name" => "CommandClass",
+			  "Constants" => [],
+			  "ClassVars" => [],
+			  "InstanceVars" => [
+				"@cmd_circle3x3Tool", 
+				"@cmd_Add_Material", 
+				"@cmdCNCTools", 
+				"@cmdCreatePath",
+				"@cmdparamGCode", 
+				"@cmdGCode", 
+				"@cmdDemoMat", 
+				"@cmdSaveGCode",
+				"@cmdDrillBits", 
+				"@cmdConstructionLine", 
+				"@cmdCNCNewTools"
+			  ],
+			  "Methods" => ["initialize"],
+			  "Classes" => []
+			}
+		  ]
+		}
+	  ],
+	  "Classes" => []
+	},
+    "Geometrie" => {
+      "CLineclass.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [],
+			  "ClassVars" => [],
+			  "Methods" => [],
+			  "Classes" => [
+				{
+				  "Name" => "LineTool",
+				  "Constants" => ["DRAG_THRESHOLD", "CURSOR_PENCIL"],
+				  "ClassVars" => ["@@cursorNumber"],
+				  "InstanceVars" => ["@mouse_ip", 
+									 "@picked_first_ip", 
+									 "@dragged", 
+									 "@mouseButton", 
+									 "@mouse_pos_down", 
+									 "@state", 
+									 "@mouse_down"],
+				  "Methods" => [
+					"activate",
+					"deactivate",
+					"resume",
+					"suspend",
+					"onCancel",
+					"onLButtonDown",
+					"onMouseMove",
+					"onLButtonUp",
+					"onSetCursor",
+					"draw",
+					"getExtents",
+					"update_ui",
+					"reset_tool",
+					"picked_first_point?",
+					"picked_points",
+					"draw_preview",
+					"create_edge"
+				  ],
+				  "Classes" => []
+				}
+			  ]
+			}
+		  ],
+		  "Classes" => []
+	  },
+      "GN_Circle3Point.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [],
+			  "ClassVars" => [],
+			  "Methods" => [],
+			  "Classes" => [
+				{
+				  "Name" => "Circle3X3DPoints",
+				  "Constants" => [],
+				  "ClassVars" => [],
+				  "InstanceVars" => [
+					"@ip1", 
+					"@ip2", 
+					"@ip3", 
+					"@ip", 
+					"@drawn", 
+					"@dragging",
+					"@state", 
+					"@xdown", 
+					"@ydown", 
+					"@center", 
+					"@shift_down_time"
+				  ],
+				  "Methods" => [
+					"initialize",
+					"activate",
+					"deactivate",
+					"onMouseMove",
+					"onLButtonDown",
+					"onLButtonUp",
+					"onKeyDown",
+					"onKeyUp",
+					"draw",
+					"onCancel",
+					"reset",
+					"midpoint_of_3Dpoints",
+					"circleCenterVectorAndRadius",
+					"perpendicular_bisector",
+					"create_geometry",
+					"draw_geometry"
+				  ],
+				  "Classes" => []
+				}
+			  ]
+			}
+		  ],
+		  "Classes" => []
+	  },
+	  "GN_Line.rb" => {
+		"Modules" => [
+		  {
+			"Name" => "GNTools",
+			"Constants" => [],
+			"ClassVars" => [],
+			"Methods" => [
+			  "checkEpsilon"
+			],
+			"Classes" => [
+			  {
+				"Name" => "LoopSegments",
+				"Constants" => [],
+				"ClassVars" => [],
+				"InstanceVars" => [
+				  "@segmentTbl",
+				  "@boundbox",
+				  "@linearray"
+				],
+				"Methods" => [
+				  "initialize",
+				  "count",
+				  "add_Seg",
+				  "classArray",
+				  "classSelection",
+				  "classGroup",
+				  "add_Segments",
+				  "clear",
+				  "add_Segment",
+				  "reverseLoop",
+				  "sortedges",
+				  "sortedges!",
+				  "setBondingBox",
+				  "linesFaces",
+				  "createCline",
+				  "createVectorTbl",
+				  "signdotvector",
+				  "loopConvex",
+				  "ligneParalelle",
+				  "offsetFace",
+				  "midpoint",
+				  "angle_between",
+				  "draw"
+				],
+				"Classes" => []
+			  },
+			  {
+				"Name" => "Line3d",
+				"Constants" => [],
+				"ClassVars" => [],
+				"InstanceVars" => [
+				  "@direction",
+				  "@point"
+				],
+				"Methods" => [
+				  "initialize"
+				],
+				"Classes" => []
+			  },
+			  {
+				"Name" => "Plan3d",
+				"Constants" => [],
+				"ClassVars" => [],
+				"InstanceVars" => [
+				  "@normal",
+				  "@d"
+				],
+				"Methods" => [
+				  "initialize"
+				],
+				"Classes" => []
+			  },
+			  {
+				"Name" => "Segment3d",
+				"Constants" => [],
+				"ClassVars" => [],
+				"InstanceVars" => [
+				  "@startpos",
+				  "@endpos"
+				],
+				"Methods" => [
+				  "initialize",
+				  "cross",
+				  "toVector",
+				  "getLine",
+				  "self.LineLineIntersect",
+				  "isOnSegment",
+				  "onSide",
+				  "draw",
+				  "createCline",
+				  "createInfiniteCline",
+				  "==",
+				  "inspect",
+				  "to_s"
+				],
+				"Classes" => []
+			  },
+			  {
+				"Name" => "Rayon3d",
+				"Constants" => [],
+				"ClassVars" => [],
+				"InstanceVars" => [
+				  "@direction",
+				  "@point"
+				],
+				"Methods" => [
+				  "initialize",
+				  "initForm2Point"
+				],
+				"Classes" => []
+			  }
+			]
+		  }
+		],
+		"Classes" => []
+	  }
+    },
+    "Tools" => {
+        "GN_DefaultCNCData.rb" => {
+			"Modules" => [
+			  {
+				"Name" => "GNTools",
+				"Constants" => [],
+				"ClassVars" => [],
+				"Methods" => [],
+				"Classes" => [
+				  {
+					"Name" => "DefaultCNCData",
+					"Constants" => [
+					  "DefautDictName"
+					],
+					"ClassVars" => [],
+					"InstanceVars" => [
+					  "@project_Name",
+					  "@material_type",
+					  "@defaultFeedRate",
+					  "@defaultPlungeRate",
+					  "@defaultDepthLenght",
+					  "@safeHeight",
+					  "@material_width",
+					  "@material_thickness",
+					  "@material_depth",
+					  "@startGCode",
+					  "@endGCode",
+					  "@safeZoneHeight",
+					  "@safeZoneDepth",
+					  "@safeZoneWidth",
+					  "@materialObjet",
+					  "@show_Material",
+					  "@LengthPrecision",
+					  "@materialObjetID"
+					],
+					"Methods" => [
+					  "initialize",
+					  "initCNCData",
+					  "dup",
+					  "to_model",
+					  "self.getFromModel",
+					  "find_entity_by_persistent_id",
+					  "find_entity_by_persistent_id_recursive",
+					  "from_model",
+					  "to_Json",
+					  "fromJson",
+					  "from_Hash",
+					  "create_Hash"
+					],
+					"Classes" => []
+				  },
+				  {
+					"Name" => "DefaultCNCDialog",
+					"Constants" => [],
+					"ClassVars" => [
+					  "@@default_FileName",
+					  "@@def_CNCData"
+					],
+					"InstanceVars" => [
+					  "@dialog"
+					],
+					"Methods" => [
+					  "self.set_defaults",
+					  "self.def_CNCData",
+					  "self.CNCData",
+					  "show_dialog",
+					  "create_cube",
+					  "modify_cube",
+					  "close_dialog",
+					  "create_dialog",
+					  "update_dialog",
+					  "self.saveToFile",
+					  "self.loadFromFile"
+					],
+					"Classes" => []
+				  },
+				  {
+					"Name" => "DefaultCNCTool",
+					"Constants" => [],
+					"ClassVars" => [
+					  "@@DefaultCNCDia"
+					],
+					"InstanceVars" => [
+					  "@mouse_pos_down",
+					  "@mouse_ip",
+					  "@picked_first_ip",
+					  "@dragged",
+					  "@mouseButton",
+					  "@state",
+					  "@mouse_down"
+					],
+					"Methods" => [
+					  "activate",
+					  "deactivate",
+					  "resume",
+					  "suspend",
+					  "onCancel",
+					  "onLButtonDown",
+					  "onMouseMove",
+					  "onLButtonUp",
+					  "onSetCursor",
+					  "draw",
+					  "draw_preview",
+					  "picked_points",
+					  "reset_tool",
+					  "show_dialog",
+					  "close_dialog",
+					  "create_dialog",
+					  "update_dialog"
+					],
+					"Classes" => []
+				  }
+				]
+			  }
+			],
+	      	"Classes" => []
+	    },
+		"GN_DrillBits.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [],
+			  "ClassVars" => [],
+			  "Methods" => [],
+			  "Classes" => [
+				{
+				  "Name" => "DrillBit",
+				  "Constants" => [],
+				  "ClassVars" => [],
+				  "InstanceVars" => [
+					"@name",
+					"@cut_Types",
+					"@cut_Diameter",
+					"@units",
+					"@cutting_Length",
+					"@drill_Size",
+					"@shank_Height",
+					"@shank_Diam",
+					"@shoulder_Lenght",
+					"@number_of_Flutes",
+					"@cutting"
+				  ],
+				  "Methods" => [
+					"initialize",
+					"from_Hash",
+					"to_Json",
+					"saveToFile",
+					"loadFromFile"
+				  ],
+				  "Classes" => []
+				},
+				{
+				  "Name" => "DrillBits",
+				  "Constants" => [],
+				  "ClassVars" => [
+					"@@drillbitTbl",
+					"@@drillbitSel"
+				  ],
+				  "InstanceVars" => [
+					"@dialog",
+					"@newdrillbitTbl"
+				  ],
+				  "Methods" => [
+					"self.drillbitSel",
+					"self.drillbitTbl",
+					"self.show",
+					"self.isDrillBit",
+					"self.getDrillBit",
+					"self.load_drillBitsTbl",
+					"self.saveToFile",
+					"self.loadFromFile",
+					"show_dialog",
+					"create_dialog",
+					"update_dialog"
+				  ],
+				  "Classes" => []
+				}
+			  ]
+			}
+		  ],
+		  "Classes" => []
+		},
+        "GN_GCodeGenerate.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [],
+			  "ClassVars" => [
+				"@pathObjList",
+				"@generation_stats",
+				"@toolDefaultNo"
+			  ],
+			  "Methods" => [
+				"self.initCNCGCode",
+				"self.setCNCDefaultNo",
+				"self.get_generation_stats",
+				"self.cleanup_gcode_resources"
+			  ],
+			  "Classes" => [
+				{
+				  "Name" => "GCodeGenerate",
+				  "Constants" => [],
+				  "ClassVars" => [],
+				  "InstanceVars" => [],
+				  "Methods" => [
+					"self.generateGCode",
+					"self.generatePreview",
+					"self.generateGCodeLayer2",
+					"self.replaceCodes",
+					"self.generateGCodeLayer",
+					"self.SaveAs",
+					"self.saveTo",
+					"self.collect_unique_drill_bits",
+					"self.generate_header_comment",
+					"self.generate_tool_header",
+					"self.generate_file_header",
+					"self.get_default_save_directory",
+					"self.generate_base_filename",
+					"self.generate_drill_filename"
+				  ],
+				  "Classes" => []
+				}
+			  ]
+			}
+		  ],
+		  "Classes" => []
+		},
+        "GN_GCode_Manager.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [],
+			  "ClassVars" => [],
+			  "Methods" => [],
+			  "Classes" => [
+				{
+				  "Name" => "NewPaths",
+				  "Constants" => [],
+				  "ClassVars" => [],
+				  "Methods" => [],
+				  "Classes" => [
+					{
+					  "Name" => "GCodeManager",
+					  "Constants" => [],
+					  "ClassVars" => [],
+					  "InstanceVars" => [
+						"@gcode_data",
+						"@json_path",
+						"@default_firmware"
+					  ],
+					  "Methods" => [
+						"initialize",
+						"get",
+						"params",
+						"syntax",
+						"category",
+						"exists?",
+						"supported_firmwares",
+						"list_codes",
+						"codes_for_firmware",
+						"list_all_firmwares"
+					  ],
+					  "Classes" => []
+					}
+				  ]
+				}
+			  ]
+			}
+		  ],
+		  "Classes" => []
+		},
+        "GN_Observer.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [],
+			  "ClassVars" => [
+				"@@selectionHash"
+			  ],
+			  "Methods" => [
+				"selectionHash",
+				"selectionHash=",
+				"verifieSelection"
+			  ],
+			  "Classes" => [
+				{
+				  "Name" => "ObserverModule",
+				  "Constants" => [],
+				  "ClassVars" => [
+					"@@modelObserver",
+					"@@allEdges",
+					"@@allFaces",
+					"@@allPoints",
+					"@@hasPaths",
+					"@@hasCircle",
+					"@@hasEdges",
+					"@@hasFaces"
+				  ],
+				  "InstanceVars" => [],
+				  "Methods" => [
+					"allEdges",
+					"allEdges=",
+					"allFaces",
+					"allFaces=",
+					"allPoints",
+					"allPoints=",
+					"hasPaths",
+					"hasPaths=",
+					"hasCircle",
+					"hasCircle=",
+					"hasEdges",
+					"hasEdges=",
+					"hasFaces",
+					"hasFaces=",
+					"attach",
+					"detach",
+					"expectsStartupModelNotifications",
+					"onNewModel",
+					"onOpenModel",
+					"onQuit",
+					"reload"
+				  ],
+				  "Classes" => [
+					{
+					  "Name" => "ModelSpy",
+					  "Constants" => [],
+					  "ClassVars" => [
+						"@@selectionObserver"
+					  ],
+					  "InstanceVars" => [
+						"@model",
+						"@spy"
+					  ],
+					  "Methods" => [
+						"initialize",
+						"remove",
+						"onActivePathChanged",
+						"onTransactionRedo",
+						"onTransactionUndo"
+					  ],
+					  "Classes" => []
+					},
+					{
+					  "Name" => "MySelectionObserver",
+					  "Constants" => [],
+					  "ClassVars" => [],
+					  "InstanceVars" => [],
+					  "Methods" => [
+						"check_Selection",
+						"onSelectionBulkChange",
+						"onSelectionAdded",
+						"onSelectionRemoved",
+						"onSelectionCleared"
+					  ],
+					  "Classes" => []
+					}
+				  ]
+				}
+			  ]
+			}
+		  ],
+		  "Classes" => []
+		},
+        "GN_OctoPrintDialog.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [],
+			  "ClassVars" => [
+				"@@dialogWidth",
+				"@@dialogHeight",
+				"@@html_content"
+			  ],
+			  "Methods" => [
+				"initialize",
+				"show_dialog",
+				"close_dialog",
+				"create_dialog",
+				"update_connectionInfo",
+				"update_position",
+				"update_fileslist",
+				"update_Objects",
+				"update_all",
+				"update_dialog",
+				"get_ObjectList",
+				"get_object_list_recursive"
+			  ],
+			  "Classes" => [
+				{
+				  "Name" => "OctoPrintDialog",
+				  "Constants" => [],
+				  "ClassVars" => [
+					"@@dialogWidth",
+					"@@dialogHeight",
+					"@@html_content"
+				  ],
+				  "InstanceVars" => [
+					"@title",
+					"@printerPaused",
+					"@dialog",
+					"@fileslisted",
+					"@repeating_timer_id",
+					"@position",
+					"@size"
+				  ],
+				  "Methods" => [
+					"initialize",
+					"show_dialog",
+					"close_dialog",
+					"create_dialog",
+					"update_connectionInfo",
+					"update_position",
+					"update_fileslist",
+					"update_Objects",
+					"update_all",
+					"update_dialog",
+					"get_ObjectList",
+					"get_object_list_recursive"
+				  ],
+				  "Classes" => []
+				}
+			  ]
+			}
+		  ],
+		  "Classes" => []
+		},
+        "GN_PathObjUtils.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [],
+			  "ClassVars" => [],
+			  "Methods" => [],
+			  "Classes" => [
+				{
+				  "Name" => "Paths",
+				  "Constants" => [],
+				  "ClassVars" => [
+					"@@groupobj"
+				  ],
+				  "InstanceVars" => [],
+				  "Methods" => [
+					"loadPaths",
+					"recursiveLoadPaths",
+					"isGroupObj",
+					"createFromEnt"
+				  ],
+				  "Classes" => [
+					{
+					  "Name" => "ToolPathObjObserver",
+					  "Constants" => [],
+					  "ClassVars" => [],
+					  "InstanceVars" => [
+						"@path_obj",
+						"@group"
+					  ],
+					  "Methods" => [
+						"self.add_group",
+						"initialize",
+						"onChangeEntity",
+						"onEraseEntity"
+					  ],
+					  "Classes" => []
+					},
+					{
+					  "Name" => "LoopFace",
+					  "Constants" => [],
+					  "ClassVars" => [],
+					  "InstanceVars" => [
+						"@pfaces_vertices",
+						"@pfaces_normal",
+						"@edge_offsetter",
+						"@edge_intersector",
+						"@loop_rebuilder"
+					  ],
+					  "Methods" => [
+						"initialize",
+						"deplacer",
+						"deplacer_arete"
+					  ],
+					  "Classes" => [
+						{
+						  "Name" => "EdgeOffsetter",
+						  "Constants" => [],
+						  "ClassVars" => [],
+						  "InstanceVars" => [
+							"@parent"
+						  ],
+						  "Methods" => [
+							"initialize",
+							"process"
+						  ],
+						  "Classes" => []
+						},
+						{
+						  "Name" => "EdgeIntersector",
+						  "Constants" => [],
+						  "ClassVars" => [],
+						  "InstanceVars" => [
+							"@parent"
+						  ],
+						  "Methods" => [
+							"initialize",
+							"process",
+							"concavetest",
+							"pointOnEdge"
+						  ],
+						  "Classes" => []
+						},
+						{
+						  "Name" => "LoopRebuilder",
+						  "Constants" => [],
+						  "ClassVars" => [],
+						  "InstanceVars" => [
+							"@parent",
+							"@loop_array"
+						  ],
+						  "Methods" => [
+							"initialize",
+							"process",
+							"get_loop_recursif",
+							"loop_direction"
+						  ],
+						  "Classes" => []
+						}
+					  ]
+					},
+					{
+					  "Name" => "TransformPoint",
+					  "Constants" => [],
+					  "ClassVars" => [],
+					  "InstanceVars" => [],
+					  "Methods" => [
+						"self.getGlobalTransform",
+						"self.getGlobalPoint",
+						"self.setGlobal",
+						"self.setLocal"
+					  ],
+					  "Classes" => []
+					},
+					{
+					  "Name" => "GN_PathObjDialog",
+					  "Constants" => [],
+					  "ClassVars" => [
+						"@@dialogWidth",
+						"@@dialogHeight",
+						"@@html_content"
+					  ],
+					  "InstanceVars" => [
+						"@tabValue",
+						"@modiHash",
+						"@selectionHash",
+						"@selectedPaths",
+						"@methodTypeCombineChoices",
+						"@title",
+						"@newhash",
+						"@observer"
+					  ],
+					  "Methods" => [
+						"initialize",
+						"resetModiHashMultiple",
+						"showTabValue",
+						"tabs_changed_callback",
+						"register_observer",
+						"show_dialog",
+						"close_dialog",
+						"create_dialog",
+						"update_dialog",
+						"update_info",
+						"update_Tab"
+					  ],
+					  "Classes" => []
+					},
+					{
+					  "Name" => "GN_PathObjTool",
+					  "Constants" => [],
+					  "ClassVars" => [
+						"@@CombineDia"
+					  ],
+					  "InstanceVars" => [
+						"@mouse_pos_down",
+						"@mouse_ip",
+						"@picked_first_ip",
+						"@dragged",
+						"@mouseButton",
+						"@state",
+						"@tabsValue",
+						"@pocketCreated",
+						"@loopForPocket",
+						"@commitOperation"
+					  ],
+					  "Methods" => [
+						"initialize",
+						"self.combineDia",
+						"commitOperation=",
+						"activate",
+						"deactivate",
+						"resume",
+						"suspend",
+						"onCancel",
+						"onLButtonDown",
+						"onMouseMove",
+						"onLButtonUp",
+						"create_Pocket",
+						"create_straitCut",
+						"onSetCursor",
+						"draw",
+						"draw_preview",
+						"picked_points",
+						"reset_tool",
+						"tabs_changed_callback"
+					  ],
+					  "Classes" => []
+					}
+				  ]
+				}
+			  ]
+			}
+		  ],
+		  "Classes" => []
+		},
+        "GN_ToolPath.rb" => ["GN_ToolPathObjData", "GN_ToolpathGCodeGenerator", "GN_ToolPathObj"],
+        "GN_UndoRedoSystem.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [],
+			  "ClassVars" => [],
+			  "Methods" => [],
+			  "Classes" => [
+				{
+				  "Name" => "OperationTracker",
+				  "Constants" => [],
+				  "ClassVars" => [
+					"@current_op",
+					"@stack_depth",
+					"@history"
+				  ],
+				  "InstanceVars" => [],
+				  "Methods" => [
+					"log_start",
+					"log_commit",
+					"log_abort",
+					"log_external_change"
+				  ],
+				  "Classes" => []
+				},
+				{
+				  "Name" => "UndoRedoObserver",
+				  "Constants" => [],
+				  "ClassVars" => [],
+				  "InstanceVars" => [],
+				  "Methods" => [
+					"onActivePathChanged",
+					"onTransactionUndo",
+					"onTransactionRedo"
+				  ],
+				  "Classes" => []
+				}
+			  ]
+			},
+			{
+			  "Name" => "OperationTrackingPatch",
+			  "Constants" => [],
+			  "ClassVars" => [],
+			  "Methods" => [
+				"apply!"
+			  ],
+			  "Classes" => []
+			},
+			{
+			  "Name" => "UndoRedoSystem",
+			  "Constants" => [],
+			  "ClassVars" => [
+				"@initialized"
+			  ],
+			  "Methods" => [
+				"init!"
+			  ],
+			  "Classes" => []
+			}
+		  ],
+		  "Classes" => []
+		},
+        "GN_WebSocketGN.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [],
+			  "ClassVars" => [],
+			  "Methods" => [],
+			  "Classes" => [
+				{
+				  "Name" => "WebSocketGN",
+				  "Constants" => [],
+				  "ClassVars" => [],
+				  "InstanceVars" => [
+					"@sock",
+					"@url",
+					"@host",
+					"@port",
+					"@path"
+				  ],
+				  "Methods" => [
+					"initialize",
+					"connect",
+					"send_text",
+					"recv_text",
+					"recv_text_non_blocking",
+					"close"
+				  ],
+				  "Classes" => []
+				}
+			  ]
+			}
+		  ],
+		  "Classes" => []
+		},
+        "GN_materialTool.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [
+				"MATERIAL_DICT"
+			  ],
+			  "ClassVars" => [
+				"@@html_content"
+			  ],
+			  "Methods" => [
+				"is_cnc_group",
+				"fixHtmlFile",
+				"findMaterial",
+				"getSafeHeight",
+				"material_type",
+				"material_Height"
+			  ],
+			  "Classes" => [
+				{
+				  "Name" => "Material",
+				  "Constants" => [],
+				  "ClassVars" => [
+					"@material_type",
+					"@safeHeight"
+				  ],
+				  "InstanceVars" => [],
+				  "Methods" => [
+					"save_group_data",
+					"clear_all_geometry_except_paths",
+					"create_from_json",
+					"restore_original",
+					"create_group_from_data",
+					"build_group_entities"
+				  ],
+				  "Classes" => []
+				},
+				{
+				  "Name" => "MaterialDialog",
+				  "Constants" => [],
+				  "ClassVars" => [
+					"@@html_content"
+				  ],
+				  "InstanceVars" => [
+					"@title",
+					"@undoRedoName",
+					"@undoRedoDepth",
+					"@viewMode",
+					"@group",
+					"@material_type",
+					"@safeHeight",
+					"@materialHeight",
+					"@newData",
+					"@dialog",
+					"@selection_observer"
+				  ],
+				  "Methods" => [
+					"initialize",
+					"dialog_ready",
+					"show_dialog",
+					"applyViewMode",
+					"create_dialog",
+					"update_dialog",
+					"close_dialog",
+					"attach_selection_observer",
+					"detach_selection_observer"
+				  ],
+				  "Classes" => []
+				}
+			  ]
+			}
+		  ],
+		  "Classes" => []
+		},
+        "NewPaths" => {
+           "GN_ToolPathDialogNew.rb" => {
+			"Modules" => {
+			  "GNTools::NewPaths::ToolPathDialogModeManager" => {
+				"Name" => "GNTools::NewPaths::ToolPathDialogModeManager",
+				"Constants" => [],
+				"ClassVars" => [],
+				"InstanceVars" => [],
+				"Methods" => {
+				  "class_methods" => [],
+				  "instance_methods" => [
+					"set_state",
+					"setInputMode",
+					"setModeFromtoolpath_type"
+				  ]
+				},
+				"Classes" => {},
+				"Modules" => {}
+			  },
+
+			  "GNTools::NewPaths::ToolPathDialogMouseEvents" => {
+				"Name" => "GNTools::NewPaths::ToolPathDialogMouseEvents",
+				"Constants" => [],
+				"ClassVars" => [],
+				"InstanceVars" => [],
+				"Methods" => {
+				  "class_methods" => [],
+				  "instance_methods" => [
+					"onLButtonDown",
+					"onMouseMove",
+					"onLButtonUp",
+					"snap_to_lines",
+					"onKeyDown"
+				  ]
+				},
+				"Classes" => {},
+				"Modules" => {}
+			  },
+
+			  "GNTools::NewPaths::ToolPathDialogDraw" => {
+				"Name" => "GNTools::NewPaths::ToolPathDialogDraw",
+				"Constants" => [],
+				"ClassVars" => [],
+				"InstanceVars" => [],
+				"Methods" => {
+				  "class_methods" => [],
+				  "instance_methods" => [
+					"midpoint_of_3Dpoints",
+					"circleCenterVectorAndRadius",
+					"draw"
+				  ]
+				},
+				"Classes" => {},
+				"Modules" => {}
+			  },
+
+			  "GNTools::NewPaths::ToolPathDialogDialogManager" => {
+				"Name" => "GNTools::NewPaths::ToolPathDialogDialogManager",
+				"Constants" => [],
+				"ClassVars" => [],
+				"InstanceVars" => [],
+				"Methods" => {
+				  "class_methods" => [],
+				  "instance_methods" => [
+					"ui_dir_path",
+					"open_dialog",
+					"dialog_ready",
+					"send_collection_to_dialog",
+					"on_dialog_closed"
+				  ]
+				},
+				"Classes" => {},
+				"Modules" => {}
+			  }
+			},
+
+			"Classes" => {
+			  "GNTools::NewPaths::ToolPathDialog" => {
+				"Name" => "GNTools::NewPaths::ToolPathDialog",
+				"Superclass" => nil,
+				"Constants" => ["DIALOG_TITLE"],
+				"ClassVars" => ["@@tool_instance"],
+				"InstanceVars" => [
+				  "@dialog",
+				  "@collection",
+				  "@state",
+				  "@input_mode",
+				  "@points",
+				  "@mouse_pos",
+				  "@ip1",
+				  "@ip2",
+				  "@ip3",
+				  "@dragging",
+				  "@active",
+				  "@dialog_width",
+				  "@dialog_height",
+				  "@hash_collection",
+				  "@schemas_hash",
+				  "@toolpath_type_setting"
+				],
+				"Methods" => {
+				  "class_methods" => [
+					"tool_instance",
+					"tool_instance="
+				  ],
+				  "instance_methods" => [
+					"toolpath_type_setting=",
+					"initialize",
+					"activate",
+					"deactivate",
+					"suspend",
+					"resume",
+					"set_collection",
+					"associer_collection",
+					"send_to_dialog",
+					"handle_js_message",
+					"update_selection_in_ruby",
+					"add_toolpath",
+					"toolpath_type_changed",
+					"add_point",
+					"add_segment",
+					"add_segments",
+					"add_arc",
+					"finalize_loop"
+				  ]
+				},
+				"Classes" => {},
+				"Modules" => {}
+			  }
+			},
+
+			"Functions" => ["callTools"]
+		  },
+          "GN_ToolpathCollection.rb" => {
+			"Modules" => [
+			  {
+				"Name" => "GNTools",
+				"Constants" => [],
+				"ClassVars" => [],
+				"Methods" => [],
+				"Classes" => [
+				  {
+					"Name" => "NewPaths",
+					"Constants" => [],
+					"ClassVars" => [],
+					"Methods" => [
+					  "testToolpathCollection"
+					],
+					"Classes" => [
+					  {
+						"Name" => "ToolpathCollection",
+						"Constants" => [],
+						"ClassVars" => [],
+						"InstanceVars" => [
+						  "@group",
+						  "@toolpaths",
+						  "@name"
+						],
+						"AttrAccessors" => [
+						  "group",
+						  "toolpaths",
+						  "name"
+						],
+						"Methods" => [
+						  "initialize",
+						  "name",
+						  "name=",
+						  "add_toolpath",
+						  "add_a_toolpath",
+						  "remove_toolpath",
+						  "[]",
+						  "add_point",
+						  "remove_point",
+						  "update_point",
+						  "to_hash",
+						  "to_json",
+						  "save_toolpaths",
+						  "load_toolpaths",
+						  "update_entities",
+						  "each",
+						  "empty?",
+						  "size",
+						  "to_s"
+						],
+						"Classes" => []
+					  }
+					]
+				  }
+				]
+			  }
+			],
+			"Classes" => [],
+			"Requires" => [
+			  "GNTools/Tools/NewPaths/GN_Toolpaths.rb",
+			  "GNTools/Tools/NewPaths/GN_ToolpathPreview.rb"
+			]
+		  },
+          "GN_ToolpathPoint.rb" => {
+			"Modules" => [
+			  {
+				"Name" => "GNTools",
+				"Constants" => [],
+				"ClassVars" => [],
+				"Methods" => [],
+				"Classes" => [
+				  {
+					"Name" => "NewPaths",
+					"Constants" => [],
+					"ClassVars" => [],
+					"Methods" => [],
+					"Classes" => [
+					  {
+						"Name" => "ToolpathPoint",
+						"Constants" => [],
+						"ClassVars" => [],
+						"InstanceVars" => [
+						  "@position",
+						  "@attributes",
+						  "@precision"
+						],
+						"AttrAccessors" => [
+						  "position",
+						  "attributes",
+						  "precision"
+						],
+						"Methods" => [
+						  "initialize",
+						  "x_mm",
+						  "y_mm",
+						  "z_mm",
+						  "type",
+						  "[]",
+						  "[]=",
+						  "clone",
+						  "position_to_string",
+						  "to_s"
+						],
+						"Classes" => []
+					  }
+					]
+				  }
+				]
+			  }
+			],
+			"Classes" => []
+		  },
+          "GN_ToolpathPreview.rb" => {
+			"Modules" => [
+			  {
+				"Name" => "GNTools",
+				"Constants" => [],
+				"ClassVars" => [],
+				"Methods" => [],
+				"Classes" => [
+				  {
+					"Name" => "NewPaths",
+					"Constants" => [],
+					"ClassVars" => [],
+					"Methods" => [],
+					"Classes" => [
+					  {
+						"Name" => "ToolpathPreview",
+						"Constants" => [],
+						"ClassVars" => [],
+						"InstanceVars" => [],
+						"Methods" => [
+						  "render",
+						  "build_points_from_toolpath",
+						  "draw_holes",
+						  "draw_points_with_labels",
+						  "group_entities",
+						  "show_toolpath",
+						  "ensure_placeholder_at",
+						  "remove_placeholder",
+						  "clear_drawn_entities"
+						],
+						"Classes" => []
+					  }
+					]
+				  }
+				]
+			  }
+			],
+			"Classes" => []
+		  },
+          "GN_Transform.rb" => {
+			"Modules" => [
+			  {
+				"Name" => "GNTools",
+				"Constants" => [],
+				"ClassVars" => [],
+				"Methods" => [],
+				"Classes" => [
+				  {
+					"Name" => "NewPaths",
+					"Constants" => [],
+					"ClassVars" => [],
+					"Methods" => [],
+					"Classes" => [
+					  {
+						"Name" => "GN_Transform",
+						"Constants" => [],
+						"ClassVars" => [],
+						"InstanceVars" => [],
+						"Methods" => [
+						  "getGlobalTransform",
+						  "getGlobal",
+						  "getLocal",
+						  "setGlobal",
+						  "setLocal"
+						],
+						"Classes" => []
+					  }
+					]
+				  }
+				]
+			  }
+			],
+			"Classes" => []
+		  },
+          "GN_Transform.rb" => {
+			  "Modules" => [
+				{
+				  "Name" => "GNTools",
+				  "Constants" => [],
+				  "Classes" => [],
+				  "Modules" => [
+					{
+					  "Name" => "NewPaths",
+					  "Constants" => [],
+					  "Classes" => [
+						{
+						  "Name" => "GN_Transform",
+						  "Constants" => [],
+						  "ClassVars" => [],
+						  "InstanceVars" => [],
+						  "Methods" => [
+							"self.getGlobalTransform",
+							"self.getGlobal",
+							"self.getLocal",
+							"self.setGlobal",
+							"self.setLocal"
+						  ],
+						  "Classes" => []
+						}
+					  ]
+					}
+				  ]
+				}
+			  ],
+			  "Classes" => []
+			},
+          "GN_strategies.rb" => {
+			  "Modules" => [
+				{
+				  "Name" => "GNTools",
+				  "Constants" => [],
+				  "Classes" => [
+					{
+					  "Name" => "NewPaths",
+					  "Constants" => [],
+					  "Classes" => [
+						{
+						  "Name" => "StrategyEngine",
+						  "Constants" => [
+							"DEFAULT"
+						  ],
+						  "ClassVars" => [],
+						  "InstanceVars" => [
+							"@toolpath",
+							"@strategies",
+							"@text"
+						  ],
+						  "Methods" => [
+							"initialize",
+							"get",
+							"set",
+							"render",
+							"load_all_strategies",
+							"load_custom_file",
+							"save_custom_strategies",
+							"parse_custom_strategies",
+							"process_if!",
+							"eval_condition",
+							"numeric_or_string",
+							"boolize",
+							"process_foreach!",
+							"process_vars!",
+							"eval_in_schema"
+						  ],
+						  "Classes" => []
+						}
+					  ]
+					}
+				  ]
+				}
+			  ],
+			  "Classes" => []
+			}
+        },
+        "octoprint.rb" => {
+		  "Modules" => [
+			{
+			  "Name" => "GNTools",
+			  "Constants" => [],
+			  "Classes" => [
+				{
+				  "Name" => "OctoPrint",
+				  "Constants" => [],
+				  "ClassVars" => [],
+				  "InstanceVars" => [
+					"@api_key",
+					"@last_error",
+					"@host",
+					"@reachable",
+					"@macro1",
+					"@macro2",
+					"@macro3",
+					"@auth",
+					"@ws",
+					"@ws_timer",
+					"@filename",
+					"@observers"
+				  ],
+				  "Methods" => [
+					"initialize",
+					"add_observer",
+					"notify",
+					"host=",
+					"jog_head",
+					"upload",
+					"upload_string",
+					"download",
+					"download_string",
+					"delete_file",
+					"send_gcodes",
+					"send_gcode",
+					"start_print",
+					"pause_print",
+					"resume_print",
+					"cancel_print",
+					"control_print",
+					"get_status",
+					"printer_status",
+					"connection_Info",
+					"connexion",
+					"toJson",
+					"fromJson",
+					"saveToFile",
+					"loadFromFile",
+					"ping",
+					"quick_ping",
+					"login_passive",
+					"handle_ws_message",
+					"closeWebSocket",
+					"list_files"
+				  ],
+				  "Classes" => []
+				}
+			  ]
+			}
+		  ],
+		  "Classes" => []
+		}
+      }
+  }
+}		
+
+offset in ou out
+ou
+raster  zizag
+	first   profile pass
+	ou last profile

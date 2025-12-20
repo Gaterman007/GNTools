@@ -1,0 +1,682 @@
+{
+  "G0": {
+    "Marlin": {
+      "syntax": "G0 [X{X position}] [Y{Y position}] [Z{Z position}] [E{Extruder position}] [F{Feedrate}]",
+      "description": "G0: Déplacement rapide vers la position donnée.",
+      "params": ["X","Y","Z","E","F"],
+      "notes": "G0 ignore l’extrusion sauf si override. G1 prend en compte F pour feedrate et E pour extrusion.",
+      "category": "Motion"
+    },
+    "GRBL": {
+      "syntax": "G0 [X{X}] [Y{Y}] [Z{Z}] [F{Feedrate}]",
+      "description": "Déplacement linéaire. G0 rapide, avec vitesse de feedrate.",
+      "params": ["X","Y","Z","F"],
+      "notes": "GRBL ne gère pas l’extrusion.",
+      "category": "Motion"
+    },
+    "Smoothieware": {
+      "syntax": "G0 [X{X}] [Y{Y}] [Z{Z}] [E{Extruder}] [F{Feedrate}]",
+      "description": "Déplacement linéaire avec G0 rapide avec feedrate et extrusion possible.",
+      "params": ["X","Y","Z","E","F"],
+      "notes": "Supporte mouvements combinés sur plusieurs axes.",
+      "category": "Motion"
+    },
+    "Klipper": {
+      "syntax": "G0 [X{X}] [Y{Y}] [Z{Z}] [E{Extruder}] [F{Feedrate}]",
+      "description": "Déplacement linéaire. G0 rapide, avec vitesse et extrusion.",
+      "params": ["X","Y","Z","E","F"],
+      "notes": "G0 peut ignorer F ou l’utiliser selon configuration.",
+      "category": "Motion"
+    }
+  },
+  "G1": {
+    "Marlin": {
+      "syntax": "G1 [X{X position}] [Y{Y position}] [Z{Z position}] [E{Extruder position}] [F{Feedrate}]",
+      "description": "G1: Déplacement linéaire contrôlé avec vitesse de coupe ou extrusion.",
+      "params": ["X","Y","Z","E","F"],
+      "notes": "G1 prend en compte F pour feedrate et E pour extrusion.",
+      "category": "Motion"
+    },
+    "GRBL": {
+      "syntax": "G1 [X{X}] [Y{Y}] [Z{Z}] [F{Feedrate}]",
+      "description": "Déplacement linéaire. G1 avec vitesse de feedrate.",
+      "params": ["X","Y","Z","F"],
+      "notes": "GRBL ne gère pas l’extrusion.",
+      "category": "Motion"
+    },
+    "Smoothieware": {
+      "syntax": "G1 [X{X}] [Y{Y}] [Z{Z}] [E{Extruder}] [F{Feedrate}]",
+      "description": "Déplacement linéaire avec G1 avec feedrate et extrusion possible.",
+      "params": ["X","Y","Z","E","F"],
+      "notes": "Supporte mouvements combinés sur plusieurs axes.",
+      "category": "Motion"
+    },
+    "Klipper": {
+      "syntax": "G1 [X{X}] [Y{Y}] [Z{Z}] [E{Extruder}] [F{Feedrate}]",
+      "description": "Déplacement linéaire. G1 avec vitesse et extrusion.",
+      "params": ["X","Y","Z","E","F"],
+      "notes": "G1 peut ignorer F ou l’utiliser selon configuration.",
+      "category": "Motion"
+    }
+  },
+  "G2": {
+    "Marlin": {
+      "syntax": "G2 [X{X}] [Y{Y}] [Z{Z}] [I{X center offset}] [J{Y center offset}] [K{Z center offset}] [E{Extruder}] [F{Feedrate}]\nG3 [X{X}] [Y{Y}] [Z{Z}] [I{X center offset}] [J{Y center offset}] [K{Z center offset}] [E{Extruder}] [F{Feedrate}]",
+      "description": "G2: Arc circulaire horaire. Déplace l’outil le long d’un arc défini par centre et rayon.",
+      "params": ["X","Y","Z","I","J","K","E","F"],
+      "notes": "I,J,K sont les offsets du centre par rapport au point de départ. F définit le feedrate, E l’extrusion.",
+      "category": "Arc Motion"
+    },
+    "GRBL": {
+      "syntax": "G2 [X{X}] [Y{Y}] [I{X offset}] [J{Y offset}] [F{Feedrate}]\nG3 [X{X}] [Y{Y}] [I{X offset}] [J{Y offset}] [F{Feedrate}]",
+      "description": "G2: Arc circulaire horaire, Mouvements circulaires 2D uniquement.",
+      "params": ["X","Y","I","J","F"],
+      "notes": "GRBL ne gère que XY arcs, Z et E sont ignorés.",
+      "category": "Arc Motion"
+    },
+    "Smoothieware": {
+      "syntax": "G2 [X{X}] [Y{Y}] [Z{Z}] [I{X center offset}] [J{Y center offset}] [K{Z center offset}] [E{Extruder}] [F{Feedrate}]\nG3 [X{X}] [Y{Y}] [Z{Z}] [I{X center offset}] [J{Y center offset}] [K{Z center offset}] [E{Extruder}] [F{Feedrate}]",
+      "description": "Déplacement circulaire horaire (G2) avec feedrate et extrusion.",
+      "params": ["X","Y","Z","I","J","K","E","F"],
+      "notes": "Smoothieware supporte arcs 2D et 3D. K est utilisé pour Z si nécessaire.",
+      "category": "Arc Motion"
+    },
+    "Klipper": {
+      "syntax": "G2 [X{X}] [Y{Y}] [Z{Z}] [I{X offset}] [J{Y offset}] [K{Z offset}] [E{Extruder}] [F{Feedrate}]\nG3 [X{X}] [Y{Y}] [Z{Z}] [I{X offset}] [J{Y offset}] [K{Z offset}] [E{Extruder}] [F{Feedrate}]",
+      "description": "Arc circulaire horaire (G2). Déplacement le long d’un arc avec centre relatif.",
+      "params": ["X","Y","Z","I","J","K","E","F"],
+      "notes": "Supporte arcs 2D et 3D, feedrate et extrusion optionnelle.",
+      "category": "Arc Motion"
+    }
+  },
+  "G3": {
+    "Marlin": {
+      "syntax": "G3 [X{X}] [Y{Y}] [Z{Z}] [I{X center offset}] [J{Y center offset}] [K{Z center offset}] [E{Extruder}] [F{Feedrate}]\nG3 [X{X}] [Y{Y}] [Z{Z}] [I{X center offset}] [J{Y center offset}] [K{Z center offset}] [E{Extruder}] [F{Feedrate}]",
+      "description": "G3: Arc circulaire antihoraire. Déplace l’outil le long d’un arc défini par centre et rayon.",
+      "params": ["X","Y","Z","I","J","K","E","F"],
+      "notes": "I,J,K sont les offsets du centre par rapport au point de départ. F définit le feedrate, E l’extrusion.",
+      "category": "Arc Motion"
+    },
+    "GRBL": {
+      "syntax": "G3 [X{X}] [Y{Y}] [I{X offset}] [J{Y offset}] [F{Feedrate}]",
+      "description": "G3: circulaire antihoraire. Mouvements circulaires 2D uniquement.",
+      "params": ["X","Y","I","J","F"],
+      "notes": "GRBL ne gère que XY arcs, Z et E sont ignorés.",
+      "category": "Arc Motion"
+    },
+    "Smoothieware": {
+      "syntax": "G2 [X{X}] [Y{Y}] [Z{Z}] [I{X center offset}] [J{Y center offset}] [K{Z center offset}] [E{Extruder}] [F{Feedrate}]\nG3 [X{X}] [Y{Y}] [Z{Z}] [I{X center offset}] [J{Y center offset}] [K{Z center offset}] [E{Extruder}] [F{Feedrate}]",
+      "description": "Déplacement circulaire horaire (G2) ou antihoraire (G3) avec feedrate et extrusion.",
+      "params": ["X","Y","Z","I","J","K","E","F"],
+      "notes": "Smoothieware supporte arcs 2D et 3D. K est utilisé pour Z si nécessaire.",
+      "category": "Arc Motion"
+    },
+    "Klipper": {
+      "syntax": "G2 [X{X}] [Y{Y}] [Z{Z}] [I{X offset}] [J{Y offset}] [K{Z offset}] [E{Extruder}] [F{Feedrate}]\nG3 [X{X}] [Y{Y}] [Z{Z}] [I{X offset}] [J{Y offset}] [K{Z offset}] [E{Extruder}] [F{Feedrate}]",
+      "description": "Arc CW (G2) ou CCW (G3). Déplacement le long d’un arc avec centre relatif.",
+      "params": ["X","Y","Z","I","J","K","E","F"],
+      "notes": "Supporte arcs 2D et 3D, feedrate et extrusion optionnelle.",
+      "category": "Arc Motion"
+    }
+  },
+  "G4": {
+    "Marlin": {
+      "syntax": "G4 P{milliseconds} S{seconds}",
+      "description": "Pause / attente. Le mouvement s’arrête pendant la durée spécifiée.",
+      "params": ["P","S"],
+      "notes": "P = durée en millisecondes, S = durée en secondes. Seules l’une des deux peut être utilisée à la fois.",
+      "category": "Miscellaneous"
+    },
+    "GRBL": {
+      "syntax": "G4 P{milliseconds}",
+      "description": "Pause pendant la durée spécifiée en millisecondes.",
+      "params": ["P"],
+      "notes": "GRBL n’accepte que P en millisecondes.",
+      "category": "Miscellaneous"
+    },
+    "Smoothieware": {
+      "syntax": "G4 P{milliseconds} S{seconds}",
+      "description": "Pause pour le temps donné, en millisecondes ou secondes.",
+      "params": ["P","S"],
+      "notes": "Compatible avec les deux formats P ou S.",
+      "category": "Miscellaneous"
+    },
+    "Klipper": {
+      "syntax": "G4 P{milliseconds} S{seconds}",
+      "description": "Pause le temps spécifié. P = ms, S = secondes.",
+      "params": ["P","S"],
+      "notes": "Seules l’une des deux valeurs doit être utilisée à la fois.",
+      "category": "Miscellaneous"
+    }
+  },
+    "G5": {
+    "Marlin": {
+      "syntax": "G5 X{X} Y{Y} I{I} J{J} F{feedrate}",
+      "description": "Spline move – Déplacement suivant une courbe Bezier.",
+      "params": ["X","Y","I","J","F"],
+      "notes": "Supporté uniquement si Marlin compile l’option SPLINE.",
+      "category": "Movement"
+    },
+    "GRBL": {
+      "description": "Non supporté",
+      "notes": "",
+      "category": "Movement"
+    },
+    "Smoothieware": {
+      "syntax": "G5 X{X} Y{Y} I{I} J{J} F{feedrate}",
+      "description": "Spline move – même que Marlin.",
+      "params": ["X","Y","I","J","F"],
+      "category": "Movement"
+    },
+    "Klipper": {
+      "description": "Non supporté",
+      "category": "Movement"
+    }
+  },
+  "G6": {
+    "Marlin": {
+      "syntax": "G6 X{X} Y{Y} Z{Z} F{feedrate}",
+      "description": "Move rapide ou internal command selon configuration.",
+      "params": ["X","Y","Z","F"],
+      "notes": "Souvent utilisé pour des extensions ou des tests internes.",
+      "category": "Movement"
+    },
+    "GRBL": {
+      "description": "Non standard",
+      "category": "Movement"
+    },
+    "Smoothieware": {
+      "syntax": "G6 X{X} Y{Y} Z{Z} F{feedrate}",
+      "description": "Fast move / internal command.",
+      "params": ["X","Y","Z","F"],
+      "category": "Movement"
+    },
+    "Klipper": {
+      "description": "Non standard",
+      "category": "Movement"
+    }
+  },
+    "G20": {
+    "Marlin": {
+      "syntax": "G20",
+      "description": "Set units to inches – Définit les unités en pouces.",
+      "params": [],
+      "category": "Setup"
+    },
+    "GRBL": {
+      "syntax": "G20",
+      "description": "Set units to inches.",
+      "params": [],
+      "category": "Setup"
+    },
+    "Smoothieware": {
+      "syntax": "G20",
+      "description": "Set units to inches.",
+      "params": [],
+      "category": "Setup"
+    },
+    "Klipper": {
+      "syntax": "G20",
+      "description": "Set units to inches.",
+      "params": [],
+      "category": "Setup"
+    }
+  },
+  "G21": {
+    "Marlin": {
+      "syntax": "G21",
+      "description": "Set units to millimeters – Définit les unités en mm.",
+      "params": [],
+      "category": "Setup"
+    },
+    "GRBL": {
+      "syntax": "G21",
+      "description": "Set units to millimeters.",
+      "params": [],
+      "category": "Setup"
+    },
+    "Smoothieware": {
+      "syntax": "G21",
+      "description": "Set units to millimeters.",
+      "params": [],
+      "category": "Setup"
+    },
+    "Klipper": {
+      "syntax": "G21",
+      "description": "Set units to millimeters.",
+      "params": [],
+      "category": "Setup"
+    }
+  },
+  "G28": {
+    "Marlin": {
+      "syntax": "G28 [X Y Z]",
+      "description": "Home axes – Référence les axes spécifiés. Sans paramètres, tous les axes sont homés.",
+      "params": ["X","Y","Z"],
+      "category": "Setup"
+    },
+    "GRBL": {
+      "syntax": "G28 [X Y Z]",
+      "description": "Home axes – Moves the machine to the home position.",
+      "params": ["X","Y","Z"],
+      "category": "Setup"
+    },
+    "Smoothieware": {
+      "syntax": "G28 [X Y Z]",
+      "description": "Home axes – Moves axes to endstops.",
+      "params": ["X","Y","Z"],
+      "category": "Setup"
+    },
+    "Klipper": {
+      "syntax": "G28 [X Y Z]",
+      "description": "Home axes – Moves axes to endstops.",
+      "params": ["X","Y","Z"],
+      "category": "Setup"
+    }
+  },
+  "G29": {
+    "Marlin": {
+      "syntax": "G29",
+      "description": "Auto bed leveling – Lance le nivellement automatique du plateau.",
+      "params": [],
+      "category": "Setup"
+    },
+    "GRBL": {
+      "description": "Non supporté",
+      "category": "Setup"
+    },
+    "Smoothieware": {
+      "syntax": "G29",
+      "description": "Bed probing / leveling – Lancement du nivellement automatique du plateau.",
+      "params": [],
+      "category": "Setup"
+    },
+    "Klipper": {
+      "syntax": "G29",
+      "description": "Bed mesh / probing.",
+      "params": [],
+      "category": "Setup"
+    }
+  },
+  "G90": {
+    "Marlin": {
+      "syntax": "G90",
+      "description": "Set to absolute positioning – Déplacements absolus.",
+      "params": [],
+      "category": "Setup"
+    },
+    "GRBL": {
+      "syntax": "G90",
+      "description": "Set to absolute positioning.",
+      "params": [],
+      "category": "Setup"
+    },
+    "Smoothieware": {
+      "syntax": "G90",
+      "description": "Set to absolute positioning.",
+      "params": [],
+      "category": "Setup"
+    },
+    "Klipper": {
+      "syntax": "G90",
+      "description": "Set to absolute positioning.",
+      "params": [],
+      "category": "Setup"
+    }
+  },
+  "G91": {
+    "Marlin": {
+      "syntax": "G91",
+      "description": "Set to relative positioning – Déplacements relatifs.",
+      "params": [],
+      "category": "Setup"
+    },
+    "GRBL": {
+      "syntax": "G91",
+      "description": "Set to relative positioning.",
+      "params": [],
+      "category": "Setup"
+    },
+    "Smoothieware": {
+      "syntax": "G91",
+      "description": "Set to relative positioning.",
+      "params": [],
+      "category": "Setup"
+    },
+    "Klipper": {
+      "syntax": "G91",
+      "description": "Set to relative positioning.",
+      "params": [],
+      "category": "Setup"
+    }
+  },
+  "G92": {
+    "Marlin": {
+      "syntax": "G92 X{X} Y{Y} Z{Z} E{E}",
+      "description": "Set current position – Définit la position actuelle pour les axes spécifiés.",
+      "params": ["X","Y","Z","E"],
+      "category": "Setup"
+    },
+    "GRBL": {
+      "syntax": "G92 X{X} Y{Y} Z{Z}",
+      "description": "Set current position.",
+      "params": ["X","Y","Z"],
+      "category": "Setup"
+    },
+    "Smoothieware": {
+      "syntax": "G92 X{X} Y{Y} Z{Z} E{E}",
+      "description": "Set current position.",
+      "params": ["X","Y","Z","E"],
+      "category": "Setup"
+    },
+    "Klipper": {
+      "syntax": "G92 X{X} Y{Y} Z{Z} E{E}",
+      "description": "Set current position.",
+      "params": ["X","Y","Z","E"],
+      "category": "Setup"
+    }
+  },
+  "M3": {
+    "Marlin": {
+      "syntax": "M3 S<speed>",
+      "description": "Active la broche ou le laser en rotation horaire (CW). S = vitesse (RPM ou puissance laser selon config).",
+      "params": ["S"],
+      "category": "Tool"
+    },
+    "GRBL": {
+      "syntax": "M3 S<speed>",
+      "description": "Spindle ON clockwise. S = vitesse de broche ou puissance laser.",
+      "params": ["S"],
+      "category": "Tool"
+    },
+    "Smoothieware": {
+      "syntax": "M3 S<speed>",
+      "description": "Spindle ON clockwise. Utilisé en CNC et laser.",
+      "params": ["S"],
+      "category": "Tool"
+    },
+    "Klipper": {
+      "syntax": "M3 S<speed>",
+      "description": "Spindle ON clockwise (nécessite l’objet 'spindle').",
+      "params": ["S"],
+      "category": "Tool"
+    }
+  },
+  "M4": {
+    "Marlin": {
+      "syntax": "M4 S<speed>",
+      "description": "Active la broche ou laser en rotation anti-horaire (CCW).",
+      "params": ["S"],
+      "category": "Tool"
+    },
+    "GRBL": {
+      "syntax": "M4 S<speed>",
+      "description": "Spindle ON counterclockwise. En mode laser, M4 active le mode dynamique.",
+      "params": ["S"],
+      "category": "Tool"
+    },
+    "Smoothieware": {
+      "syntax": "M4 S<speed>",
+      "description": "Spindle CCW ON.",
+      "params": ["S"],
+      "category": "Tool"
+    },
+    "Klipper": {
+      "syntax": "M4 S<speed>",
+      "description": "Spindle ON counterclockwise.",
+      "params": ["S"],
+      "category": "Tool"
+    }
+  },
+  "M5": {
+    "Marlin": {
+      "syntax": "M5",
+      "description": "Arrête la broche ou coupe le laser.",
+      "params": [],
+      "category": "Tool"
+    },
+    "GRBL": {
+      "syntax": "M5",
+      "description": "Spindle / laser OFF.",
+      "params": [],
+      "category": "Tool"
+    },
+    "Smoothieware": {
+      "syntax": "M5",
+      "description": "Spindle OFF.",
+      "params": [],
+      "category": "Tool"
+    },
+    "Klipper": {
+      "syntax": "M5",
+      "description": "Spindle OFF.",
+      "params": [],
+      "category": "Tool"
+    }
+  },
+  "M82": {
+    "Marlin": {
+      "syntax": "M82",
+      "description": "Mode extrusion ABSOLUE.",
+      "params": [],
+      "category": "Extrusion"
+    },
+    "GRBL": { "description": "Non supporté" },
+    "Smoothieware": {
+      "syntax": "M82",
+      "description": "Extrusion absolue.",
+      "params": [],
+      "category": "Extrusion"
+    },
+    "Klipper": {
+      "syntax": "M82",
+      "description": "Extrusion absolue.",
+      "params": [],
+      "category": "Extrusion"
+    }
+  },
+  "M83": {
+    "Marlin": {
+      "syntax": "M83",
+      "description": "Mode extrusion RELATIVE.",
+      "params": [],
+      "category": "Extrusion"
+    },
+    "Smoothieware": {
+      "syntax": "M83",
+      "description": "Extrusion relative.",
+      "params": [],
+      "category": "Extrusion"
+    },
+    "Klipper": {
+      "syntax": "M83",
+      "description": "Extrusion relative.",
+      "params": [],
+      "category": "Extrusion"
+    }
+  },
+  "M106": {
+    "Marlin": {
+      "syntax": "M106 S<0-255>",
+      "description": "Active un ventilateur contrôlé. S = vitesse.",
+      "params": ["S"],
+      "category": "Cooling"
+    },
+    "Smoothieware": {
+      "syntax": "M106 S<0-255>",
+      "description": "Fan ON.",
+      "params": ["S"],
+      "category": "Cooling"
+    },
+    "Klipper": {
+      "syntax": "M106 S<0-255>",
+      "description": "Fan ON.",
+      "params": ["S"],
+      "category": "Cooling"
+    }
+  },
+  "M107": {
+    "Marlin": {
+      "syntax": "M107",
+      "description": "Ventilateur OFF.",
+      "params": [],
+      "category": "Cooling"
+    },
+    "Smoothieware": {
+      "syntax": "M107",
+      "description": "Fan OFF.",
+      "params": [],
+      "category": "Cooling"
+    },
+    "Klipper": {
+      "syntax": "M107",
+      "description": "Fan OFF.",
+      "params": [],
+      "category": "Cooling"
+    }
+  },
+  "M104": {
+    "Marlin": {
+      "syntax": "M104 S<°C>",
+      "description": "Règle la température de la buse sans attendre.",
+      "params": ["S"],
+      "category": "Heater"
+    },
+    "Smoothieware": {
+      "syntax": "M104 S<°C>",
+      "description": "Set temperature (no wait).",
+      "params": ["S"],
+      "category": "Heater"
+    },
+    "Klipper": {
+      "syntax": "M104 S<°C>",
+      "description": "Set heater temperature without waiting.",
+      "params": ["S"],
+      "category": "Heater"
+    }
+  },
+  "M109": {
+    "Marlin": {
+      "syntax": "M109 S<°C>",
+      "description": "Règle la température et attend l’atteinte.",
+      "params": ["S"],
+      "category": "Heater"
+    },
+    "Smoothieware": {
+      "syntax": "M109 S<°C>",
+      "description": "Set temperature and wait.",
+      "params": ["S"],
+      "category": "Heater"
+    },
+    "Klipper": {
+      "syntax": "M109 S<°C>",
+      "description": "Set temperature and wait.",
+      "params": ["S"],
+      "category": "Heater"
+    }
+  },
+  "M6": {
+    "Marlin": {
+      "syntax": "M6 T<tool>",
+      "description": "Commande un changement d’outil. Peut être automatique ou manuel selon la machine et les options (NOZZLE_PARK, CNCWORKSPACE, etc.).",
+      "params": ["T"],
+      "category": "Tool"
+    },
+    "GRBL": {
+      "syntax": "M6 T<tool>",
+      "description": "Déclenche une pause pour changement manuel d’outil. L'utilisateur doit confirmer (cycle start).",
+      "params": ["T"],
+      "category": "Tool"
+    },
+    "Smoothieware": {
+      "syntax": "M6 T<tool>",
+      "description": "Ordre de changement d’outil. Peut appeler un script configuré dans 'switching_toolhead'.",
+      "params": ["T"],
+      "category": "Tool"
+    },
+    "Klipper": {
+      "syntax": "M6 T<tool>",
+      "description": "Changement d’outil. Appelle la macro TOOL_CHANGE. Utilisé pour CNC, multi-extrudeur ou laser.",
+      "params": ["T"],
+      "category": "Tool"
+    }
+  },
+  "M7": {
+    "Marlin": {
+      "syntax": "M7",
+      "description": "Active le 'mist coolant'. Seulement si COOLANT_CONTROL est activé.",
+      "params": [],
+      "category": "Coolant"
+    },
+    "GRBL": {
+      "syntax": "M7",
+      "description": "Mist coolant ON. Peut contrôler un relais CNC ou sortie 'mist'.",
+      "params": [],
+      "category": "Coolant"
+    },
+    "Smoothieware": {
+      "syntax": "M7",
+      "description": "Mist coolant ON (si configuré dans 'switch' module).",
+      "params": [],
+      "category": "Coolant"
+    },
+    "Klipper": {
+      "syntax": "M7",
+      "description": "Mist coolant ON. Nécessite un objet 'coolant_mist' ou macro.",
+      "params": [],
+      "category": "Coolant"
+    }
+  },
+  "M8": {
+    "Marlin": {
+      "syntax": "M8",
+      "description": "Active l’arrosage à grand débit (flood coolant).",
+      "params": [],
+      "category": "Coolant"
+    },
+    "GRBL": {
+      "syntax": "M8",
+      "description": "Flood coolant ON. Active la sortie CNC dédiée.",
+      "params": [],
+      "category": "Coolant"
+    },
+    "Smoothieware": {
+      "syntax": "M8",
+      "description": "Flood coolant ON (relais ou transistor configuré).",
+      "params": [],
+      "category": "Coolant"
+    },
+    "Klipper": {
+      "syntax": "M8",
+      "description": "Flood coolant ON.",
+      "params": [],
+      "category": "Coolant"
+    }
+  },
+  "M9": {
+    "Marlin": {
+      "syntax": "M9",
+      "description": "Désactive M7 et M8 (mist + flood coolant off).",
+      "params": [],
+      "category": "Coolant"
+    },
+    "GRBL": {
+      "syntax": "M9",
+      "description": "Coolant OFF for both mist and flood.",
+      "params": [],
+      "category": "Coolant"
+    },
+    "Smoothieware": {
+      "syntax": "M9",
+      "description": "Coolant OFF (désactive toutes les sorties 'coolant').",
+      "params": [],
+      "category": "Coolant"
+    },
+    "Klipper": {
+      "syntax": "M9",
+      "description": "Coolant OFF.",
+      "params": [],
+      "category": "Coolant"
+    }
+  }
+}

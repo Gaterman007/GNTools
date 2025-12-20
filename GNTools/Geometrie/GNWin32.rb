@@ -90,6 +90,10 @@ module Win32API2
       ]
 
 
+	  extern 'HWND GetParent(HWND)'
+	  extern "HWND FindWindowA(LPCSTR, LPCSTR)"
+
+
       # https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getcursorpos
       #
       # Retrieves the position of the mouse cursor, in screen coordinates.
@@ -239,6 +243,36 @@ module Win32API2
       ]
 	  
 	  extern 'BOOL GetMenuItemInfo(HANDLE,UINT,BOOL,MenuItemInfo*)'
+	  
+	  extern 'int GetSystemMetrics(int)'
+      extern 'int GetDpiForWindow(void*)' # Windows 10+
+      extern 'void* GetActiveWindow()'
+
+      SM_CXSCREEN = 0
+      SM_CYSCREEN = 1
+
+      def self.screen_size_dpi_aware
+        hwnd = GetActiveWindow()
+        dpi = 96 # fallback DPI
+        if hwnd != 0
+          dpi = GetDpiForWindow(hwnd)
+        end
+        width_px  = GetSystemMetrics(SM_CXSCREEN)
+        height_px = GetSystemMetrics(SM_CYSCREEN)
+        # Convert to logical pixels (si besoin)
+        width_logical  = width_px * 96.0 / dpi
+        height_logical = height_px * 96.0 / dpi
+        [width_logical, height_logical, dpi]
+      end
+
+      def self.screen_width
+        GetSystemMetrics(SM_CXSCREEN)
+      end
+
+      def self.screen_height
+        GetSystemMetrics(SM_CYSCREEN)
+      end
+	  
     end
     
     module CursorPos
@@ -258,61 +292,6 @@ module Win32API2
                 retpointst = CursorPoint.new(pointpos)
 #                puts "point array #{retpointst.x},#{retpointst.y}"
                 pointarrayptr = [retpointst.x,retpointst.y]
-#                puts "point array #{pointarrayptr}"
-#                retval
-            end
-        end
-    end
-
-    module Menus
-    # Doing this to be able to hide internal methods from the Clipboard
-    # public interface.
-        class << self
-    
-            include User32
-        
-            def getMenuItemCount()
-				mainHandle = User32.GetActiveWindow
-				retval = User32.GetMenuItemCount(User32.GetMenu(mainHandle))
-            end
-
-            def getMenuItem(menuindex)
-				mainHandle = User32.GetActiveWindow
-				menutext = '                                                                                                                                                                        '
-                menuItemInfo = MenuItemInfo.malloc
-#				p MenuItemInfo.size
-				menuItemInfo.cbSize = MenuItemInfo.size
-				menuItemInfo.fMask = 0
-				menuItemInfo.fType = 0
-				menuItemInfo.fState = 0
-				menuItemInfo.wID = 0
-				menuItemInfo.hSubMenu = 0
-				menuItemInfo.hbmpChecked = 0
-				menuItemInfo.hbmpUnchecked = 0
-				menuItemInfo.dwItemData = 0
-				menuItemInfo.dwTypeData = 0
-				menuItemInfo.cch = 0
-				menuItemInfo.hbmpItem = 0
-				menuItemInfo.fMask = 0x00000040
-				menuItemInfo.fType = 0x00000000
-				menuItemInfo.dwTypeData = menutext
-				menuItemInfo.cch = 128
-                retval = User32.GetMenuItemInfo(mainHandle,menuindex,1,menuItemInfo)
-				retmenuItemInfost = MenuItemInfo.new(menuItemInfo)
-				ssize = menuItemInfo.cch + 1
-				p 'string size'
-				p menuItemInfo.cch
-				p retmenuItemInfost.cch
-				menuItemInfo.cch = ssize
-				menuItemInfo.dwTypeData = menutext
-                retval = User32.GetMenuItemInfo(mainHandle,menuindex,1,menuItemInfo)
-				p 'string'
-				p menuItemInfo.dwTypeData
-                retmenuItemInfost = MenuItemInfo.new(menuItemInfo)
-#                puts "point array #{retpointst.x},#{retpointst.y}"
-                menuStr = retmenuItemInfost.dwTypeData
-				p 'string'
-#				puts menuStr
 #                puts "point array #{pointarrayptr}"
 #                retval
             end

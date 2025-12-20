@@ -1,0 +1,104 @@
+/* Container principal réutilisable */
+
+/* Base : forcer la racine à 100% */
+html, body {
+  height: 100%;
+  padding: 10px;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+  background: #f3f3f3;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#tabs {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* le scroll se fait dans les panneaux */
+}
+
+/* Zone des panels (jQuery UI crée .ui-tabs-panel) */
+.ui-tabs .ui-tabs-panel {
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 8px; /* ajuster si besoin */
+}
+
+/* Sections de formulaire réutilisables */
+.ui-form-section {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.ui-form-section h3 {
+  margin-top: 0;
+  font-size: 1.1em;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 4px;
+}
+
+/* Champs courts */
+.ui-small-field {
+  width: 80px;
+}
+
+/* Grille pour coordonnées */
+.ui-coord-grid {
+  display: grid;
+  grid-template-columns: 30px 80px;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+/* Ligne de slider */
+.ui-slider-row {
+  margin-top: 10px;
+}
+
+.ui-selectmenu-menu .ui-menu {
+	max-height: 220px; /* Adjust this value as needed */
+	overflow-y: auto; /* Ensures vertical scrollbar appears when content overflows */
+}
+
+#btn-edit.active {
+    background: #ffa500 !important;  /* orange */
+    color: white !important;
+    border: 1px solid #cc8400 !important;
+}
+
+#btn-edit {
+    transition: 0.15s;
+}
+
+#tab-toolpaths {
+    display: block;      /* jQuery UI va pouvoir le passer à none quand il veut */
+    flex-direction: unset;
+}
+
+/* Le contenu des paramètres prend l'espace et scroll */
+#tab-parameters,
+#tab-defaultparameters {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+}
+
+/* Fix footer position to bottom */
+#ui-footer {
+  color: #e72b3d;
+  padding: 10px;
+  background: #fff;
+  border-top: 1px solid #ccc;
+  flex: 0 0 auto;
+}

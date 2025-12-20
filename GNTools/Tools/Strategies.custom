@@ -1,0 +1,7 @@
+[strategy contour2]
+G0 X{points[0].x} Y{points[0].y} Z{safe_z}
+{foreach p in points}
+  G1 X{p.x} Y{p.y} F{feedrate}
+{end}
+G1 Z{safe_z}
+

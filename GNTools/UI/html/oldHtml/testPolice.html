@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Test Segoe UI Emoji</title>
+<style>
+  body {
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    padding: 20px;
+  }
+
+  /* Forcer Segoe UI Emoji pour les éléments emoji */
+  .emoji {
+    /* Liste de fallback : Segoe UI Emoji si dispo, sinon Segoe UI Symbol, sinon Noto Color Emoji, sinon système */
+    font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI", sans-serif;
+    font-size: 48px;     /* agrandir pour voir le rendu */
+    line-height: 1;
+    vertical-align: middle;
+  }
+
+  /* Comparaison : forcer une police sans couleur (monochrome) */
+  .emoji-monochrome {
+    font-family: "Segoe UI Symbol", "Segoe UI", sans-serif;
+    font-size: 48px;
+    color: black; /* rendra certains glyphes monochromes selon la police */
+  }
+
+  .row { display:flex; gap:18px; align-items:center; margin-bottom:12px; }
+  .label { width:200px; color:#333; font-size:14px; }
+  .box { padding:6px 10px; border:1px solid #ddd; border-radius:6px; background:#fafafa; }
+</style>
+</head>
+<body>
+  <h2>Test rendu emoji — Segoe UI Emoji</h2>
+
+  <div class="row">
+    <div class="label">Emoji (font forcée):</div>
+    <div class="box"><span class="emoji">📂 🖨️ 🐧 👍 ❤️</span></div>
+  </div>
+
+  <div class="row">
+    <div class="label">Emoji (monochrome fallback):</div>
+    <div class="box"><span class="emoji-monochrome">📂 🖨️ 🐧 👍 ❤️</span></div>
+  </div>
+
+  <div class="row">
+    <div class="label">Texte normal:</div>
+    <div class="box">Police système: Segoe UI / Tahoma / Arial selon OS</div>
+  </div>
+
+  <p>
+    Si tu es sur <strong>Windows</strong>, le navigateur devrait utiliser <em>Segoe UI Emoji</em> (rendu couleur).  
+    Sur <strong>macOS</strong> : <em>Apple Color Emoji</em>. Sur <strong>Linux</strong> : souvent <em>Noto Color Emoji</em> selon la distro.
+  </p>
+
+  <p>
+    Si tu veux un rendu identique sur toutes les plateformes, utilise des icônes SVG/PNG (ou une librairie comme Twemoji de Twitter).
+  </p>
+</body>
+</html>

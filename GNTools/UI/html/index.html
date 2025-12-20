@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MetaTree – Éditeur Ruby</title>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- jQuery UI -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<!-- jsTree -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    margin: 10px;
+}
+
+#toolbar {
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #EEE;
+    border: 1px solid #CCC;
+}
+
+#container {
+    display: flex;
+    height: 80vh;
+}
+
+#leftPane {
+    width: 35%;
+    border-right: 1px solid #CCC;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+#rightPane {
+    flex-grow: 1;
+    padding: 15px;
+}
+
+textarea {
+    width: 100%;
+    height: 120px;
+}
+
+.dropzone {
+    border: 2px dashed #888;
+    padding: 20px;
+    text-align: center;
+    background: #fafafa;
+    margin-top: 10px;
+}
+.dropzone.dragover {
+    background: #e0ffe0;
+    border-color: green;
+}
+</style>
+</head>
+<body>
+
+<h1>Documentation de Ruby</h1>
+
+
+<button id="btnSetRoot">Définir dossier racine</button>
+<div id="RootName">C:\</div>
+
+<div id="dlgSetRoot" title="Dossier racine" style="display:none;">
+    <label>Entrer le chemin de la racine :</label>
+    <input type="text" id="txtRootName" style="width:100%">
+</div>
+
+<!-- Toolbar -->
+<div id="toolbar">
+    <button id="importJSON">Importer JSON</button>
+    <button id="saveJSON">Exporter JSON</button>
+    <button id="addFile">Ajouter un fichier Ruby</button>
+    <button id="btnAddFolder">Ajouter dossier</button>
+
+    <input type="file" id="fileInputJSON" accept=".json" style="display:none;">
+</div>
+
+<div id="container">
+    <!-- Tree -->
+    <div id="leftPane">
+        <div id="jstree"></div>
+    </div>
+
+    <!-- Details panel -->
+    <div id="rightPane">
+        <h2 id="nodeTitle">Sélectionnez un élément</h2>
+
+        <h3>Description</h3>
+        <textarea id="description"></textarea>
+
+        <h3>Modules</h3>
+        <div id="modulesList"></div>
+
+        <h3>Classes</h3>
+        <div id="classesList"></div>
+
+        <h3>Méthodes</h3>
+        <div id="methodsList"></div>
+
+        <br>
+        <button id="saveDesc">Sauvegarder Description</button>
+    </div>
+</div>
+
+<div id="dlgAddFolder" title="Nouveau dossier" style="display:none;">
+    <label>Nom du dossier :</label>
+    <input type="text" id="txtFolderName" style="width:100%">
+</div>
+
+<script src="../Scripts/indexDocs.js"></script>
+
+</body>
+</html>

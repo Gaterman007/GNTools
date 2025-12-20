@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+<input type="file" id="fileInput" />
+<script>
+const obj = { host: "http://10.0.0.108:5000", api_key: "w3hB9JoyaOEj07EWqCLUbpjrsPtbYXp7cbkw8MqT_x4" };
+
+document.getElementById("fileInput").addEventListener("change", () => {
+  let file = fileInput.files[0];
+  let formData = new FormData();
+  formData.append("file", file);
+
+  fetch(obj.host + "/api/files/local", {
+    method: "POST",
+    headers: { "X-Api-Key": obj.api_key },
+    body: formData
+  })
+  .then(r => r.text())
+  .then(console.log)
+  .catch(console.error);
+});
+</script>
+</body>
+</html>

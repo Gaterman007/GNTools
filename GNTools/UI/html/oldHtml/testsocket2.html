@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OctoPrint WebSocket Example</title>
+</head>
+<body>
+  <h1>OctoPrint Push Updates</h1>
+  <pre id="log"></pre>
+  <script>
+  
+	const log = document.getElementById("log");
+	
+    // 🔧 Remplace par l'adresse de ton OctoPrint
+    const host = "http://10.0.0.108:5000";  
+    const apiKey = "w3hB9JoyaOEj07EWqCLUbpjrsPtbYXp7cbkw8MqT_x4";  
+
+	// Étape 1 : Connexion à l'API REST pour obtenir le nom d'utilisateur et la session
+    fetch(host + "/api/login?passive=true", {
+	  method: "POST",
+	  headers: {
+	    "Content-Type": "application/json",
+	    "X-Api-Key": apiKey   // on passe la clé ici
+	  },
+	  body: "{}"   // obligatoire pour POST mais vide
+    })
+	  .then(response => response.json())
+	  .then(data => {
+		const auth = `${data.name}:${data.session}`;
+		const socketUrl = host + '/sockjs/websocket';
+
+		// Étape 2 : Connexion au WebSocket
+		const socket = new WebSocket(socketUrl);
+
+		socket.onopen = () => {
+		  log.textContent += "✅ Connecté au WebSocket OctoPrint" + "\n";
+
+		  // Étape 3 : Envoi de l'authentification
+		  socket.send(JSON.stringify({ auth }));
+		  log.textContent += "🔑 Auth envoyé" + "\n";
+
+		  // Étape 4 : Abonnement aux événements
+		  socket.send(JSON.stringify({
+			subscribe: {
+			  events: true
+			}
+		  }));
+		  log.textContent += "🔔 Abonnement aux événements" + "\n";
+		};
+
+	    socket.onmessage = (event) => {
+		  try {
+		    const msg = JSON.parse(event.data);
+
+		    // 📌 Cas 1 : message d'événement
+		    if (msg.event) {
+			  const type = msg.event.type;
+			  const payload = msg.event.payload || {};
+
+			  switch (type) {
+			    case "Connected":
+				  log.textContent += "🔌 Imprimante connectée" + "\n";
+				  break;
+			    case "Disconnected":
+				  log.textContent += "❌ Imprimante déconnectée" + "\n";
+				  break;
+			    case "PrintStarted":
+				  log.textContent += "▶️ Impression démarrée : " + payload.name + "\n";
+				  break;
+			    case "PrintDone":
+				  log.textContent += "✅ Impression terminée : " + payload.name + "\n";
+				  break;
+			    case "PrintFailed":
+				  log.textContent += "⚠️ Impression échouée : " + payload.name + "\n";
+				  break;
+			    case "Error":
+				  log.textContent += "💥 Erreur : " + payload.error + "\n";
+				  break;
+			    default:
+				  log.textContent += "📩 Autre événement: " + type + "\n";
+				  break;
+			  }
+		    }
+
+		    // 📌 Cas 2 : données plugin (ex: température)
+		    if (msg.plugin === "temperature") {
+			  log.textContent += `🌡 Température : ${JSON.stringify(msg.data)}` + "\n";
+		    }
+
+		  } catch (e) {
+		    console.error("Erreur parsing WS:", e);
+		  }
+	    };
+		socket.onerror = (error) => {
+		  console.error("❌ Erreur WebSocket:", error);
+		};
+
+		socket.onclose = () => {
+		  log.textContent += "🔌 WebSocket fermé" + "\n";
+		};
+	  })
+	  .catch(error => {
+		console.error("❌ Erreur lors de la connexion à l'API REST:", error);
+	  });
+  </script>
+</body>
+</html>

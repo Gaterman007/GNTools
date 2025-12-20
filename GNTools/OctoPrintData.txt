@@ -1,0 +1,1 @@
+{"api_key":"w3hB9JoyaOEj07EWqCLUbpjrsPtbYXp7cbkw8MqT_x4","host":"http://10.0.0.107:5000","macro1":"G21#rG90","macro2":"","macro3":""}

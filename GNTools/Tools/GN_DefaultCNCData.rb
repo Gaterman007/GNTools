@@ -240,7 +240,7 @@ module GNTools
 			if group_Material
 				@@def_CNCData.from_model()
 			else
-				if File.exist?(File.join(GNTools::PATH, @@default_FileName))
+				if File.exist?(File.join(GNTools::PATH_ROOT, @@default_FileName))
 					self.loadFromFile()
 				else
 					@@def_CNCData = DefaultCNCData.new
@@ -417,13 +417,13 @@ module GNTools
 		end
 		
 		def self.saveToFile()
-			file = File.open(File.join(GNTools::PATH, @@default_FileName), "w")
+			file = File.open(File.join(GNTools::PATH_ROOT, @@default_FileName), "w")
 			file.write(@@def_CNCData.to_Json)
 			file.close
 		end
 		
 		def self.loadFromFile()
-			File.foreach(File.join(GNTools::PATH, @@default_FileName)) { |line|
+			File.foreach(File.join(GNTools::PATH_ROOT, @@default_FileName)) { |line|
 				@@def_CNCData.fromJson(line)
 				
 			}

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tool Paths</title>
+  <link rel="stylesheet" href="../css/themes/smoothness/jquery-ui.css">
+  <script src="../js/jquery-3.7.1.min.js"></script>
+  <script src="../js/jquery-ui.min.js"></script>
+  <link rel="stylesheet" href="../css/Default.css" type="text/css" charset="utf-8" />
+</head>
+<body class="ui-container">
+
+<h2 id="title">Tool Paths</h2>
+
+<div id="tabs">
+  <ul>
+    <li><a href="#tab-material">Material</a></li>
+    <li><a href="#tab-toolpaths">Toolpaths</a></li>
+	<li id="parameters-tab-header"><a href="#tab-parameters">Paramètres</a></li>
+    <li id="points-tab-header"><a href="#tab-points">Points</a></li>
+	<li><a href="#tab-defaultparameters">Default</a></li>
+    <!--<li><a href="#tab-previews">Previews</a></li> -->
+  </ul>
+
+  <div id="tab-material">
+    <select name="material_type" id="material_type" class="def-cnc-input">
+    </select>
+
+    <div class="container">
+      <label>Safe Height: <input id="safeHeight" class="def-cnc-input" style="width: 100px;"></label>
+    </div>
+    <div class="container">
+      <label>Depth: <input id="Depth" class="def-cnc-input" style="width: 100px;" readonly></label>
+    </div>
+    <div class="container">
+      <label>Thickness: <input id="Thickness" class="def-cnc-input" style="width: 100px;" readonly></label>
+    </div>
+    <div class="container">
+      <label>Width: <input id="Width" class="def-cnc-input" style="width: 100px;" readonly></label>
+    </div>
+  </div>
+
+  <!-- Toolpaths Tab -->
+  <div id="tab-toolpaths">
+
+	<select id="add-toolpath-type">
+	  <!-- rempli par updateDialog() -->
+	</select>
+	<button id="btn-edit">Edit</button>
+	<button id="btn-remove-tp">Remove</button>
+	<div style="margin-bottom: 10px;">
+    <label>
+	  <input type="checkbox" id="tp-select-all">
+		Select All
+	  </label>
+	</div>
+	<ul id="toolpath-list"></ul>
+  </div>
+
+  <!-- Parameters Tab -->
+  <div id="tab-parameters">
+    <div id="parameters-content"></div>
+  </div>
+
+  <!-- Default Parameters Tab -->
+  <div id="tab-defaultparameters">
+    <div id="defaultparameters-content"></div>
+  </div>
+
+  <!-- Points Tab -->
+  <div id="tab-points">
+    <div id="points-content"></div>
+  </div>
+
+  <!-- Previews Tab 
+  <div id="tab-previews">
+    <canvas id="preview-canvas" width="400" height="400" style="border:1px solid #ccc;"></canvas>
+  </div> -->
+</div>
+<!-- View Mode Buttons -->
+<div class="container" style="margin-top: 10px;">
+  <button id="original" onclick="setViewMode('original')">Original</button>
+  <button id="actuel" onclick="setViewMode('current')">Actuel</button>
+  <button id="chemin" onclick="setViewMode('path')">Chemin</button>
+  <button id="simulation" onclick="setViewMode('simulation')">Simulation</button>
+</div>
+<div class="container" id="ui-footer">
+  <div style="width: 100%; background-color: #e3e3e3; border-top: solid #C5C5C5 1px">
+	<div style="float: left; margin: 10px">
+	  <button id="setDefault" class="ui-button ui-widget ui-corner-all">Set Default</button>
+	</div>
+	<div style="float: right; margin: 10px">
+	  <button id="cancel" class="ui-button ui-widget ui-corner-all">Cancel</button>
+	  <button id="apply" class="ui-button ui-widget ui-corner-all">Apply</button>
+	  <button id="accept" class="ui-button ui-widget ui-corner-all">Ok</button>
+	</div>
+  </div>
+</div>
+<script src="../Scripts/GN_Drillbits.js"></script>
+<script src="../Scripts/GN_MaterialTab.js"></script>
+<script src="../Scripts/GN_ViewModes.js"></script>
+<script src="../Scripts/GN_ParametersTab.js"></script>
+<script src="../Scripts/GN_PointsTab.js"></script>
+<script src="../Scripts/GN_DefaultParametersTab.js"></script>
+<script src="../Scripts/GN_ToolPathDialog.js"></script>
+</body>
+</html>
