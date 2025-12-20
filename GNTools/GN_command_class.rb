@@ -59,16 +59,16 @@ module GNTools
 			}
 			#		MF_ENABLED, MF_DISABLED, MF_CHECKED, MF_UNCHECKED, or MF_GRAYED
 #			@cmdMaterial = UI::Command.new("Material") {GNTools::activate_Material}
-			@cmd_Add_Material.small_icon = File.join(GNTools::PATH_IMAGES,"PlayCncLarge.png")
-			@cmd_Add_Material.large_icon = File.join(GNTools::PATH_IMAGES,"PlayCncSmall.png")
+			@cmd_Add_Material.small_icon = File.join(GNTools::PATH_IMAGES,"MaterielSmall.png")
+			@cmd_Add_Material.large_icon = File.join(GNTools::PATH_IMAGES,"MaterielLarge.png")
 			@cmd_Add_Material.tooltip = "Add Material"
 			@cmd_Add_Material.status_bar_text = "Add Material"
 			@cmd_Add_Material.menu_text = "Add Material"
 			
 
 			@cmd_OctoPrint = UI::Command.new("OctoPrint") {GNTools::activate_OctoPrint}
-			@cmd_OctoPrint.small_icon = File.join(GNTools::PATH_IMAGES,"ConfigSmall.png")
-			@cmd_OctoPrint.large_icon = File.join(GNTools::PATH_IMAGES,"ConfigLarge.png")			
+			@cmd_OctoPrint.small_icon = File.join(GNTools::PATH_IMAGES,"Print3DSmall.png")
+			@cmd_OctoPrint.large_icon = File.join(GNTools::PATH_IMAGES,"Print3DLarge.png")			
 			@cmd_OctoPrint.tooltip = "OctoPrint Menu"
 			@cmd_OctoPrint.status_bar_text = "OctoPrint Menu"
 			
@@ -120,8 +120,8 @@ module GNTools
 
 
 			@cmdparamGCode = UI::Command.new("GCode") {Sketchup.active_model.select_tool(GNTools.defaultCNCTool)}
-			@cmdparamGCode.small_icon = File.join(GNTools::PATH_IMAGES,"MaterialParamSmall.png")
-			@cmdparamGCode.large_icon = File.join(GNTools::PATH_IMAGES,"MaterialParam.png")
+			@cmdparamGCode.small_icon = File.join(GNTools::PATH_IMAGES,"ConfigSmall.png")
+			@cmdparamGCode.large_icon = File.join(GNTools::PATH_IMAGES,"ConfigLarge.png")
 			@cmdparamGCode.tooltip = "Parameters GCode"
 			@cmdparamGCode.status_bar_text = "Parameters GCode"
 			@cmdparamGCode.menu_text = "Parameters GCode"
@@ -156,8 +156,8 @@ module GNTools
 			@cmdDrillBits.tooltip = GNTools.traduire('DrillBits')
 			@cmdDrillBits.status_bar_text = GNTools.traduire('DrillBits')
 			@cmdDrillBits.menu_text = GNTools.traduire('DrillBits')
-			@cmdDrillBits.small_icon = File.join(GNTools::PATH_IMAGES,"HoleSmall.png")
-			@cmdDrillBits.large_icon = File.join(GNTools::PATH_IMAGES,"HoleLarge.png")
+			@cmdDrillBits.small_icon = File.join(GNTools::PATH_IMAGES,"DrillBitsSmall.png")
+			@cmdDrillBits.large_icon = File.join(GNTools::PATH_IMAGES,"DrillBitsLarge.png")
 
 			@cmdConstructionLine = UI::Command.new("Construction_Line")  { Sketchup.active_model.select_tool(LineTool.new) }
 			@cmdConstructionLine.tooltip = GNTools.traduire('Construction Line')

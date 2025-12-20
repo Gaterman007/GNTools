@@ -128,6 +128,11 @@ module GNTools
 			end
 		end
 	  end
+	  selection = Sketchup.active_model.selection
+	  @material = nil
+	  if Material::isMaterial?(selection[0])
+		@material = Material.new(selection[0])
+	  end
 	  if @dialog && @dialog.visible?
 		self.update_all
 		self.update_Tab
@@ -388,9 +393,13 @@ module GNTools
 					GNTools.octoPrint.send_gcode("G0 X#{object1["X"]} Y#{object1["Y"]} Z#{object1["Z"]}")
 				end
 			when 48
-				pathObj = GNTools.pathObjList[object1["persistent_id"]]
-				gCodeStr = ""
-				gCodeStr = pathObj.createGCode(gCodeStr)
+#				puts @material["toolpaths"][object1["persistent_id"]]	
+#
+				@material.generate_gcode(object1["persistent_id"])		
+#				pathObj = GNTools.pathObjList[object1["persistent_id"]]
+				gCodeStr = @material.generate_gcode(object1["persistent_id"])
+#				gCodeStr = pathObj.createGCode(gCodeStr)
+
 				filename = ""
 				scriptStr = "addToEditor(#{filename.to_json}, #{gCodeStr.to_json})"
 				@dialog.execute_script(scriptStr)
@@ -527,11 +536,16 @@ module GNTools
 	end
 
 	def get_ObjectList
-	  model = Sketchup.active_model
-	  return {} unless model
-	  ents = model.active_entities
-	  return {} unless ents
-	  { "objet" => get_object_list_recursive(ents) }
+	  return {} unless @material && @material["toolpaths"]
+	  toolpaths = @material["toolpaths"]
+	  objets = []
+	  @material["toolpaths"].each_pair do |key, toolpath|
+		objets << {
+		  "name" => toolpath["name"],
+		  "persistent_id" => key
+		}
+	  end
+	  { "objet" => objets }
 	end
 	
 	def get_object_list_recursive(ents)

@@ -56,18 +56,21 @@ module GNTools
         write(data)
       end
 
-	  def generate_gcode
+	  def generate_gcode(tp_id = nil)
 		engine = GNTools::NewPaths::StrategyEngine.instance
 		data = Marshal.load(Marshal.dump(read()))
 		data.delete("toolpaths")
 		engine.global_vars = data
 		toolpaths = read["toolpaths"]
 		toolpaths.map do |tp|
-		  strategy = GNTools::NewPaths::ToolpathSchemas.get_strategy(tp[1]["type"])
-		  puts tp[1],strategy["Name"]
-		  engine.render(strategy["Name"], build_context(tp[1]))
+		  if (tp_id == nil) or (tp[0] == tp_id)
+		    strategy = GNTools::NewPaths::ToolpathSchemas.get_strategy(tp[1]["type"])
+#		    puts tp[1],strategy["Name"]
+		    engine.render(strategy["Name"], build_context(tp[1]))
+		  end
 		end.join("\n")
 	  end
+	  
 
 	  def build_context(toolpath)
 		{
