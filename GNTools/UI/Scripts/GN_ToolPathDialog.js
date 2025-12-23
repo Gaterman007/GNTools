@@ -31,7 +31,8 @@ function adjustParametersHeight() {
 
 // Reçu depuis Ruby
 window.loadCollection = function(datajson) {
-  collection = JSON.parse(datajson);
+  console.log(datajson);
+  collection = datajson;
   refreshToolpathList();
   updateTabsContent();
 };
@@ -52,7 +53,7 @@ window.selectToolpathType = function(type) {
     if (!select) return;
     // Sélectionner l'option correspondante
     select.val(type);
-	console.log(type)
+	console.log(type);
 	select.selectmenu("refresh");
     updateTabsContent();
 };
@@ -87,49 +88,51 @@ function refreshToolpathList() {
 
   selectedToolpaths = [];
   var allVisible = true
-  Object.keys(collection).forEach(key => {
-    const tp = collection[key];
-	const checked = tp.visible ? "checked" : "";
-	if (!tp.visible) allVisible = false
-    const li = $(`
-      <li>
-        <input type="checkbox" class="tp-select" value="${key}"  ${checked}>
-        <span class="tp-label">${tp.type} (${tp.name})</span>
-      </li>
-    `);
-    list.append(li);
-	// Mettre à jour selectedToolpaths si visible
-    if (tp.visible) selectedToolpaths.push(key);
-  });
+  if (collection.Toolpaths) {
+	  Object.keys(collection.Toolpaths).forEach(key => {
+		const tp = collection.Toolpaths[key];
+		const checked = tp.visible ? "checked" : "";
+		if (!tp.visible) allVisible = false
+		const li = $(`
+		  <li>
+			<input type="checkbox" class="tp-select" value="${key}"  ${checked}>
+			<span class="tp-label">${tp.type} (${tp.name})</span>
+		  </li>
+		`);
+		list.append(li);
+		// Mettre à jour selectedToolpaths si visible
+		if (tp.visible) selectedToolpaths.push(key);
+	  });
 
-  if (selectedToolpaths.length === Object.keys(collection).length) {
-	$('#tp-select-all').prop("checked", true);
-  }
-  
-  // Mise à jour des toolpaths sélectionnés
-  $('.tp-select').change(function() {
-    const key = $(this).val();
-
-    if (this.checked) {
-      if (!selectedToolpaths.includes(key)) selectedToolpaths.push(key);
-    } else {
-      selectedToolpaths = selectedToolpaths.filter(k => k !== key);
+    if (selectedToolpaths.length === Object.keys(collection.Toolpaths).length) {
+	  $('#tp-select-all').prop("checked", true);
     }
-	if (selectedToolpaths.length === 0)  {
+  
+    // Mise à jour des toolpaths sélectionnés
+    $('.tp-select').change(function() {
+      const key = $(this).val();
+
+      if (this.checked) {
+        if (!selectedToolpaths.includes(key)) selectedToolpaths.push(key);
+      } else {
+        selectedToolpaths = selectedToolpaths.filter(k => k !== key);
+      }
+	  if (selectedToolpaths.length === 0)  {
 		$('#tp-select-all').prop("checked", false);
-	}
-	if (selectedToolpaths.length === Object.keys(collection).length) {
+	  }
+	  if (selectedToolpaths.length === Object.keys(collection.Toolpaths).length) {
 		$('#tp-select-all').prop("checked", true);
-	}
-	collection[key].visible = this.checked
-	sketchup.fromJS(JSON.stringify({
-	  action: "set_toolpath_visible",
-	  id: key,
-	  visible: this.checked
-	}));
+	  }
+	  collection.Toolpaths[key].visible = this.checked
+	  sketchup.fromJS(JSON.stringify({
+	    action: "set_toolpath_visible",
+	    id: key,
+	    visible: this.checked
+	  }));
 	
-    updateTabsContent();
-  });
+      updateTabsContent();
+    });
+  }
 }
 
 // Sélection / désélection globale
@@ -148,15 +151,15 @@ $('#tp-select-all').change(function() {
     } else {
       selectedToolpaths = [];
     }
-	collection[key].visible = this.checked
+	collection.Toolpaths[key].visible = this.checked
 	sketchup.fromJS(JSON.stringify({
 	  action: "set_toolpath_visible",
 	  id: key,
 	  visible: this.checked
 	}));
   });
-  updateParametersTab()
-  updatePointsTab()
+  updateParametersTab();
+  updatePointsTab();
 });
 
 
@@ -176,7 +179,7 @@ $('#btn-remove-tp').click(function() {
   if (selectedToolpaths.length === 0) return;
 
   selectedToolpaths.forEach(key => {
-    delete collection[key];
+    delete collection.Toolpaths[key];
 	sketchup.fromJS(JSON.stringify({
 	  action: "toolpath_delete",
 	  id: key
@@ -191,7 +194,7 @@ $('#btn-remove-tp').click(function() {
 
 $('#btn-edit-tp').click(function() {
   const type = $('#add-toolpath-type').val();
-  const key = type + "_" + (Object.keys(collection).length + 1);
+  const key = type + "_" + (Object.keys(collection.Toolpaths).length + 1);
   const defaults = schemas[type]?.Schema || {};
 
   sketchup.fromJS(JSON.stringify({
@@ -205,9 +208,9 @@ $('#btn-edit-tp').click(function() {
 
 // ➜ Mettre à jour les autres tabs selon la sélection
 function updateTabsContent() {
-  updateParametersTab()
-  updateDefaultParametersTab()
-  updatePointsTab()
+  updateParametersTab();
+  updateDefaultParametersTab();
+  updatePointsTab();
 }
 
 $(function() {
@@ -230,9 +233,11 @@ $(function() {
 	sketchup.cancel();
   });
   // Ajuster le checkbox "Select All"
-  $('#tp-select-all').prop(
-    selectedToolpaths.length === Object.keys(collection).length
-  );
+  if (collection.Toolpaths) {
+	$('#tp-select-all').prop("checked", selectedToolpaths.length === Object.keys(collection.Toolpaths).length);
+  } else {
+	$('#tp-select-all').prop("checked",false);
+  }	
   $("#add-toolpath-type").on("selectmenuchange", function () {
 	const type = $('#add-toolpath-type').val();
 	sketchup.fromJS(JSON.stringify({

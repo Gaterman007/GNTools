@@ -6,7 +6,22 @@ module GNTools
     #
     class ToolpathPreview
 	  # Dessiner une collection (un json)
-	  def self.render(view, collection)
+	  
+	  def self.render(view, collection, type = "material")
+		case type
+	    when "Toolpaths"
+		  self.draw_toolpaths(view, collection["Toolpaths"])
+	    when "Material"
+		  self.draw_toolpaths(view, collection["Toolpaths"])
+		  self.draw_material_outline(view, collection["Material"])
+	    when "OriginalData"
+		  self.draw_original_geometry(view, collection["OriginalData"])
+	    end
+	  end
+	  
+	  def self.draw_toolpaths(view, toolpaths)
+		return unless toolpaths
+		return if toolpaths.empty?
 	    # Paramètres visuels
 	    default_color = Sketchup::Color.new(100, 80, 255) # bleu clair
 	    selected_color = Sketchup::Color.new(255, 160, 0)  # orange
@@ -16,9 +31,9 @@ module GNTools
 	    point_mark_size = 5.mm
 	    # Si tu as un mécanisme pour connaitre la selection active côté JS/Ruby,
 	    # expose la clé/keys sélectionnées dans collection.active_keys (optionnel).
-	    active_keys = (collection.respond_to?(:active_keys) && collection.active_keys) ? collection.active_keys : []
+	    active_keys = (toolpaths.respond_to?(:active_keys) && toolpaths.active_keys) ? toolpaths.active_keys : []
 	    # Itérer les toolpaths (assume collection.toolpaths is an Array or Hash)
-	    collection.each_with_index do |(key, tp), idx|
+	    toolpaths.each_with_index do |(key, tp), idx|
 		  begin
 			if tp["visible"]
 				tp_points = build_points_from_toolpath(tp)
@@ -53,6 +68,29 @@ module GNTools
 		    puts "[ToolPathDialog#draw] erreur en dessinant #{key}: #{e.message}"
 		  end
 	    end	  
+	  end
+
+	  def self.draw_material_outline(view, material_hash)
+	    return unless material_hash
+
+	    edges = material_hash["edges"] || []
+	    view.drawing_color = Sketchup::Color.new(200,200,255)
+	    edges.each do |edge|
+		  pts = edge.values.map { |p| Geom::Point3d.new(*p) }
+		  view.draw(GL_LINE_STRIP, pts)
+	    end
+	  end
+
+	  def self.draw_original_geometry(view, original_data)
+	    return unless original_data
+	    # on peut réutiliser build_points_from_toolpath pour arcs/curves/faces simplifiées
+	    if original_data["edges"]
+		  view.drawing_color = Sketchup::Color.new(180,180,180)
+		  original_data["edges"].each do |edge|
+		    pts = edge.values.map { |p| Geom::Point3d.new(*p) }
+		    view.draw(GL_LINE_STRIP, pts)
+		  end
+	    end
 	  end
 
 	  # --- helpers privés ---
@@ -131,89 +169,6 @@ module GNTools
 		  view.draw_text(screen_pt, i.to_s, size: 12, color: "white")
 	    end
 	  end
-	
-	  def self.group_entities(group,collection)
-	    return unless group
-	    self.clear_drawn_entities(group)
-	    # Calculer une position moyenne pour placer les placeholders si invalides
-	    tp = collection.toolpaths.first
-	    if tp
-		  first_pt = tp.points.first
-		  placeholder_pos = first_pt ? first_pt.position : Geom::Point3d.new(0,0,0)
-	    else
-	 	  placeholder_pos = Geom::Point3d.new(0,0,0)
-	    end
-	    self.ensure_placeholder_at(group,placeholder_pos)
-
-	    tpvalide = false
-
-	    if tpvalide
-		  self.remove_placeholder(group)
-	    end
-	  end
-
-	  def self.show_toolpath(group,tp)
-	    ent = group.entities
-
-	    pts = tp.points.map(&:position)
-	    return if pts.empty?
-
-	    # 1 point → CPoint
-	    if pts.length == 1
-		  ent.add_cpoint(pts[0])
-		  return
-	    end
-
-	    # 2+ points → polyline
-	    pts.each_cons(2) do |a, b|
-		  ent.add_line(a, b)
-	    end
-	  end
-  
-	  def self.ensure_placeholder_at(group,position)
-	    ent = group.entities
-
-	    cp = ent.find { |e|
-		  e.is_a?(Sketchup::ConstructionPoint) &&
-		  e.get_attribute("GNTP", "placeholder")
-	    }
-
-	    if cp
-		  ent.erase_entities(cp)
-	    end
-	    cp = ent.add_cpoint(position)
-	    cp.set_attribute("GNTP", "placeholder", true)
-	    cp.hidden = true
-
-	    cp
-	  end
-
-	  def self.remove_placeholder(group)
-	    to_delete = []
-
-	    group.entities.each do |e|
-		  next unless e.is_a?(Sketchup::ConstructionPoint)
-		  next unless e.get_attribute("GNTP", "placeholder")
-		  to_delete << e
-	    end
-
-	    group.entities.erase_entities(to_delete) unless to_delete.empty?
-	  end
-
-	  def self.clear_drawn_entities(group)
-	    to_delete = []
-
-	    group.entities.each do |e|
-		  next if e.is_a?(Sketchup::ConstructionPoint) &&
-			 e.get_attribute("GNTP", "placeholder")
-		  to_delete << e
-	    end
-
-	    group.entities.erase_entities(to_delete) unless to_delete.empty?
-	  end
     end
   end
 end
-
-#$toolpath_preview ||= GNTools::NewPaths::ToolpathObserver.new
-#Sketchup.active_model.active_view.add_observer($toolpath_preview)

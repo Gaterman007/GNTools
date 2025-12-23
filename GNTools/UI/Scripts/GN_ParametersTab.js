@@ -15,8 +15,8 @@ function updateParametersTab() {
 		container.show();
 		$("#tabs").tabs( "refresh" );
         const key = selectedToolpaths[0];
-        container.append(`<h3>Paramètres : ${collection[key].name}</h3>`);
-		var defaults = collection[key].metadata
+        container.append(`<h3>Paramètres : ${collection.Toolpaths[key].name}</h3>`);
+		var defaults = collection.Toolpaths[key].metadata
         container.append(buildParameterForm(defaults, key));
     } else {
 	    // montrer le tab Paramètre
@@ -37,7 +37,7 @@ function updateParametersTab() {
 				const keys = selectedToolpaths;
 				// collection a mettre a jour
 				keys.forEach(k => {
-                  const tpMeta = collection[k].metadata;
+                  const tpMeta = collection.Toolpaths[k].metadata;
 				  if (tpMeta && tpMeta[name]) {  // <-- sécurise
 					tpMeta[name].Value = parseFloat($(this).val());
 				  }
@@ -48,7 +48,7 @@ function updateParametersTab() {
 				const keys = selectedToolpaths;
 				// collection a mettre a jour
 				keys.forEach(k => {
-                  const tpMeta = collection[k].metadata;
+                  const tpMeta = collection.Toolpaths[k].metadata;
 				  if (tpMeta && tpMeta[name]) {  // <-- sécurise
 					tpMeta[name].Value = parseFloat($(this).val());
 				  }
@@ -66,7 +66,7 @@ function updateParametersTab() {
 				const keys = selectedToolpaths;
 				// collection a mettre a jour
 				keys.forEach(k => {
-                  const tpMeta = collection[k].metadata;
+                  const tpMeta = collection.Toolpaths[k].metadata;
 				  if (tpMeta && tpMeta[name]) {  // <-- sécurise
 					tpMeta[name].Value = ui.item.value;
 				  }
@@ -80,7 +80,7 @@ function updateParametersTab() {
 				const keys = selectedToolpaths;
 				// collection a mettre a jour
 				keys.forEach(k => {
-                  const tpMeta = collection[k].metadata;
+                  const tpMeta = collection.Toolpaths[k].metadata;
 				  if (tpMeta && tpMeta["drillBitName"]) {  // <-- sécurise
 					tpMeta["drillBitName"].Value = ui.item.value;
 				  }
@@ -101,7 +101,7 @@ function updateParametersTab() {
 				const keys = selectedToolpaths;
 				// collection a mettre a jour
 				keys.forEach(k => {
-                  const tpMeta = collection[k].metadata;
+                  const tpMeta = collection.Toolpaths[k].metadata;
 				  if (tpMeta && tpMeta[name]) {  // <-- sécurise
 					tpMeta[name].Value = $(this).prop('checked');
 				  }
@@ -194,7 +194,7 @@ function buildParameterForm(params) {
 
 function getParamType(paramName, keys) {
     for (let k of keys) {
-        const tpMeta = collection[k]?.metadata;
+        const tpMeta = collection.Toolpaths[k]?.metadata;
         if (tpMeta && tpMeta[paramName]?.type) {
             return tpMeta[paramName].type;
         }
@@ -212,8 +212,8 @@ function buildMixedParameterForm() {
     // 1️ Construire la liste de tous les paramnames présents dans les toolpaths sélectionnés
     const allParamNames = new Set();
     keys.forEach(k => {
-		console.log(collection[k])
-        const tpMeta = collection[k].metadata;
+		console.log(collection.Toolpaths[k])
+        const tpMeta = collection.Toolpaths[k].metadata;
         Object.keys(tpMeta).forEach(p => allParamNames.add(p));
     });
     // Récupérer les champs avec un idx valide et trier par idx
@@ -221,7 +221,7 @@ function buildMixedParameterForm() {
 		.map(paramName => {
 			// chercher le premier toolpath qui a ce param
 			const meta = keys
-				.map(k => collection[k].metadata[paramName])
+				.map(k => collection.Toolpaths[k].metadata[paramName])
 				.find(m => m !== undefined);
 
 			return {
@@ -237,7 +237,7 @@ function buildMixedParameterForm() {
 	sortedFields.forEach( param => {
         // valeurs existantes pour ce param dans chaque TP
         const values = keys
-						.map(k => collection[k].metadata[param.name]?.Value)
+						.map(k => collection.Toolpaths[k].metadata[param.name]?.Value)
 						.filter(v => v !== undefined);   // <-- important
 						
 		allSame = true; // pas d’ambiguïté
@@ -257,7 +257,7 @@ function buildMixedParameterForm() {
 
           const style = allSame ? "" : "background-color:#fff59d";
 
-		  const meta = keys.map(k => collection[k]?.metadata[param.name]).find(m => m);
+		  const meta = keys.map(k => collection.Toolpaths[k]?.metadata[param.name]).find(m => m);
 
           html += `
             <tr>

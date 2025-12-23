@@ -70,7 +70,7 @@ module GNTools
 	    # Merge : global < local
 		@vars = @global_vars.dup
 		@vars.merge!(vars) if vars
-		@toolpath = toolpath["toolpath"]
+		@toolpath = toolpath["Toolpath"]
         @text = get(name).dup
 		process_foreach!
 		process_if!

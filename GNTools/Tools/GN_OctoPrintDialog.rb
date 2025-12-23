@@ -129,10 +129,7 @@ module GNTools
 		end
 	  end
 	  selection = Sketchup.active_model.selection
-	  @material = nil
-	  if Material::isMaterial?(selection[0])
-		@material = Material.new(selection[0])
-	  end
+	  @groupdata = CNCData.new(selection[0])
 	  if @dialog && @dialog.visible?
 		self.update_all
 		self.update_Tab
@@ -393,13 +390,8 @@ module GNTools
 					GNTools.octoPrint.send_gcode("G0 X#{object1["X"]} Y#{object1["Y"]} Z#{object1["Z"]}")
 				end
 			when 48
-#				puts @material["toolpaths"][object1["persistent_id"]]	
-#
-				@material.generate_gcode(object1["persistent_id"])		
-#				pathObj = GNTools.pathObjList[object1["persistent_id"]]
-				gCodeStr = @material.generate_gcode(object1["persistent_id"])
-#				gCodeStr = pathObj.createGCode(gCodeStr)
-
+				@groupdata.generate_gcode(object1["persistent_id"])		
+				gCodeStr = @groupdata.generate_gcode(object1["persistent_id"])
 				filename = ""
 				scriptStr = "addToEditor(#{filename.to_json}, #{gCodeStr.to_json})"
 				@dialog.execute_script(scriptStr)
@@ -536,10 +528,10 @@ module GNTools
 	end
 
 	def get_ObjectList
-	  return {} unless @material && @material["toolpaths"]
-	  toolpaths = @material["toolpaths"]
+	  return {} unless @groupdata && @groupdata["Toolpaths"]
+	  toolpaths = @groupdata["Toolpaths"]
 	  objets = []
-	  @material["toolpaths"].each_pair do |key, toolpath|
+	  @groupdata["Toolpaths"].each_pair do |key, toolpath|
 		objets << {
 		  "name" => toolpath["name"],
 		  "persistent_id" => key

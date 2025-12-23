@@ -10,12 +10,18 @@ module GNTools
 	  def initialize
 		super(OVERLAY_ID, OVERLAY_NAME)
         @hash_collection = nil
+		@renderType = "Toolpaths"
       end
 	  
 	  def set_collection(col)
         @hash_collection = col
         Sketchup.active_model.active_view.invalidate
       end
+
+	  def set_render_type(renderType)
+		@renderType = renderType
+	  end
+
 
 	  def getTextBox(point,text,view)
 	    bounds = view.text_bounds(point, text, size: 12, bold: true, color: 'white')
@@ -44,7 +50,7 @@ module GNTools
 #			view.draw2d(GL_QUADS, rectangle)
 			view.draw_text(point, "No collection", size: 12, bold: true, color: 'white')
 		else
-			NewPaths::ToolpathPreview.render(view, @hash_collection)
+			NewPaths::ToolpathPreview.render(view, @hash_collection,@renderType)
 		end
       end
 	end
@@ -98,6 +104,10 @@ module GNTools
 
 	  def self.set_collection(collection)
 		@@instance.model_overlay.set_collection(collection)
+	  end
+
+	  def self.set_render_type(renderType)
+		@@instance.model_overlay.set_render_type(renderType)
 	  end
 
 	  # Activer/désactiver overlay

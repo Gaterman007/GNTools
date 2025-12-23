@@ -1,0 +1,65 @@
+.cnc-spinner {
+  display: grid;
+  grid-template-columns: 1fr auto; /* input+slider | spinner buttons */
+  grid-template-rows: auto auto;   /* input | slider */
+  gap: 2px;
+  width: 220px;
+}
+
+.cnc-spinner .ui-spinner {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  width: 100%;
+  display: flex; /* important pour input + boutons internes */
+}
+
+.cnc-spinner-buttons {
+  grid-column: 2 / 3;
+  grid-row: 1 / 3; /* s'étend sur input + slider */
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 2px;
+}
+
+.cnc-spinner-buttons .ui-spinner-up,
+.cnc-spinner-buttons .ui-spinner-down {
+  width: 18px;
+  height: 16px;
+}
+
+/* slider sous l’input */
+.cnc-spinner-slider {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+  height: 6px;
+  margin-top: 2px;
+}
+
+
+.cnc-spinner-slider {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+  height: 4px;
+  margin-top: 2px;
+}
+
+/* input compact */
+.cnc-spinner .ui-spinner-input {
+  height: 22px;
+  padding: 1px 2px;
+  font-size: 14px;
+}
+
+/* slider handle */
+.cnc-spinner-slider .ui-slider-handle {
+  width: 9px;
+  height: 9px;
+  top: -3px;
+}
+
+/* danger zone */
+.cnc-spinner-slider.cnc-danger .ui-slider-range,
+.cnc-spinner-slider.cnc-danger .ui-slider-handle {
+  background: #c0392b;
+  border-color: #c0392b;
+}

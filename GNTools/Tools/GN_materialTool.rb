@@ -429,7 +429,6 @@ module GNTools
 	module MaterialToolDialogManager
 
 	  def accept_Pressed(value,matvalue)
-		puts "Ok press"
 		apply_Pressed(value,matvalue)
 		close_dialog
 		Sketchup.active_model.tools.pop_tool
@@ -437,7 +436,7 @@ module GNTools
 	  end
 
 	  def cancel_Pressed(value)
-		puts "Cancel press"
+		@data.revert!
 		if @undoRedoName == GNTools::OperationTracker.current_op and @undoRedoDepth == GNTools::OperationTracker.stack_depth
 		  Sketchup.active_model.abort_operation()
 		end
@@ -447,20 +446,17 @@ module GNTools
 	  end
 
 	  def setDefault_Pressed(value)
-		puts "Set Default press"
+		puts "Set Default press #{value}"
 	    nil
 	  end
 	  
 	  def apply_Pressed(value,matvalue)
-		puts "Apply values #{value} #{matvalue}"
 		# Mettre à jour les données temporaires
-		# Écrire directement dans le groupe via Material
-		@material["toolpaths"] = value
-		@material.update do |d|
-		  d["material_type"] = matvalue["material_type"]
-		  d["safeHeight"] = matvalue["safeHeight"]
-		  d["materialHeight"] = matvalue["materialHeight"]
-		end
+		# Écrire directement dans le groupe via @data
+		@data["Material.material_type"] = matvalue["material_type"]
+		@data["Material.safeHeight"] = matvalue["safeHeight"]
+		@data["Material.materialHeight"] = matvalue["materialHeight"]
+		@data.commit!		
 		if @undoRedoName == GNTools::OperationTracker.current_op and @undoRedoDepth == GNTools::OperationTracker.stack_depth
 		  Sketchup.active_model.commit_operation()
 		end
@@ -474,35 +470,7 @@ module GNTools
 		else
 		  # Attach content and callbacks when showing the dialog,
 		  # not when creating it, to be able to use the same dialog again.
-		  # on a 4 bouton   $( "#accept, #cancel, #setDefault, #apply").button();
-		  # sketchup.apply();   			bouton Apply
-		  # sketchup.accept();  			bouton Ok
-		  # sketchup.setDefault(defaults);	bouton set Default
-		  # sketchup.cancel();				bouton Cancel
-		  
 		  @dialog ||= self.create_dialog
-		  @dialog.add_action_callback("ready") { |action_context|
-			dialog_opened
-			nil
-		  }
-		  # set to model only
-		  @dialog.add_action_callback("accept") { |action_context, value, matvalue|
-			accept_Pressed(value,matvalue)
-		  }
-		  @dialog.add_action_callback("cancel") { |action_context, value|
-			cancel_Pressed(value)
-		  }
-		  @dialog.add_action_callback("setDefault") { |action_context, value|
-			setDefault_Pressed(value)
-		  }
-		  @dialog.add_action_callback("apply") { |action_context, value, matvalue|
-			apply_Pressed(value,matvalue)
-		  }
-	  
-		  @dialog.add_action_callback("applyViewMode") { |action_context, mode|
-			self.applyViewMode(mode)
-			nil
-		  }
 		  bind_dialog_callbacks
 		  @dialog.set_size(@dialog_width,@dialog_height)
 		  @dialog.set_on_closed { on_dialog_closed }
@@ -543,6 +511,35 @@ module GNTools
 	  end
 	  
 	  def bind_dialog_callbacks
+		# on a 4 bouton   $( "#accept, #cancel, #setDefault, #apply").button();
+		# sketchup.apply();   			bouton Apply
+		# sketchup.accept();  			bouton Ok
+		# sketchup.setDefault(defaults);	bouton set Default
+		# sketchup.cancel();				bouton Cancel
+		@dialog.add_action_callback("ready") { |action_context|
+		  dialog_opened
+		  nil
+		}
+		@dialog.add_action_callback("accept") { |action_context, value, matvalue|
+		  accept_Pressed(value,matvalue)
+		  nil
+		}
+		@dialog.add_action_callback("cancel") { |action_context, value|
+		  cancel_Pressed(value)
+		  nil
+		}
+		@dialog.add_action_callback("setDefault") { |action_context, value|
+		  setDefault_Pressed(value)
+		  nil
+		}
+		@dialog.add_action_callback("apply") { |action_context, value, matvalue|
+		  apply_Pressed(value,matvalue)
+		  nil
+		}
+		@dialog.add_action_callback("setViewMode") { |action_context, mode|
+		  applyViewMode(mode)
+		  nil
+		}
 		@dialog.add_action_callback("fromJS") do |_ctx, msg|
 		  handle_js_message(JSON.parse(msg))
 		end
@@ -600,26 +597,29 @@ module GNTools
 		scriptStr = "window.setTitle('Material CNC')"
 		@dialog.execute_script(scriptStr)
 		boundingbox = @group.bounds
-		if @material["safeHeight"] < boundingbox.depth.to_mm
-		  @material["safeHeight"] = boundingbox.depth.to_mm + 5.mm
+		if @data["Material"]["safeHeight"] < boundingbox.depth.to_mm
+		  @data["Material"]["safeHeight"] = boundingbox.depth.to_mm + 5.mm
 		end
-		@material["materialHeight"] = boundingbox.depth.to_mm
+		@data["Material"]["materialHeight"] = boundingbox.depth.to_mm
 		jsonStr = JSON.generate({
-		  'material_type' => @material["material_type"],
-		  'safeHeight' => @material["safeHeight"],
-		  'materialHeight' => @material["materialHeight"],
+		  'material_type' => @data["Material"]["material_type"],
+		  'safeHeight' => @data["Material"]["safeHeight"],
+		  'materialHeight' => @data["Material"]["materialHeight"],
 		  'width' => boundingbox.width.to_mm.round(3),
 		  'height' => boundingbox.height.to_mm.round(3),
 		  'depth' => boundingbox.depth.to_mm.round(3),
 		})
-		scriptStr = "updateMaterial(\'#{jsonStr}\')"
+		@data["Material"]['width'] = boundingbox.width.to_mm.round(3)
+		@data["Material"]['height'] = boundingbox.height.to_mm.round(3)
+		@data["Material"]['depth'] = boundingbox.depth.to_mm.round(3)
+		scriptStr = "updateMaterial(#{jsonStr})"
 		@dialog.execute_script(scriptStr)
 		send_collection_to_dialog
 	  end
 
       def send_collection_to_dialog
-        return unless @hash_collection && @dialog
-        loadCollection_json = "window.loadCollection('#{JSON.generate(@hash_collection)}')"
+        return unless @dialog
+        loadCollection_json = "window.loadCollection(#{@data.to_json})"
         @dialog.execute_script(loadCollection_json)
       end
 	  
@@ -629,7 +629,6 @@ module GNTools
 	  end
 
 	  def on_dialog_closed
-		@hash_collection = nil
         OverlayManager.set_collection(nil)
 	  end
 		
@@ -642,45 +641,32 @@ module GNTools
 		detach_selection_observer
 		@dialog.set_can_close { true }
 		@dialog.close
+		applyViewMode("original")
 	  end
 	end
 
 	module MaterialToolViewModeManager
 	  def applyViewMode(mode)
-		groups = Sketchup.active_model.entities.grep(Sketchup::Group)
-		path_obj_list = groups.select { |g| GNTools::Paths.isGroupObj(g) }
-		case mode
-		when "original"
-			Material::restore_original(@group)
+		if @viewMode != mode
+		  @viewMode = mode
+		  case mode
+		  when "original"
+			@data.show_Material
+			OverlayManager.set_render_type("Toolpaths")
 			Sketchup.active_model.active_view.refresh
-		when "current"
-			Material::recreate_from_groupData(@group)
-		when "path"
-#			Material::restore_original(@group)
-			Material::clear_all_geometry_except_paths(@group)
-			original_json = @group.get_attribute(CNC_DICT, "originalData")
-			return nil unless original_json
-			Material::create_from_json(@group,original_json)
-			# Créer une face dans le groupe
-			face = @group.entities.add_face([0,0,0],[50.mm,0,0],[50.mm,50.mm,0],[0,50.mm,0])
-			# Faire un pushpull
-			face.pushpull(-10.mm)  # fonctionne parfaitement
-#			path_obj_list.each do |obj|
-#			  obj.createPath(@group)  # applique juste la géométrie
-#			end
+		  when "current"
+			OverlayManager.set_render_type("Material")
+			@data.hide_Material
 			Sketchup.active_model.active_view.refresh
-		when "simulation"
-			original_json = @group.get_attribute(CNC_DICT, "originalData")
-			return nil unless original_json
-			Material::clear_all_geometry_except_paths(@group)
-			sousgroup = @group.entities.add_group
-			Material::create_from_json(sousgroup,original_json)
-			until_index = path_obj_list.count
-			@group.entities.each {|entity| puts entity.inspect}
-			sousgroup.explode
-		end
+		  when "path"
+			OverlayManager.set_render_type("OriginalData")
+			@data.hide_Material
+			Sketchup.active_model.active_view.refresh
+		  when "simulation"
+			Sketchup.active_model.active_view.refresh
+		  end
+	    end
 	  end
-	
 	end
 
 	class MaterialTool
@@ -705,8 +691,8 @@ module GNTools
 		@schemas_hash = GNTools::NewPaths::ToolpathSchemas.toHash
 		@toolpath_type_setting = "Hole"
 		setModeFromtoolpath_type
-		@hash_collection = {}
-		OverlayManager.set_collection(@hash_collection)
+		@data = GNTools::CNCData.new()
+		OverlayManager.set_collection(@data)
 	  end
 
       def activate
@@ -728,10 +714,12 @@ module GNTools
 		# -----------------------------
 		@group = (selection.length == 1 && selection.first.is_a?(Sketchup::Group) ? selection.first : entities.add_group(selection.to_a))
 
-		@material = GNTools::Material.new(@group)
-		puts @material["toolpaths"]
-		@hash_collection = Marshal.load(Marshal.dump(@material["toolpaths"]))
-		OverlayManager.set_collection(@hash_collection)
+		@data.setGroup(@group)
+		@data.set_as_temp
+		group_hash = GNTools::Material.get_group_data(@group)
+		@data["OriginalData"] = group_hash
+		OverlayManager.set_collection(@data)
+		OverlayManager.set_render_type("Toolpaths")
 		@viewMode = "current"  # "original", "current", "path", "simulation"
 
 #        associer_collection
@@ -759,25 +747,18 @@ module GNTools
       end
 	
 	  def dialog_opened
-		if @material.isMaterial?
+		if @data.exist?("Material")
 		  Sketchup.active_model.start_operation(GNTools::traduire("Edit Material"), true)
 		  @undoRedoName = GNTools::OperationTracker.current_op
 		  @undoRedoDepth = GNTools::OperationTracker.stack_depth
 		  # Cas : déjà un groupe CNC/Material → on recharge les données
-
-		  Material::save_group_data(@group)
 		else
 		  Sketchup.active_model.start_operation(GNTools::traduire("Create Material"), true)
 		  @undoRedoName = GNTools::OperationTracker.current_op
 		  @undoRedoDepth = GNTools::OperationTracker.stack_depth
-				
 		  @group.name = "Material CNC"
-				
 		  # Initialisation des valeurs par défaut via Material.default
-		  # Écriture dans le groupe via Material
-		  @material.write(@material.default)
-
-		  Material::save_group_data(@group)
+		  @data["Material"] = Material::default
 		end
 
 		update_dialog
@@ -793,36 +774,41 @@ module GNTools
 			   "attrs" =>  {}
 			  }
 		end
-		@hash_collection[id] = {
-						"name"=>name,
-						"type"=>type,
-						"metadata"=>Marshal.load(Marshal.dump(metadata)),
-						"visible"=>true,
-						"points"=>pointshash
-						}	
-		OverlayManager.set_collection(@hash_collection)							
+		@data["Toolpaths"] ||= {}
+		@data["Toolpaths"][id] = {
+			"name"     => name,
+			"type"     => type,
+			"metadata" => Marshal.load(Marshal.dump(metadata)),
+			"visible"  => true,
+			"points"   => pointshash
+		}
+		OverlayManager.set_collection(@data)							
 		send_collection_to_dialog
 	  end
 
 	  def del_toolpath(key)
-	    @hash_collection.delete(key)
-		OverlayManager.set_collection(@hash_collection)	
+		@data["Toolpaths"] ||= {}
+	    @data["Toolpaths"].delete(key)
+		OverlayManager.set_collection(@data)	
 	  end
 
 	  def set_visible_toolpath(key,visible)
-		@hash_collection[key]["visible"] = visible
-		OverlayManager.set_collection(@hash_collection)
+		@data["Toolpaths"] ||= {}
+		@data["Toolpaths"][key]["visible"] = visible
+		OverlayManager.set_collection(@data)
 	  end
 
       # lightweight helpers for adding geometry/collection
       def add_point(pos)
         @points ||= []
         @points << pos
-		@hash_collection ||= {}
-		OverlayManager.set_collection(@hash_collection)	
-#       puts "[ToolPathDialog] add_point #{pos}"
-#		puts @schemas_hash[@toolpath_type_setting]["Rules"][:max_points]
-		name = @toolpath_type_setting + "_" + (@hash_collection.size + 1).to_s
+		OverlayManager.set_collection(@data)
+		if @data.exist?("Toolpaths")
+		  size = @data["Toolpaths"].length
+		else
+		  size = 0
+		end
+		name = @toolpath_type_setting + "_" + (size + 1).to_s
 		add_toolpath(@toolpath_type_setting,name,@schemas_hash[@toolpath_type_setting]["Schema"],@points)
       end
 
@@ -830,10 +816,13 @@ module GNTools
         @points ||= []
         @points << p1
         @points << p2
-		@hash_collection ||= {}
-		OverlayManager.set_collection(@hash_collection)	
-#       puts "[ToolPathDialog] add_segment #{p1} -> #{p2}"
-		name = @toolpath_type_setting + "_" + (@hash_collection.size + 1).to_s
+		OverlayManager.set_collection(@data)	
+		if @data.exist?("Toolpaths")
+		  size = @data["Toolpaths"].length
+		else
+		  size = 0
+		end
+		name = @toolpath_type_setting + "_" + (size + 1).to_s
 		add_toolpath(@toolpath_type_setting,name,@schemas_hash[@toolpath_type_setting]["Schema"],@points)
       end
 
@@ -841,31 +830,40 @@ module GNTools
         @points ||= []
         @points << p1
         @points << p2
-		@hash_collection ||= {}
-		OverlayManager.set_collection(@hash_collection)	
-#       puts "[ToolPathDialog] add_segment #{p1} -> #{p2}"
-		name = @toolpath_type_setting + "_" + (@hash_collection.size + 1).to_s
+		OverlayManager.set_collection(@data)
+		if @data.exist?("Toolpaths")
+		  size = @data["Toolpaths"].length
+		else
+		  size = 0
+		end
+		name = @toolpath_type_setting + "_" + (size + 1).to_s
 		add_toolpath(@toolpath_type_setting,name,@schemas_hash[@toolpath_type_setting]["Schema"],@points)
       end
 
       def add_arc(p1, p2, p3)
         @points ||= []
         @points << p1 << p2 << p3
- 		name = @toolpath_type_setting + "_" + (@hash_collection.size + 1).to_s
+		if @data.exist?("Toolpaths")
+		  size = @data["Toolpaths"].length
+		else
+		  size = 0
+		end
+ 		name = @toolpath_type_setting + "_" + (size + 1).to_s
 		add_toolpath(@toolpath_type_setting,name,@schemas_hash[@toolpath_type_setting]["Schema"],@points)
-#        puts "[ToolPathDialog] add_arc #{p1} #{p2} #{p3}"
       end
 
       def finalize_loop(points)
-	  	@hash_collection ||= {}
-		OverlayManager.set_collection(@hash_collection)
+		OverlayManager.set_collection(@data)
 #		if @input_mode == :loop
 #		   puts "closed loop"
 #		end 
-		name = @toolpath_type_setting + "_" + (@hash_collection.size + 1).to_s
+		if @data.exist?("Toolpaths")
+		  size = @data["Toolpaths"].length
+		else
+		  size = 0
+		end
+		name = @toolpath_type_setting + "_" + (size + 1).to_s
 		add_toolpath(@toolpath_type_setting,name,@schemas_hash[@toolpath_type_setting]["Schema"],@points)
-        # example: create a closed polyline
-#        puts "[ToolPathDialog] loop finalized with #{points.length/2} segments"
         @points = []
       end
 	  
