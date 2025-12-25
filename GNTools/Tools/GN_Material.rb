@@ -37,9 +37,13 @@ module GNTools
       else
         dict = @group.attribute_dictionary(CNC_DICT, false)
         hash = {}
-        dict.each_pair do |k, v|
-          hash[k] = JSON.parse(v) rescue v
-        end
+		if dict
+			dict.each_pair do |k, v|
+			  hash[k] = JSON.parse(v) rescue v
+			end
+		else
+		  nil
+		end
         hash
       end
     end

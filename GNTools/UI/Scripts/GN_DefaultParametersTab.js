@@ -9,6 +9,27 @@ function updateDefaultParametersTab() {
 	container.append(buildDefaultParameterForm(defaults, null));
 
 	setTimeout(() => {
+	    container.find('input[data-cncInputs="true"]').each(function() {
+			$(this).cncInputs({
+				units: "mm",      // ou autre unité si tu veux
+				wheel: true,
+				number: true,
+				readonly: false   // ou selon ton meta
+			});
+
+			// Pour mettre à jour la collection sur changement
+			$(this).on('change', function() {
+				const name = $(this).prop("id");
+				const keys = selectedToolpaths;
+				keys.forEach(k => {
+					const tpMeta = collection.Toolpaths[k].metadata;
+					if (tpMeta && tpMeta[name]) {
+						tpMeta[name].Value = parseFloat($(this).val());
+					}
+				});
+			});
+		});
+
 		// Inputs number → spinner
 		const nums = container.find('input[type="number"]');
 		if (nums.length != 0) {
@@ -105,12 +126,14 @@ function createDefaultInputControl(paramName, paramInfo, displayValue) {
         case "spinner":
 			var id = `default_${paramName}`;
             return `
-               <input type="number"
+               <input
                       data-param="${paramName}"
+					  data-cncInputs="true"
                       value="${value}"
-                      min="${paramInfo.min ?? ''}"
-                      max="${paramInfo.max ?? ''}"
-                      step="${paramInfo.step ?? '0.1'}"
+					  ${paramInfo.min !== undefined ? `min="${paramInfo.min}"` : ''}
+					  ${paramInfo.max !== undefined ? `max="${paramInfo.max}"` : ''}
+                      step="${paramInfo.step ?? '1'}"
+                      decimal="${paramInfo.decimal ?? '0'}"
 					  id="${id}">
             `;
 

@@ -720,7 +720,7 @@ module GNTools
 		@data["OriginalData"] = group_hash
 		OverlayManager.set_collection(@data)
 		OverlayManager.set_render_type("Toolpaths")
-		@viewMode = "current"  # "original", "current", "path", "simulation"
+		@viewMode = "original"  # "original", "current", "path", "simulation"
 
 #        associer_collection
         open_dialog

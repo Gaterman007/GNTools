@@ -17,7 +17,7 @@ module GNTools
    PLUGIN = {
 		id:       "GNTools Tool Set²".freeze,
 		name:     "Tool Set²".freeze,
-		version:  "0.3.0".freeze,
+		version:  "0.3.2".freeze,
 		creator:  "Gaetan Noiseux",
 		description: "GNTools CNC / Tooling"
 	}.freeze

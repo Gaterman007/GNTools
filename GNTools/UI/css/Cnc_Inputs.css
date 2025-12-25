@@ -1,65 +1,185 @@
+/* =========================================================
+ * CNC Spinner CSS
+ * ========================================================= */
 .cnc-spinner {
-  display: grid;
-  grid-template-columns: 1fr auto; /* input+slider | spinner buttons */
-  grid-template-rows: auto auto;   /* input | slider */
-  gap: 2px;
-  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+/*  width: 160px; /* largeur globale du spinner */
 }
 
-.cnc-spinner .ui-spinner {
-  grid-column: 1 / 2;
-  grid-row: 1 / 2;
-  width: 100%;
-  display: flex; /* important pour input + boutons internes */
+.cnc-spinner-grid {
+  display: grid;
+  grid-template-columns: 1fr auto; /* colonne 1 = flexible, colonne 2 = unité */
+  grid-template-rows: auto auto;   /* ligne 1 = input+buttons, ligne 2 = slider */
+  column-gap: 4px;
+  row-gap: 4px;
+}
+
+.cnc-spinner-input.cnc-danger {
+  color: #c0392b;
+}
+
+.cnc-spinner-input-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  grid-column: 1 / 2; /* occupe la colonne 1 */
+  grid-row: 1 / 2;    /* ligne 1 */
+  position: relative;
+}
+
+.cnc-spinner-input {
+  flex: 1;
+  height: 22px;
+  font-size: 14px;
+  padding: 2px 4px;
+}
+
+.cnc-spinner-unit {
+  grid-column: 2 / 3; /* colonne 2 */
+  grid-row: 1 / 2;    /* ligne 1 */
+  align-self: center;  /* centré verticalement sur l’input */
+  font-size: 12px;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.cnc-spinner-slider {
+  grid-column: 1 / 2; /* colonne 1 */
+  grid-row: 2 / 3;    /* ligne 2 */
+  width: 100%;        /* prend tout l’espace disponible de la colonne */
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
+  -webkit-appearance: none; /* pour Chrome/Safari */
+}
+
+
+.cnc-spinner-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 10px;
+  width: 10px;
+  background: #555;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.cnc-spinner-slider::-moz-range-thumb {
+  height: 10px;
+  width: 10px;
+  background: #555;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Danger zone styling */
+.cnc-spinner-slider.cnc-danger {
+  background: #c0392b;
+}
+
+
+.cnc-slider {
+  grid-column: 1 / 2;   /* slider = colonne 1 seulement */
+  position: relative;
+  width: 100%; /* sinon la range ne s’étend pas */
+  height: 6px;
+  background: #ccc;        /* ← IMPORTANT */
+  border-radius: 4px;
+  box-sizing: border-box;
+  overflow: visible; /* PAS hidden */
+}
+
+
+
+.ui-slider-range {
+  position: absolute;
+  height: 100%;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%; /* départ à 0 */
+  background: #888;        /* ← IMPORTANT */
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.ui-slider-handle {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  background: #555;
+  border-radius: 50%;
+  cursor: grab;
+  z-index: 2;
+}
+
+/* Rail */
+.cnc-slider.ui-slider-horizontal {
+  height: 6px;              /* ← plus fin */
+  border-radius: 3px;
+}
+
+/* Zone remplie */
+.cnc-slider .ui-slider-range {
+  height: 100%;
+  top: 0;
+}
+
+.cnc-slider .ui-slider-handle {
+  width: 10px;
+  height: 10px;
+  top: 50%;
+  margin-left: -5px;   /* recentrage horizontal */
+  margin-top: -5px;    /* recentrage vertical */
+  border-radius: 50%;
 }
 
 .cnc-spinner-buttons {
-  grid-column: 2 / 3;
-  grid-row: 1 / 3; /* s'étend sur input + slider */
-  display: grid;
-  grid-template-rows: 1fr 1fr;
-  gap: 2px;
+  display: flex;
+  flex-direction: column;
+  margin-left: 4px;
 }
 
-.cnc-spinner-buttons .ui-spinner-up,
-.cnc-spinner-buttons .ui-spinner-down {
-  width: 18px;
-  height: 16px;
+.cnc-spinner-btn {
+  width: 20px;
+  height: 14px;
+  line-height: 14px;
+  font-size: 11px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+
+  /* look jQuery UI compatible */
+  border: 1px solid #aaa;
+  background: linear-gradient(#f6f6f6, #dcdcdc);
 }
 
-/* slider sous l’input */
-.cnc-spinner-slider {
-  grid-column: 1 / 2;
-  grid-row: 2 / 3;
-  height: 6px;
-  margin-top: 2px;
+.cnc-spinner-btn:first-child {
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
 }
 
-
-.cnc-spinner-slider {
-  grid-column: 1 / 2;
-  grid-row: 2 / 3;
-  height: 4px;
-  margin-top: 2px;
+.cnc-spinner-btn:last-child {
+  border-radius: 0 0 3px 3px;
 }
 
-/* input compact */
-.cnc-spinner .ui-spinner-input {
-  height: 22px;
-  padding: 1px 2px;
-  font-size: 14px;
+.cnc-spinner-btn:hover {
+  background: linear-gradient(#ffffff, #e0e0e0);
 }
 
-/* slider handle */
-.cnc-spinner-slider .ui-slider-handle {
-  width: 9px;
-  height: 9px;
-  top: -3px;
+.cnc-spinner-btn:active {
+  background: linear-gradient(#d0d0d0, #bcbcbc);
 }
 
-/* danger zone */
-.cnc-spinner-slider.cnc-danger .ui-slider-range,
-.cnc-spinner-slider.cnc-danger .ui-slider-handle {
+.cnc-spinner-btn.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Danger zone */
+.ui-slider-range.cnc-danger {
   background: #c0392b;
-  border-color: #c0392b;
 }

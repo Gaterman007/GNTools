@@ -40,6 +40,9 @@ module GNTools
         GNTools.activate_GCodeGenerate
       }
       @menu.add_item(GNTools::commandClass.cmdSaveGCode)				# retour un integer
+      @menu.add_item(GNTools::commandClass.cmd_configToolpaths)			# retour un integer
+
+
 
       # items dans le menu Plugins
       plugins_menu.add_item(GNTools::commandClass.cmdConstructionLine)	# retour un integer

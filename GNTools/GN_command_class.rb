@@ -26,6 +26,7 @@ module GNTools
 		attr_accessor :cmdConstructionLine
 		attr_accessor :cmdCNCNewTools
 		attr_accessor :cmd_OctoPrint
+		attr_accessor :cmd_configToolpaths
 		
 		def initialize
 			@cmd_circle3x3Tool = UI::Command.new(GNTools.traduire("Circle From 3 Points")) { Sketchup.active_model.select_tool Circle3X3DPoints.new }
@@ -99,6 +100,12 @@ module GNTools
 			@cmdCNCNewTools.status_bar_text = "Add new tool Path"
 			@cmdCNCNewTools.menu_text = "Add new tool Path"
 			
+
+			@cmd_configToolpaths = UI::Command.new("ConfigurePath") {GNTools::configure_ToolPath}
+			@cmd_configToolpaths.tooltip = "Configure Tool Path"
+			@cmd_configToolpaths.status_bar_text = "Configure Tool Path"
+			@cmd_configToolpaths.menu_text = "Configure Tool Path"
+
 			
 #			@cmdCreatePath = UI::Command.new("CreatePath") {GNTools::activate_PathTool}
 #			@cmdCreatePath.small_icon = File.join(GNTools::PATH_IMAGES,"HoleSmall.png")
@@ -179,9 +186,9 @@ module GNTools
 		@@defaultCNCTool
 	end
 
-#	def self.gn_PathObjTool
-#		@@gn_PathObjTool
-#	end
+	def self.configure_ToolPath
+	  GNTools::ToolpathConfigDialog.instance.show_dialog
+	end
 
 	def self.activeToolID
 		@@activeToolID
@@ -195,45 +202,6 @@ module GNTools
 		@@octoPrintDiag ||= GNTools::OctoPrintDialog.new
         @@octoPrintDiag.show_dialog
 	end
-	
-#	def self.activate_PathTool
-#		Sketchup.active_model.tools.push_tool(GNTools::gn_PathObjTool)
-#	end
-	
-	# def self.activate_CreateTool
-		# select = Sketchup.active_model.selection
-		# circles = GNTools.verifieSelection(select)
-		# edges = select.grep(Sketchup::Edge)
-		# if circles.count > 0
-			# circles.each do |circle|
-				# defaultHoleData = GNTools::Paths::GN_ToolPathObj.defaults_for("Hole")
-# #				puts "defaultHoleData"
-				# defaultHoleData["holesize"]["Value"] = circle.radius.to_mm * 2.0
-# #				defaultHoleData.holesize = circle.radius.to_mm * 2.0
-				# Sketchup.active_model.start_operation('createHole', true)
-				# GNTools::Paths::GN_ToolPathObj.create_pathobj("Hole",circle.center,defaultHoleData)
-				# Sketchup.active_model.commit_operation
-			# end
-		# end
-		# defaultStraitCutData = GNTools::Paths::GN_ToolPathObj.defaults_for("StraitCut")
-		# defaultPocketData = GNTools::Paths::GN_ToolPathObj.defaults_for("Pocket")
-		# if edges.count > 0
-			# edges.each do |edge|
-				# if not (edge.is_a?(Sketchup::Edge) && edge.curve && edge.curve.is_a?(Sketchup::ArcCurve))
-					# line = [edge.start.position,edge.end.position]
-					# Sketchup.active_model.start_operation('createLine', true)
-					# GNTools::Paths::GN_ToolPathObj.create_pathobj("StraitCut",line,defaultStraitCutData)
-					# Sketchup.active_model.commit_operation
-				# end
-			# end
-		# end
-		# faces = select.grep(Sketchup::Face)
-		# if faces.count > 0
-			# Sketchup.active_model.start_operation(GNTools.traduire('createPocket'), true)
-			# GNTools::Paths::GN_ToolPathObj.create_pathobj("Pocket",faces,defaultPocketData)
-			# Sketchup.active_model.commit_operation
-		# end
-	# end
 	
 	def self.activate_Material
 		GNTools::MaterialTool.tool_instance ||= GNTools::MaterialTool.new

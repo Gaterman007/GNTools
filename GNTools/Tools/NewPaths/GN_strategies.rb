@@ -48,6 +48,10 @@ module GNTools
 		@global_vars = {}
       end
 
+	  def self.toJson
+	  	JSON.generate(self.instance.strategies)
+	  end
+
       # ============================================================
       # Récupérer une stratégie (base + custom)
       # ============================================================

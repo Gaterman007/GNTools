@@ -141,7 +141,6 @@ module GNTools
 		    dependance_list.unshift(dep)
 		    dep = merged[dep]["dependance"]  # on prend dans merged pour rester cohérent
 		  end
-		  
 	    end
 		merged.delete("Base")
 		merged
@@ -191,13 +190,12 @@ module GNTools
       # --- Base Schema commun à tous ---
 	  register("Base", {
 	    "Schema" => {
-		  "pathName"       => { "Value" => "",        "type" => "" },
 		  "type"           => { "Value" => "Base",    "type" => "" },
-		  "depth"          => { "Value" => 4.0,       "type" => "spinner",  "idx" => 1 },
-		  "feedrate"       => { "Value" => 5.0,       "type" => "spinner",  "idx" => 2 },
+		  "depth"          => { "Value" => 4.0,       "type" => "spinner",  "idx" => 1, "step" => 0.001, "decimal" => 3 },
+		  "feedrate"       => { "Value" => 5.0,       "type" => "spinner",  "idx" => 2, "step" => 0.01, "decimal" => 2 },
 		  "multipass"      => { "Value" => true,      "type" => "checkbox", "idx" => 3 },
-		  "depthstep"      => { "Value" => 0.2,       "type" => "spinner",  "idx" => 4 },
-		  "overlapPercent" => { "Value" => 50,        "type" => "spinner",  "idx" => 5 },
+		  "depthstep"      => { "Value" => 0.2,       "type" => "spinner",  "idx" => 4, "step" => 0.01, "decimal" => 2 },
+		  "overlapPercent" => { "Value" => 50,        "type" => "spinner",  "idx" => 5, "min" => 0, "max" => 100, "step" => 0.01, "decimal" => 2 },
 		  "drillBitName"   => { "Value" => "Default", "type" => "dropdown", "idx" => 6 }
 	    },
 	    "Rules" => {
@@ -205,24 +203,26 @@ module GNTools
 		  max_points: nil,
 	  	  closed: false
 	    },
-	    "Strategy" => { "Name" => "drill" , "Selection" => "Point"}
+	    "Strategy" => { "Name" => "drill" , "Selection" => "Point"},
+		"Preview" => { "Name" => "drill" }
 	  })
 
 
 	  register("Arc", {
 	    "Schema" => {
 		  "type"        => { "Value" => "Arc",     "type" => "" },
-		  "angle"       => { "Value" => 90.0,      "type" => "spinner",  "min": 0,"max": 180, "step": 0.1, "idx" => 1 },
+		  "angle"       => { "Value" => 90.0,      "type" => "spinner",  "min" => 0,"max" => 180, "step" => 0.1, "idx" => 1 },
 		  "direction"   => { "Value" => "Horaire", "type" => "dropdown", "options": ["Horaire", "Anti Horaire"], "idx" => 2 },
-		  "cutwidth"    => { "Value" => 3.175,     "type" => "spinner",  "idx" => 3 },
-		  "nbdesegment" => { "Value" => 24,        "type" => "spinner",  "idx" => 4 }
+		  "cutwidth"    => { "Value" => 3.175,     "type" => "spinner",  "idx" => 3, "step" => 0.001, "decimal" => 3 },
+		  "nbdesegment" => { "Value" => 24,        "type" => "spinner",  "idx" => 4, "step" => 1, "decimal" => 0 }
 	    },
 	    "Rules" => {
 		  min_points: 2,
 	  	  max_points: 2,
 		  closed: false
 	    },
-	    "Strategy" => { "Name" => "Arc" , "Selection" => "Arc"}
+	    "Strategy" => { "Name" => "Line" , "Selection" => "Arc"},
+		"Preview" => { "Name" => "Arc" }
 	  }, "Base")
 
 
@@ -230,14 +230,15 @@ module GNTools
 	    "Schema" => {
 		  "type"       => { "Value" => "Line", "type" => "" },
 		  "methodType" => { "Value" => "Ramp", "type" => "dropdown", "options": ["Ramp","Pocket", "Spiral"], "idx" => 2 },
-		  "cutwidth"   => { "Value" => 3.175,  "type" => "spinner",  "idx" => 1 }
+		  "cutwidth"   => { "Value" => 3.175,  "type" => "spinner",  "idx" => 1, "step" => 0.001, "decimal" => 3  }
 	    },
 	    "Rules" => {
 		  min_points: 2,
 		  max_points: 2,
 		  closed: false
 	    },
-	    "Strategy" => { "Name" => "Line" , "Selection" => "Line" }
+	    "Strategy" => { "Name" => "Line" , "Selection" => "Line" },
+		"Preview" => { "Name" => "Line" }
 	  }, "Base")
 
 
@@ -251,8 +252,8 @@ module GNTools
           max_points: nil,
           closed: false
         },
-		"Strategy" => { "Name" => "OpenShape" , "Selection" => "Multiline"
-		}
+		"Strategy" => { "Name" => "Line" , "Selection" => "Multiline"},
+		"Preview" => { "Name" => "OpenShape" }
       },"Base")
 
       register("ClosedShape", {
@@ -265,33 +266,33 @@ module GNTools
           max_points: nil,
           closed: true
         },
-		"Strategy" => { "Name" => "ClosedShape" , "Selection" => "Loop"
-		}
+		"Strategy" => { "Name" => "Line" , "Selection" => "Loop" },
+		"Preview" => { "Name" => "ClosedShape" }
       },"Base")
 
       register("Hole", {
         "Schema" => {
 		  "type"         => { "Value" => "Hole",   "type" => "" },
-		  "holesize"     => { "Value" => 15.0,     "type" => "spinner",  "idx" => 1 },
+		  "holesize"     => { "Value" => 15.0,     "type" => "spinner", "idx" => 1, "step" => 0.001, "decimal" => 3},
 		  "methodType"   => { "Value" => "Pocket", "type" => "dropdown", "options": ["Pocket", "Spiral"], "idx" => 2 },
 		  "holeposition" => { "Value" => [0,0,0],  "type" => "" },
-		  "nbdesegment"  => { "Value" => 24,       "type" => "spinner",  "idx" => 3 },
-		  "cutwidth"     => { "Value" => 3.175,    "type" => "spinner",  "idx" => 4 }
+		  "nbdesegment"  => { "Value" => 24,       "type" => "spinner",  "idx" => 3, "step" => 1, "decimal" => 0 },
+		  "cutwidth"     => { "Value" => 3.175,    "type" => "spinner",  "idx" => 4, "step" => 0.001, "decimal" => 3 }
         },
         "Rules" => {
           min_points: 1,
           max_points: 1,
           closed: true    # cercle
         },
-		"Strategy" => { "Name" => "Hole" , "Selection" => "Point"
-		}
+		"Strategy" => { "Name" => "Hole" , "Selection" => "Point" },
+		"Preview" => { "Name" => "Hole" }
       },"Base")
 
 	  register("Pocket", {
 	    "Schema" => {
 		  "type"            => { "Value" => "Pocket", "type" => "" },
 		  "methodType"      => { "Value" => "Pocket", "type" => "dropdown", "idx" => 1 },
-		  "cutwidth"        => { "Value" => 3.175,    "type" => "spinner",  "idx" => 2 },
+		  "cutwidth"        => { "Value" => 3.175,    "type" => "spinner",  "idx" => 2, "step" => 0.001, "decimal" => 3  },
 		  "overlapPercent"  => { "Value" => 50,       "type" => "spinner",  "idx" => 3 }
 	    },
 	    "Rules" => {
@@ -299,8 +300,8 @@ module GNTools
 		  max_points: nil,
 		  closed: true
 	    },
-		"Strategy" => { "Name" => "Pocket" , "Selection" => "Loop"
-		}
+		"Strategy" => { "Name" => "Line" , "Selection" => "Loop" },
+		"Preview" => { "Name" => "Pocket" }
 	  }, "ClosedShape")
 
 	  register("Engrave", {
@@ -308,33 +309,33 @@ module GNTools
 		  "type"         => { "Value" => "Engrave",      "type" => ""         },
 		  "methodType"   => { "Value" => "Engrave", "type" => "dropdown", "idx" => 1 },
 		  "engraveDepth" => { "Value" => 0.3,       "type" => "spinner",  "idx" => 2 },
-		  "cutwidth"     => { "Value" => 1.0,       "type" => "spinner",  "idx" => 3 }
+		  "cutwidth"     => { "Value" => 1.0,       "type" => "spinner",  "idx" => 3, "step" => 0.001, "decimal" => 3 }
 	    },
 	    "Rules" => {
 		  min_points: 1,
 		  max_points: nil,
 		  closed: false
 	    },
-		"Strategy" => { "Name" => "Engrave" , "Selection" => "Multiline"
-		}
+		"Strategy" => { "Name" => "Line" , "Selection" => "Multiline" },
+		"Preview" => { "Name" => "Engrave" }
 	  }, "OpenShape")
 
 
 	  register("DrillPattern", {
 	    "Schema" => {
 		  "type"         => { "Value" => "DrillPattern", "type" => ""         },
-		  "holesize" => { "Value" => 10.0, "type" => "spinner",  "idx" => 1 },
+		  "holesize" => { "Value" => 10.0, "type" => "spinner",  "idx" => 1, "step" => 0.001, "decimal" => 3  },
 		  "spacing"  => { "Value" => 20.0, "type" => "spinner",  "idx" => 2 },
-		  "rows"     => { "Value" => 2,    "type" => "spinner",  "idx" => 3 },
-		  "cols"     => { "Value" => 2,    "type" => "spinner",  "idx" => 4 }
+		  "rows"     => { "Value" => 2,    "type" => "spinner",  "idx" => 3, "step" => 1, "decimal" => 0 },
+		  "cols"     => { "Value" => 2,    "type" => "spinner",  "idx" => 4, "step" => 1, "decimal" => 0 }
 	    },
 	    "Rules" => {
 		  min_points: 1,
 		  max_points: nil,
 		  closed: false
 	    },
-		"Strategy" => { "Name" => "DrillPattern" , "Selection" => "Point"
-		}
+		"Strategy" => { "Name" => "Line" , "Selection" => "Point" },
+		"Preview" => { "Name" => "DrillPattern" }
 	  }, "Hole")
 
     end

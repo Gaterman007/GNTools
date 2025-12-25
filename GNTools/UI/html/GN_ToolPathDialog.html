@@ -27,19 +27,24 @@
   <div id="tab-material">
     <select name="material_type" id="material_type" class="def-cnc-input">
     </select>
-
-    <div class="container">
-      <label>Safe Height: <input id="safeHeight" class="def-cnc-input" style="width: 100px;"></label>
-    </div>
-    <div class="container">
-      <label>Depth: <input id="Depth" class="def-cnc-input" style="width: 100px;" readonly></label>
-    </div>
-    <div class="container">
-      <label>Thickness: <input id="Thickness" class="def-cnc-input" style="width: 100px;" readonly></label>
-    </div>
-    <div class="container">
-      <label>Width: <input id="Width" class="def-cnc-input" style="width: 100px;" readonly></label>
-    </div>
+	<table>
+	  <tr>
+		<td><label for="safeHeight">Safe Height:</label></td>
+		<td><input id="safeHeight" class="cnc-spinner-input"></td>
+	  </tr>
+	  <tr>
+		<td><label for="Depth">Depth:</label></td>
+		<td><input id="Depth" class="cnc-spinner-input"></td>
+	  </tr>
+	  <tr>
+		<td><label for="Thickness">Thickness:</label></td>
+		<td><input id="Thickness" class="cnc-spinner-input"></td>
+	  </tr>
+	  <tr>
+		<td><label for="Width">Width:</label></td>
+		<td><input id="Width" class="cnc-spinner-input"></td>
+	  </tr>
+	</table>
   </div>
 
   <!-- Toolpaths Tab -->

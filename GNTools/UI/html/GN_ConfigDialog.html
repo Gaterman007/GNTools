@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tool Paths Configuration</title>
+
+  <!-- jQuery UI -->
+  <link rel="stylesheet" href="../css/themes/smoothness/jquery-ui.css">
+  <script src="../js/jquery-3.7.1.min.js"></script>
+  <script src="../js/jquery-ui.min.js"></script>
+
+  <!-- Custom -->
+  <script src="../Scripts/Cnc_Inputs.js"></script>
+  <link rel="stylesheet" href="../css/Cnc_Inputs.css">
+  <link rel="stylesheet" href="../css/Default.css">
+</head>
+
+<body class="ui-container">
+
+<div id="toolpath-dialog" class="tp-dialog">
+
+  <!-- ================= HEADER ================= -->
+  <header class="tp-header">
+    <h2 id="title">Tool Paths Configuration</h2>
+  </header>
+
+  <!-- ================= CONTENT ================= -->
+  <section class="tp-content">
+    <div id="tp-tabs">
+      <ul>
+        <li><a href="#tab-schema">Schema</a></li>
+        <li><a href="#tab-strategy">Strategy</a></li>
+        <li><a href="#tab-preview">Preview</a></li>
+      </ul>
+
+      <!-- ================= TAB SCHEMA ================= -->
+      <div id="tab-schema" class="tp-tab">
+        <div class="tp-header">
+          <label>Schema</label>
+          <select id="schema-select"></select>
+          <button id="schema-add">+</button>
+          <button id="schema-remove">−</button>
+        </div>
+        <div id="schema-content"></div>
+      </div>
+
+      <!-- ================= TAB STRATEGY ================= -->
+      <div id="tab-strategy" class="tp-tab">
+        <div class="tp-header">
+          <label>Strategy</label>
+          <select id="strategy-select"></select>
+          <button id="strategy-add">+</button>
+          <button id="strategy-remove">−</button>
+        </div>
+        <div id="strategy-content"></div>
+      </div>
+
+      <!-- ================= TAB PREVIEW ================= -->
+      <div id="tab-preview" class="tp-tab">
+        <div class="tp-header">
+          <label>Preview</label>
+          <select id="preview-select"></select>
+          <button id="preview-add">+</button>
+          <button id="preview-remove">−</button>
+        </div>
+        <div id="preview-content"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <div class="container" id="ui-footer">
+    <div style="width: 100%; background-color: #e3e3e3; border-top: solid #C5C5C5 1px">
+	  <div style="float: left; margin: 10px">
+	    <button id="setDefault" class="ui-button ui-widget ui-corner-all">Set Default</button>
+	  </div>
+	  <div style="float: right; margin: 10px">
+	    <button id="cancel" class="ui-button ui-widget ui-corner-all">Cancel</button>
+	    <button id="apply" class="ui-button ui-widget ui-corner-all">Apply</button>
+	    <button id="accept" class="ui-button ui-widget ui-corner-all">Ok</button>
+	  </div>
+    </div>
+  </div>
+</div>
+
+<script src="../Scripts/GN_DefaultParametersTab.js"></script>
+<script src="../Scripts/GN_ConfigDialog.js"></script>
+</body>
+</html>

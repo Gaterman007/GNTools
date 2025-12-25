@@ -6,6 +6,104 @@ module GNTools
     #
     class ToolpathPreview
 	  # Dessiner une collection (un json)
+	  DEFAULT = {
+        "contour" => <<~STRAT,
+          ; --- Strategy: contour ---
+          G0 X{points[0].x} Y{points[0].y} Z{safeHeight}
+          {foreach p in points}
+            G1 X{p.x} Y{p.y} F{feedrate}
+          {end}
+          G1 Z{safeHeight}
+       STRAT
+
+        "drill" => <<~STRAT,
+          ; --- Strategy: drill ---
+          G0 X{points[0].x} Y{points[0].y} Z{safeHeight}
+          G1 Z{depth} F{feedrate}
+          G0 Z{safeHeight}
+        STRAT
+		
+		"Hole" => <<~STRAT,
+          ; --- Strategy: Hole ---
+          G0 X{points[0].x} Y{points[0].y} Z{safeHeight} F{feedrate}
+          G1 Z{depth} F{feedrate}
+          G0 Z{safeHeight}
+        STRAT
+		
+		"Line" => <<~STRAT,
+          ; --- Strategy: Line ---
+          G0 X{points[0].x} Y{points[0].y} Z{safeHeight} F{feedrate}
+          G1 Z{depth} F{feedrate}
+          G0 Z{safeHeight}
+        STRAT
+      }
+	  
+	  attr_accessor:previews
+
+      def self.instance
+        @instance ||= new
+      end
+	  
+      def initialize()
+		@previews = load_all_previews
+		@global_vars = {}
+      end
+
+      def load_all_previews
+        base = DEFAULT.dup
+        custom = load_custom_file
+        base.merge(custom)
+      end
+	  
+      def load_custom_file
+        file = File.join(GNTools::PATH_TOOLS, "Previews.custom")
+        return {} unless File.exist?(file)
+
+        text = File.read(file)
+        parse_custom_previews(text)
+      end
+
+      # ============================================================
+      # Sauvegarde
+      # ============================================================
+      def save_custom_previews
+        file = File.join(GNTools::PATH_TOOLS, "Previews.custom")
+
+        File.open(file, "w") do |f|
+          @previews.each do |name, text|
+            next if GNTools::NewPaths::ToolpathPreview::DEFAULT[name] == text # évite les doublons
+            f.puts "[strategy #{name}]"
+            f.puts text
+            f.puts
+          end
+        end
+      end
+	  
+      # ============================================================
+      # Parsing du fichier custom
+      # ============================================================
+      def parse_custom_previews(text)
+        h = {}
+        current = nil
+        buffer = []
+
+        text.each_line do |line|
+          if line =~ /^\[strategy (.+?)\]/
+            h[current] = buffer.join if current
+            current = $1.strip
+            buffer = []
+          elsif current
+            buffer << line
+          end
+        end
+
+        h[current] = buffer.join if current
+        h
+      end
+	  
+	  def self.toJson
+	  	JSON.generate(self.instance.previews)
+	  end
 	  
 	  def self.render(view, collection, type = "material")
 		case type
