@@ -52,6 +52,22 @@ module GNTools
 	  	JSON.generate(self.instance.strategies)
 	  end
 
+	  def self.apply_strategie_diff(diff_hash)
+	    return unless diff_hash.is_a?(Hash)
+
+	    diff_hash.each do |name, text|
+		  if text.nil?
+		    # suppression
+		    self.instance.strategies.delete(name)
+		  else
+		    # ajout ou override
+		    self.instance.strategies[name] = text
+		  end
+	    end
+
+	    self.instance.save_custom_strategies
+	  end
+
       # ============================================================
       # Récupérer une stratégie (base + custom)
       # ============================================================

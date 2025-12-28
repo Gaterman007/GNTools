@@ -13,6 +13,7 @@
   <script src="../Scripts/Cnc_Inputs.js"></script>
   <link rel="stylesheet" href="../css/Cnc_Inputs.css">
   <link rel="stylesheet" href="../css/Default.css">
+  <link rel="stylesheet" href="../css/GN_ConfigDialog.css">  
 </head>
 
 <body class="ui-container">
@@ -40,6 +41,7 @@
           <select id="schema-select"></select>
           <button id="schema-add">+</button>
           <button id="schema-remove">−</button>
+		  <button id="schema-revert">&#x27F3;</button>
         </div>
         <div id="schema-content"></div>
       </div>
@@ -70,10 +72,7 @@
 
   <!-- ================= FOOTER ================= -->
   <div class="container" id="ui-footer">
-    <div style="width: 100%; background-color: #e3e3e3; border-top: solid #C5C5C5 1px">
-	  <div style="float: left; margin: 10px">
-	    <button id="setDefault" class="ui-button ui-widget ui-corner-all">Set Default</button>
-	  </div>
+    <div style="width: 100%; background-color: #e3e3e3;">
 	  <div style="float: right; margin: 10px">
 	    <button id="cancel" class="ui-button ui-widget ui-corner-all">Cancel</button>
 	    <button id="apply" class="ui-button ui-widget ui-corner-all">Apply</button>
@@ -85,5 +84,8 @@
 
 <script src="../Scripts/GN_DefaultParametersTab.js"></script>
 <script src="../Scripts/GN_ConfigDialog.js"></script>
+<script src="../Scripts/GN_SchemaTab.js"></script>
+<script src="../Scripts/GN_StrategyTab.js"></script>
+<script src="../Scripts/GN_PreviewTab.js"></script>
 </body>
 </html>

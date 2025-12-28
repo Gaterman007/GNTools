@@ -78,6 +78,23 @@ module GNTools
           end
         end
       end
+
+	  def self.apply_preview_diff(diff_hash)
+		
+	    return unless diff_hash.is_a?(Hash)
+
+	    diff_hash.each do |name, text|
+		  if text.nil?
+		    # suppression
+		    self.instance.previews.delete(name)
+		  else
+		    # ajout ou override
+		    self.instance.previews[name] = text
+		  end
+	    end
+
+	    self.instance.save_custom_previews
+	  end
 	  
       # ============================================================
       # Parsing du fichier custom

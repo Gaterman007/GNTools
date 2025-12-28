@@ -31,17 +31,41 @@ module GNTools
 	
 	def action_callback
 	  # when the dialog is ready update the data
-	  puts "add dialog ready"
 	  @dialog.add_action_callback("ready") { |action_context|
-		puts "dialog ready"
 		update_dialog
 		nil
 	  }
 	  # when the button "Accept" is press "OK"
 	  @dialog.add_action_callback("accept") { |action_context, value|
+		if value
+			if value.has_key?("schemas")
+			  GNTools::NewPaths::ToolpathSchemas.apply_schema_diff(value["schemas"])
+			end
+			if value.has_key?("strategies")
+			  GNTools::NewPaths::StrategyEngine.apply_strategie_diff(value["strategies"])
+			end
+			if value.has_key?("previews")
+			  GNTools::NewPaths::ToolpathPreview.apply_preview_diff(value["previews"])
+			end
+		end
 	    close_dialog
 		nil
 	  }
+	  # when the button "Apply" is press "Apply"
+	  @dialog.add_action_callback("apply") { |action_context, value|
+		if value
+			if value.has_key?("schemas")
+			  GNTools::NewPaths::ToolpathSchemas.apply_schema_diff(value["schemas"])
+			end
+			if value.has_key?("strategies")
+			  GNTools::NewPaths::StrategyEngine.apply_strategie_diff(value["strategies"])
+			end
+			if value.has_key?("previews")
+			  GNTools::NewPaths::ToolpathPreview.apply_preview_diff(value["previews"])
+			end
+		end
+		nil
+	  }	  
 	  # when the button "Cancel" is press
 	  @dialog.add_action_callback("cancel") { |action_context, value|
 		close_dialog
@@ -81,13 +105,13 @@ module GNTools
 	  end
 	  
 	  @dialog.add_action_callback("saveSchema") do |ctx, type, values|
-	    ToolpathSchemas.update_custom(type, values)
-	    ToolpathSchemas.save_custom_schemas
+#	    GNTools::NewPaths::ToolpathSchemas.update_custom(type, values)
+#	    GNTools::NewPaths::ToolpathSchemas.save_custom_schemas
 	  end	  
 
 	  @dialog.add_action_callback("resetSchema") do |ctx, type|
-	    ToolpathSchemas.reset_custom(type)
-	    ToolpathSchemas.save_custom_schemas
+#	    GNTools::NewPaths::ToolpathSchemas.reset_custom(type)
+#	    GNTools::NewPaths::ToolpathSchemas.save_custom_schemas
 	    update_dialog
 	  end
 	  

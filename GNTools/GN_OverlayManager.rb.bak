@@ -74,9 +74,10 @@ module GNTools
 		self.register_overlay(Sketchup.active_model,ToolpathObserver)
 	  end
 
-	  #def onExtensionsLoaded
+	  def onExtensionsLoaded
+	    puts "onExtensionsLoaded"
 		# quand tout les extension son loader
-	  #end
+	  end
 
 	  def onNewModel(model)
 		self.register_overlay(Sketchup.active_model,ToolpathObserver)
@@ -90,10 +91,10 @@ module GNTools
 	    puts "onQuit"
 	  end
 
-	  #def onUnloadExtension(extension_name)
-	    #puts "onUnloadExtension: #{extension_name}"
+	  def onUnloadExtension(extension_name)
+	    puts "onUnloadExtension: #{extension_name}"
 		# l extention est soit pas loader ou doit etre unloader
-	  #end
+	  end
 
 	  # Ajouter un overlay à un modèle
 	  def register_overlay(model, overlay_class)
