@@ -8,11 +8,13 @@ function updatePointsTab() {
         $("#points-tab-header").hide();      // cacher le bouton
 		pointsContent.hide();
 		$("#tabs").tabs( "refresh" );
+		updateTabScrollButtons();
     } else if (selectedToolpaths.length === 1) {
 		// montrer le tab Paramètre
 		$("#points-tab-header").show();
 		pointsContent.show();
 		$("#tabs").tabs( "refresh" );
+		updateTabScrollButtons();
 		const key = selectedToolpaths[0];
 		const tp = collection.Toolpaths[key];
 		$('#points-content').html("Points de : " + collection.Toolpaths[key].name);
@@ -36,5 +38,6 @@ function updatePointsTab() {
         $("#points-tab-header").hide();      // cacher le bouton
 		pointsContent.hide();
 		$("#tabs").tabs( "refresh" );
+		updateTabScrollButtons();
 	}
 }

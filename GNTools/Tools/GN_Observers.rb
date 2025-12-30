@@ -142,11 +142,6 @@ module GNTools
         # Hash to hold observer references:
         @spy = {}
         # Add all of the implemented observers:
-		
-#		Sketchup.active_model.entities.remove_observer(@entities_observer) if @entities_observer
-#		@entities_observer = TestEntitiesObserver.new
-#		Sketchup.active_model.entities.add_observer(@entities_observer)
-
 
 		# Attach the observer.
 		@@selectionObserver = MySelectionObserver.new
@@ -199,101 +194,6 @@ module GNTools
 #	  end	  
       # ... ModelObserver callback method definitions ...
     end
-
-#    class TestEntitiesObserver < Sketchup::EntitiesObserver
-#
-#		def onElementAdded(entities, entity)
-#			if !entity.deleted?
-#				puts "Element added #{entities}, #{entity}"
-#			else
-#				puts "Element added mais deleted #{entities}"
-#			end
-#			if !entity.deleted?
-#				if Paths::isGroupObj(entity)
-#					puts "EntitiesObserver.onElementAdded(#{entities}, #{entity}, #{entity.name})"
-#				end
-#			end
-#		end
-
-#		def onElementRemoved(entities, entity_id)
-#			puts "EntitiesObserver.onElementRemoved #{entities},#{entity_id}"
-#			if GNTools.pathObjList.key?(entity_id)
-#				puts "EntitiesObserver.onElementRemoved(#{entities}, #{entity_id}, #{GNTools.pathObjList[entity_id].pathEntitie.valid?} )"
-#				puts "Le groupe #{GNTools.pathObjList[entity_id].pathName} a été effacer ? !"
-#				GNTools::ObserverModule::MultiGroupObserver.remove_group(GNTools.pathObjList[entity_id].pathEntitie)
-#				pathObj = GNTools.pathObjList.delete(entity_id)
-#				pathObj = nil
-#			end
-#		end
-
-#		def onElementModified(entities, entity)
-#			if !entity.deleted?
-#				puts "EntitiesObserver.onElementModified(#{entities}, #{entity})"
-#			else
-#				puts "EntitiesObserver.onElementModified deleted entity(#{entities}, #{entity})"
-#			end
-#		end
-
-#		def onEraseEntities(entities)
-#		  puts "EntitiesObserver.onEraseEntities: #{entities}"
-#		end
-#
-#	end # class TestEntitiesObserver
-
-	#GNTools::ObserverModule::MultiGroupObserver.add_group(group)
-	#GNTools::ObserverModule::MultiGroupObserver.remove_group(group)
-	
-#	class MultiGroupObserver < Sketchup::EntityObserver
-#		@@instance = nil  # Stocke une seule instance de l'observer
-#
-#		def self.instance
-#			@@instance ||= MultiGroupObserver.new
-#		end
-#
-#		def self.add_group(group)
-#			group.add_observer(self.instance)
-#		end
-#
-#		def self.remove_group(group)
-#			group.remove_observer(self.instance)
-#		end
-#
-#		def onChangeEntity(entity)
-#			if !entity.deleted?
-#				if Paths::isGroupObj(entity)
-#					GNTools.pathObjList[entity.persistent_id].changed()
-#					puts "Le groupe #{GNTools.pathObjList[entity.persistent_id].pathName} a été déplacé ou transformé !"
-#				end
-#			else
-#				puts "EntityObserver.onChangeEntity deleted "
-#			end
-#		end
-#		
-#		def onEraseEntity(entity)
-#			puts "EntityObserver.onEraseEntity: #{entity} #{entity.valid?}"
-#		    puts "Nom de l'entité effacée: #{entity.name}"
-#			puts "Transformation de l'entité: #{entity.transformation}"
-#			if entity.is_a?(Sketchup::Group)
-#			  puts "C'est un groupe."
-#			end
-#
-#			if entity.typename == "Group"
-#				if entity.attribute_dictionaries  != nil
-#					if (entity.attribute_dictionaries.count == 1)
-#						entity.attribute_dictionaries.each {|dictionary| 
-#							puts "Attributs personnalisés: #{dictionary}"
-#						}
-#					end
-#				end
-#			end
-		
-		
-#			if GNTools.pathObjList.key?(entity.persistent_id)
-#			if Paths::isGroupObj(entity)
-#				puts "onEraseEntity: #{GNTools.pathObjList[entity.persistent_id].pathName}"
-#			end
-#		end
-#	end
 
   # This is an an observer that watches the selection for changes.
 	class MySelectionObserver < Sketchup::SelectionObserver

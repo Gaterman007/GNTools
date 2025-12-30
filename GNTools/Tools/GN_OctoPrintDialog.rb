@@ -350,7 +350,7 @@ module GNTools
 				else
 					GNTools.octoPrint.send_gcode("G90")
 				end
-			when 39 #object cnc print
+			when 39 #object cnc  Objet Impression
 				pathObj = GNTools.pathObjList[object1["persistent_id"]]
 				gCodeStr = ""
 				gCodeStr = pathObj.createGCode(gCodeStr).gsub(/\R+/, "#r")

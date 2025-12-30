@@ -1,11 +1,16 @@
 function updatePreviewsTab() {
-  const name = $("#preview-select").val();
-  if (!name || !Store.previews[name]) return;
+  const toolpath = $("#preview-select").val();
+  const type     = $("#preview-type").val();
+
+  console.log("updatePreviewsTab",toolpath,type)
+
+  if (!toolpath || !Store.previews[toolpath]) return;
 
   const container = $("#preview-content");
   container.empty();
 
-  const text = Store.previews[name];
+  const text =
+    (Store.previews[toolpath][type]) || "";
 
   const html = `
     <div class="preview-editor">
@@ -14,31 +19,37 @@ function updatePreviewsTab() {
         <button id="preview-revert">⟳</button>
         <button id="preview-save">💾</button>
       </div>
+
       <textarea id="preview-text"
-                spellcheck="false"
-                class="preview-textarea"
-                style="width:100%; height:300px; font-family:monospace; font-size:14px;">${escapeHtml(text).trim()}</textarea>
+        spellcheck="false"
+        class="preview-textarea"
+        style="width:100%; height:300px; font-family:monospace; font-size:14px;">${escapeHtml(text).trim()}</textarea>
 
     </div>
   `;
 
   container.append(html);
-
-  bindPreviewActions(name);
+  bindPreviewActions(toolpath, type);
 }
 
 function bindPreviewActions(name) {
-  $("#preview-save").on("click", function () {
-    Store.previews[name] = $("#preview-text").val();
-//    sketchup.savePreview(name, Store.previews[name]);
+ $("#preview-save").on("click", function () {
+    Store.previews[toolpath] ||= {};
+    Store.previews[toolpath][type] = $("#preview-text").val();
+
+    // sketchup.savePreview(toolpath, type, Store.previews[toolpath][type]);
   });
 
   $("#preview-revert").on("click", function () {
-    if (!Store.defaults.previews[name]) return;
-    Store.previews[name] = Store.defaults.previews[name];
+    if (!Store.defaults.previews[toolpath]) return;
+    if (!Store.defaults.previews[toolpath][type]) return;
+
+    Store.previews[toolpath][type] =
+      Store.defaults.previews[toolpath][type];
+
     updatePreviewsTab();
   });
-
+  
   $("#preview-remove").on("click", function () {
     if (!confirm(`Remove preview "${name}" ?`)) return;
     delete Store.previews[name];
@@ -56,4 +67,6 @@ function bindPreviewActions(name) {
     $("#preview-select").val(newName).selectmenu("refresh");
     updatePreviewsTab();
   });
+  
+
 }

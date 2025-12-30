@@ -49,7 +49,7 @@ module GNTools
 				groups = selection.grep(Sketchup::Group)
 				
 				if groups.count == 1 
-					if GNTools::Material.cnc?(groups[0]) || groups[0].manifold?
+					if GNTools::CNCData.cnc?(groups[0]) || groups[0].manifold?
 						MF_ENABLED
 					else
 						MF_GRAYED

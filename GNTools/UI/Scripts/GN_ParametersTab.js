@@ -9,11 +9,13 @@ function updateParametersTab() {
         $("#parameters-tab-header").hide();      // cacher le bouton
 		container.hide();
 		$("#tabs").tabs( "refresh" );
+		updateTabScrollButtons();
     } else if (selectedToolpaths.length === 1) {
 	    // montrer le tab Paramètre
 		$("#parameters-tab-header").show();
 		container.show();
 		$("#tabs").tabs( "refresh" );
+		updateTabScrollButtons();
         const key = selectedToolpaths[0];
         container.append(`<h3>Paramètres : ${collection.Toolpaths[key].name}</h3>`);
 		var defaults = collection.Toolpaths[key].metadata
@@ -23,6 +25,7 @@ function updateParametersTab() {
 	  $("#parameters-tab-header").show();
 	  container.show();
 	  $("#tabs").tabs( "refresh" );
+	  updateTabScrollButtons();
       // Sélection multiple
       container.append(`<h3>Sélection multiple (${selectedToolpaths.length})</h3>`);
       container.append(buildMixedParameterForm());

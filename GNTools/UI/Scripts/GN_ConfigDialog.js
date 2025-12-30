@@ -108,8 +108,11 @@ function loadStrategies(json) {
 
 function loadPreviews(json) {
   Store.previews = json;
+  console.log(Store.previews)
   Store.defaults.previews = deepClone(json);
   populateSelect("#preview-select", Store.previews, updateTab);
+  $("#preview-type").selectmenu();
+  $("#preview-type").selectmenu({ change: updatePreviewsTab });
   updatePreviewsTab()
 }
 

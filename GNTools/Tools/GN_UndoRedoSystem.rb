@@ -13,34 +13,49 @@ module GNTools
     @current_op = nil
     @stack_depth = 0
     @history = []
-
+    @suspended = false
+ 
     class << self
       attr_reader :current_op, :stack_depth, :history
+	  attr_accessor :suspended
 
       def log_start(name)
+		return if @suspended
         @current_op = name
         @stack_depth += 1
         @history << { type: :start, name: name, time: Time.now, depth: @stack_depth }
       end
 
       def log_commit
+	    return if @suspended
         @history << { type: :commit, name: @current_op, time: Time.now, depth: @stack_depth }
         @stack_depth -= 1 if @stack_depth > 0
         @current_op = nil if @stack_depth == 0
       end
 
       def log_abort
+		return if @suspended
         @history << { type: :abort, name: @current_op, time: Time.now, depth: @stack_depth }
         @stack_depth -= 1 if @stack_depth > 0
         @current_op = nil if @stack_depth == 0
       end
 
       def log_external_change(event)
+	    return if @suspended
         @history << { type: :external_event, event: event, time: Time.now }
       end
     end
   end
 
+  def self.with_preview_operation(name = "Preview")
+    model = Sketchup.active_model
+    GNTools::OperationTracker.suspended = true
+    model.start_operation(name, true)
+    yield
+  ensure
+    model.commit_operation
+    GNTools::OperationTracker.suspended = false
+  end
 
   # ============================================================
   # 2) Patch du modèle SketchUp (safe + idempotent)

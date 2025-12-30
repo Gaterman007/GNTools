@@ -213,9 +213,50 @@ function updateTabsContent() {
   updatePointsTab();
 }
 
+
+function updateTabScrollButtons() {
+  const scroll = $(".tabs-scroll")[0];
+  if (!scroll) return;
+
+  const canScroll = scroll.scrollWidth > scroll.clientWidth;
+
+  $("#tabs-left, #tabs-right").toggle(canScroll);
+
+  if (!canScroll) {
+    scroll.scrollLeft = 0; // reset propre
+  }
+}
+
 $(function() {
   $("#add-toolpath-type").selectmenu();
+
+  const scrollAmount = 120;
   $("#tabs").tabs();
+  updateTabScrollButtons();
+
+  $("#tabs-left").on("click", function () {
+    $(".tabs-scroll").animate({
+      scrollLeft: "-=" + scrollAmount
+    }, 200);
+  });
+
+  $("#tabs-right").on("click", function () {
+    $(".tabs-scroll").animate({
+      scrollLeft: "+=" + scrollAmount
+    }, 200);
+  });
+
+  $("#tabs").on("tabsactivate", function (event, ui) {
+    const container = $(".tabs-scroll");
+    const tab = ui.newTab[0];
+
+	if (!tab) return;
+
+    container.animate({
+      scrollLeft: tab.offsetLeft - container.width() / 2
+    }, 200);
+  });  
+  
   $( "#accept, #cancel, #setDefault, #apply").button();
   $( "#apply" ).on( "click", function( event ) {
 	sketchup.apply(collection,objMaterial);

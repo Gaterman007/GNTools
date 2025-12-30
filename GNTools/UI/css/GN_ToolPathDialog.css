@@ -1,0 +1,38 @@
+#tabs > ul {
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.tabs-header {
+  display: flex;
+  align-items: center;
+}
+
+.tabs-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex: 1;
+  background: #e3e3e3; /* même couleur que le thème */
+  scrollbar-width: none;
+}
+
+.tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.tabs-scroll > ul {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+#tabs .ui-tabs-nav {
+  border: none;
+}
+
+#tabs-left,
+#tabs-right {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}

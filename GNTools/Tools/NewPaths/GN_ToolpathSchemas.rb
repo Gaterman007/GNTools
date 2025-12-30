@@ -1,4 +1,3 @@
-require "GNTools/Tools/NewPaths/GN_ToolpathPoint.rb"
 require 'json'
 
 module GNTools

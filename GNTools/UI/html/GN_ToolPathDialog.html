@@ -9,21 +9,30 @@
   <script src="../Scripts/Cnc_Inputs.js"></script>
   <link rel="stylesheet" href="../css/Cnc_Inputs.css" type="text/css" charset="utf-8" />
   <link rel="stylesheet" href="../css/Default.css" type="text/css" charset="utf-8" />
+  <link rel="stylesheet" href="../css/GN_ToolPathDialog.css" type="text/css" charset="utf-8" />
 </head>
 <body class="ui-container">
 
 <h2 id="title">Tool Paths</h2>
 
-<div id="tabs">
-  <ul>
-    <li><a href="#tab-material">Material</a></li>
-    <li><a href="#tab-toolpaths">Toolpaths</a></li>
-	<li id="parameters-tab-header"><a href="#tab-parameters">Paramètres</a></li>
-    <li id="points-tab-header"><a href="#tab-points">Points</a></li>
-	<li><a href="#tab-defaultparameters">Default</a></li>
-    <!--<li><a href="#tab-previews">Previews</a></li> -->
-  </ul>
 
+<div id="tabs">
+
+  <div class="tabs-header">
+    <button id="tabs-left">◀</button>
+
+    <div class="tabs-scroll">
+    <ul>
+      <li><a href="#tab-material">Material</a></li>
+      <li><a href="#tab-toolpaths">Toolpaths</a></li>
+	  <li id="parameters-tab-header"><a href="#tab-parameters">Paramètres</a></li>
+      <li id="points-tab-header"><a href="#tab-points">Points</a></li>
+	  <li><a href="#tab-defaultparameters">Default</a></li>
+      <!--<li><a href="#tab-previews">Previews</a></li> -->
+    </ul>
+    </div>
+    <button id="tabs-right">▶</button>
+  </div>
   <div id="tab-material">
     <select name="material_type" id="material_type" class="def-cnc-input">
     </select>

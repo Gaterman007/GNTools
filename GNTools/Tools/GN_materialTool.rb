@@ -585,7 +585,12 @@ module GNTools
         DrillBits.drillbitTbl.each do |oneDrill|
           @dialog.execute_script("window.addRowToTable('#{oneDrill.to_Json()}')")
         end
-		scriptStr = "updateMaterialType(\'#{JSON.generate(Material::materialTypes)}\')"
+		scriptStr = "updateMaterialType(\'#{JSON.generate({
+	      "Acrylic" => "Acrylic",
+	      "Aluminum" => "Aluminum",
+	      "Birch_Plywood" => "Birch Plywood",
+	      "Cherry_Plywood" => "Cherry Plywood"
+	    })}\')"
 		@dialog.execute_script(scriptStr)
 	    scriptStr = "window.updateSchemas('#{JSON.generate(@schemas_hash)}')"
         @dialog.execute_script(scriptStr)
@@ -663,6 +668,8 @@ module GNTools
 			@data.hide_Material
 			Sketchup.active_model.active_view.refresh
 		  when "simulation"
+			OverlayManager.set_render_type("Simulation")
+			@data.hide_Material
 			Sketchup.active_model.active_view.refresh
 		  end
 	    end
@@ -688,7 +695,7 @@ module GNTools
 		@dialog_width = 550
         @dialog_height = 820
 		# Hash des schemas Toolpath (peut ne pas etre constant pour tout le cycle de vie)
-		@schemas_hash = GNTools::NewPaths::ToolpathSchemas.toHash
+		@schemas_hash = GNTools::NewPaths::ToolpathSchemas.instance.to_hash
 		@toolpath_type_setting = "Hole"
 		setModeFromtoolpath_type
 		@data = GNTools::CNCData.new()
@@ -699,7 +706,7 @@ module GNTools
         @active = true
         @state = :idle
 		# (peut ne pas etre constant pour tout le cycle de vie)
-        @schemas_hash = GNTools::NewPaths::ToolpathSchemas.toHash
+        @schemas_hash = GNTools::NewPaths::ToolpathSchemas.instance.to_hash
 
 		model     = Sketchup.active_model
 		selection = model.selection
@@ -716,7 +723,7 @@ module GNTools
 
 		@data.setGroup(@group)
 		@data.set_as_temp
-		group_hash = GNTools::Material.get_group_data(@group)
+		group_hash = @data.get_group_data(@group)
 		@data["OriginalData"] = group_hash
 		OverlayManager.set_collection(@data)
 		OverlayManager.set_render_type("Toolpaths")
@@ -757,8 +764,13 @@ module GNTools
 		  @undoRedoName = GNTools::OperationTracker.current_op
 		  @undoRedoDepth = GNTools::OperationTracker.stack_depth
 		  @group.name = "Material CNC"
-		  # Initialisation des valeurs par défaut via Material.default
-		  @data["Material"] = Material::default
+		  # Initialisation des valeurs par défaut
+		  @data["Material"] = {
+	        "material_type"  => "Acrylic",
+			"materialHeight" => 4.0,
+			"safeHeight"     => 5.0,
+			"z_zero"         => "top"
+	      }
 		end
 
 		update_dialog
