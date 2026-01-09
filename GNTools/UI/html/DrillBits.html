@@ -264,12 +264,24 @@ tr:nth-child(even) {
 				$( "#units" ).val(rowSelectedData[3]);
 				$( "#units" ).selectmenu("refresh");
 				$( "#units" ).selectmenu("option","width", 85);
+			} else if (c == 10) {
+			  x.cells[c].innerHTML =
+				"<button onclick='loadProfile()'>Load</button> " +
+				"<button onclick='editProfile()'>Edit</button>";
 			} else {
 				x.cells[c].innerHTML = "<input id='inputSelected_" + c + "'  padding = '1px' onchange = 'changeInput(this)' size = '1' class='tableInput'>";
 				//x.cells[c].setAttribute("onchange","changeInput(this);");
 				document.getElementById("inputSelected_" + c).value = rowSelectedData[c];
 			}
 		}
+	}
+
+	function loadProfile() {
+	  sketchup.load_profile(rowSelected);
+	}
+
+	function editProfile() {
+	  sketchup.edit_profile(rowSelected);
 	}
 
 	function resetRowTableInput(x){

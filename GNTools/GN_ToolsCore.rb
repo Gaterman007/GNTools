@@ -59,6 +59,8 @@ module GNTools
 		drill_file = File.join(PATH_ROOT, "DrillBits.txt")
 		if File.exist?(drill_file) && defined?(DrillBits)
 			DrillBits.loadFromFile(drill_file)
+		else
+			DrillBits.load_drillBitsTbl
 		end
 		self.initCNCGCode    
 	end

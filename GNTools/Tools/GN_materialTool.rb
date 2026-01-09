@@ -174,14 +174,14 @@ module GNTools
           @ip2.copy!(ip)
           add_point(@ip2.position)
           set_state(:idle)
-		  @points.clear
+		  @points.clear if @points
         when :line
           ip.pick(view, x, y, @ip1)
           @ip2.copy!(ip)
           if @dragging
             add_segment(@ip1.position, @ip2.position)
             set_state(:idle)
-			@points.clear
+			@points.clear if @points
           else
             if @state == :first_point_selected
               # treat as selection of first point, keep waiting
@@ -192,7 +192,7 @@ module GNTools
             else
               set_state(:idle)
             end
-			@points.clear
+			@points.clear if @points
           end
         when :multiline, :loop
           ip.pick(view, x, y, @ip1)
@@ -638,6 +638,7 @@ module GNTools
 	  end
 		
 	  def close_dialog
+		applyViewMode("original")
 		return unless @dialog
 		if @undoRedoName == GNTools::OperationTracker.current_op and 
 		   @undoRedoDepth == GNTools::OperationTracker.stack_depth
@@ -646,7 +647,6 @@ module GNTools
 		detach_selection_observer
 		@dialog.set_can_close { true }
 		@dialog.close
-		applyViewMode("original")
 	  end
 	end
 
@@ -654,17 +654,17 @@ module GNTools
 	  def applyViewMode(mode)
 		if @viewMode != mode
 		  @viewMode = mode
-		  case mode
+		  case mode			# original,actuel,chemin,simulation
 		  when "original"
+			OverlayManager.set_render_type("Original")
 			@data.show_Material
-			OverlayManager.set_render_type("Toolpaths")
 			Sketchup.active_model.active_view.refresh
-		  when "current"
-			OverlayManager.set_render_type("Material")
+		  when "actuel"
+			OverlayManager.set_render_type("Actuel")
 			@data.hide_Material
 			Sketchup.active_model.active_view.refresh
-		  when "path"
-			OverlayManager.set_render_type("OriginalData")
+		  when "chemin"
+			OverlayManager.set_render_type("Chemin")
 			@data.hide_Material
 			Sketchup.active_model.active_view.refresh
 		  when "simulation"
@@ -726,7 +726,7 @@ module GNTools
 		group_hash = @data.get_group_data(@group)
 		@data["OriginalData"] = group_hash
 		OverlayManager.set_collection(@data)
-		OverlayManager.set_render_type("Toolpaths")
+		OverlayManager.set_render_type("Original")
 		@viewMode = "original"  # "original", "current", "path", "simulation"
 
 #        associer_collection
@@ -808,6 +808,10 @@ module GNTools
 		@data["Toolpaths"] ||= {}
 		@data["Toolpaths"][key]["visible"] = visible
 		OverlayManager.set_collection(@data)
+	  end
+
+	  def getExtents
+	    return nil unless @preview_bbox
 	  end
 
       # lightweight helpers for adding geometry/collection

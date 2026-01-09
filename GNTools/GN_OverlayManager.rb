@@ -10,7 +10,7 @@ module GNTools
 	  def initialize
 		super(OVERLAY_ID, OVERLAY_NAME)
         @hash_collection = nil
-		@renderType = "Toolpaths"
+		@renderType = "Original"
       end
 	  
 	  def set_collection(col)

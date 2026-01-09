@@ -3,7 +3,6 @@ require 'json'
 
 module GNTools
 
-
 	#a drill bit information
 	class DrillBit
 	
@@ -18,8 +17,9 @@ module GNTools
 		attr_accessor :shoulder_Lenght
 		attr_accessor :number_of_Flutes
 		attr_accessor :cutting
+		attr_accessor :tool_profile
 
-		def initialize(name = "", cut_Types = "", cut_Diameter = 4,units = "mm",cutting_Length = 5,drill_Size = 1,shank_Height = 1,shank_Diam = 1,shoulder_Lenght = 1,number_of_Flutes = 1,cutting = 1)
+		def initialize(name = "", cut_Types = "", cut_Diameter = 4,units = "mm",cutting_Length = 5,drill_Size = 1,shank_Height = 1,shank_Diam = 1,shoulder_Lenght = 1,number_of_Flutes = 1,cutting = 1,profil = nil)
 			@name = name
 			@cut_Types = cut_Types
 			@cut_Diameter = cut_Diameter
@@ -31,6 +31,13 @@ module GNTools
 			@shoulder_Lenght = shoulder_Lenght
 			@number_of_Flutes = number_of_Flutes
 			@cutting = cutting
+			if profil
+			  @tool_profile = profil
+#			  puts "init tool_profile #{@tool_profile}"
+			else
+			  @tool_profile = generate_flat_profile
+#			  puts "init tool_profile #{@tool_profile}"
+			end
 		end
 
 		def from_Hash(hash)
@@ -45,11 +52,119 @@ module GNTools
 			@shoulder_Lenght = hash["Shoulder_Lenght"]
 			@number_of_Flutes = hash["Number_of_Flutes"]
 			@cutting = hash["Cutting"]
+			@tool_profile = hash["Tool_Profile"] || generate_flat_profile
+#			puts "hash tool_profile #{@tool_profile}"
+		end
+
+		def key(p)
+		  [p.x.to_f.round(8), p.y.to_f.round(8), p.z.to_f.round(8)]
+		end
+
+		def ordered_points_from_edges(edges)
+		  return [] if edges.empty?
+
+		  # Construire la connectivité vertex => edges
+		  start_edges = Hash.new { |h, k| h[k] = [] }
+		  end_edges = Hash.new { |h, k| h[k] = [] }
+		  edges.each do |e|
+			start_edges[e.start] << e
+			end_edges[e.end] << e
+		  end
+		  start_vertex = start_edges.find { |v, es| es.length == 1 }&.first
+
+		  # Trouver un sommet de départ (open loop)
+		  start_vertex = vertex_edges.find { |v, es| es.length == 1 }&.first
+		  return [] unless start_vertex
+
+		  ordered_points = []
+		  used_edges = {}
+
+		  current_vertex = start_vertex
+		  start_edge = vertex_edges[current_vertex]
+		  current_edge = start_edge
+
+		  loop do
+		  
+		    current_edge.end
+			
+			ordered_points << current_vertex.position
+
+			# trouver la prochaine edge non utilisée
+			next_edge = vertex_edges[current_vertex].find { |e| !used_edges[e] }
+			
+			break unless next_edge
+
+			used_edges[next_edge] = true
+
+			# avancer vers l'autre sommet
+			current_vertex =
+			  (next_edge.start == current_vertex) ? next_edge.end : next_edge.start
+		  end
+
+		  ordered_points
 		end
 
 
+		def profile_from_geometry(group_or_array)
+		  edges =
+			case group_or_array
+			when Sketchup::Group
+			  group_or_array.entities.grep(Sketchup::Edge)
+			when Array
+			  if group_or_array.length == 1 and group_or_array[0].is_a?(Sketchup::Group)
+			    group_or_array[0].entities.grep(Sketchup::Edge)
+			  else
+			    group_or_array.grep(Sketchup::Edge)
+			  end
+			else
+			  return []
+			end
+
+		  return [] if edges.empty?
+  
+		  pts3d = ordered_points_from_edges(edges)
+		  return [] if pts3d.empty?
+
+		  # Projection XZ
+		  #profile = pts3d.map { |p| [p.x, p.z] }
+
+		  profile = pts3d.map do |p|
+		    x = p.x.to_f    # float en pouces
+		    z = p.z.to_f
+		    [x, z]
+		  end
+
+		  # Sécurité
+		  profile.select! { |x, z| x >= 0.0 }
+
+		  # Normalisation : base à z = 0
+		  min_z = profile.map(&:last).min
+		  profile.map! { |x, z| [x, z - min_z] }
+
+		  profile
+		end
+
+		def profile_to_group(tool_profile, name: "Tool Profile")
+		  group = Sketchup.active_model.active_entities.add_group
+		  group.name = name
+
+#		  puts "profile_to_group tool_profile #{tool_profile}"
+		  
+		  
+		  pts = tool_profile.map do |x, z|
+			Geom::Point3d.new(x, 0, z)  # déjà en pouces
+		  end
+		  
+		  pts.each_cons(2) do |p0, p1|
+			group.entities.add_line(p0, p1)
+		  end
+
+		  group
+		end
+
 		def to_Json()
-			JSON.generate({
+#			puts "json tool_profile #{@tool_profile}"
+			json = JSON.generate({
 				'Name' => @name,
 				'Cut_Types' => @cut_Types,
 				'Cut_Diameter' => @cut_Diameter,
@@ -60,8 +175,22 @@ module GNTools
 				'Shank_Diam' => @shank_Diam,
 				'Shoulder_Lenght' => @shoulder_Lenght,
 				'Number_of_Flutes' => @number_of_Flutes,
-				'Cutting' => @cutting
+				'Cutting' => @cutting,
+				'Tool_Profile' => @tool_profile
 			})
+#			puts "json #{json}"
+			json
+		end
+
+
+		def generate_flat_profile
+		  radius = @cut_Diameter.mm.to_f / 2.0
+		  cutting_Length = @cutting_Length.mm.to_f
+		  [
+			[radius, 0.0],
+			[0.0, 0.0],
+			[0.0, cutting_Length]
+		  ]
 		end
 
 		def saveToFile(file)
@@ -111,27 +240,27 @@ module GNTools
 		
 		
 		def self.load_drillBitsTbl
-			@@drillbitTbl.push(DrillBit.new("Default","Up"	,3.175,"mm"  ,10  ,3.175,22  ,3.175,0   ,2  ,0))
-			@@drillbitTbl.push(DrillBit.new("#2"	 ,"Up"	,3.175,"mm"  ,10  ,3.175,22  ,3.175,0   ,2  ,0))
-			@@drillbitTbl.push(DrillBit.new("#3"	 ,"Up"	,6	  ,"mm"  ,13  ,6    ,57  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#4"	 ,"Up"	,5.5  ,"mm"  ,13  ,6    ,57  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#5"	 ,"Up"	,5 	  ,"mm"  ,13  ,6    ,57  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#6"	 ,"Up"	,4.5  ,"mm"  ,12  ,6    ,56  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#7"	 ,"Up"	,4	  ,"mm"  ,11  ,6    ,55  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#8"	 ,"Up"	,3.5  ,"mm"  ,3   ,6    ,55  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#9"	 ,"Up"	,3	  ,"mm"  ,8   ,6    ,45  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#10"	 ,"Up"	,2.5  ,"mm"  ,7   ,6    ,52  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#11"	 ,"Up"	,2	  ,"mm"  ,7   ,6    ,51  ,6    ,0   ,4  ,0))
-			@@drillbitTbl.push(DrillBit.new("#12"    ,"Down",1.5  ,"mm"  ,43.4,6    ,1.1 ,6    ,22.1,6.3,0))
-			@@drillbitTbl.push(DrillBit.new("#13"    ,"Down",5    ,"inch",43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#14"    ,"Down",4    ,"inch",43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#15"    ,"Down",7    ,"inch",43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#16"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#17"    ,"Up"  ,5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#18"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#19"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#20"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
-			@@drillbitTbl.push(DrillBit.new("#21"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1))
+			@@drillbitTbl.push(DrillBit.new("Default","Up"	,3.175,"mm"  ,10  ,3.175,22  ,3.175,0   ,2  ,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#2"	 ,"Up"	,3.175,"mm"  ,10  ,3.175,22  ,3.175,0   ,2  ,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#3"	 ,"Up"	,6	  ,"mm"  ,13  ,6    ,57  ,6    ,0   ,4  ,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#4"	 ,"Up"	,5.5  ,"mm"  ,13  ,6    ,57  ,6    ,0   ,4  ,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#5"	 ,"Up"	,5 	  ,"mm"  ,13  ,6    ,57  ,6    ,0   ,4  ,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#6"	 ,"Up"	,4.5  ,"mm"  ,12  ,6    ,56  ,6    ,0   ,4  ,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#7"	 ,"Up"	,4	  ,"mm"  ,11  ,6    ,55  ,6    ,0   ,4  ,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#8"	 ,"Up"	,3.5  ,"mm"  ,3   ,6    ,55  ,6    ,0   ,4  ,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#9"	 ,"Up"	,3	  ,"mm"  ,8   ,6    ,45  ,6    ,0   ,4  ,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#10"	 ,"Up"	,2.5  ,"mm"  ,7   ,6    ,52  ,6    ,0   ,4  ,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#11"	 ,"Up"	,2	  ,"mm"  ,7   ,6    ,51  ,6    ,0   ,4  ,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#12"    ,"Down",1.5  ,"mm"  ,43.4,6    ,1.1 ,6    ,22.1,6.3,0,nil))
+			@@drillbitTbl.push(DrillBit.new("#13"    ,"Down",5    ,"inch",43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1,nil))
+			@@drillbitTbl.push(DrillBit.new("#14"    ,"Down",4    ,"inch",43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1,nil))
+			@@drillbitTbl.push(DrillBit.new("#15"    ,"Down",7    ,"inch",43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1,nil))
+			@@drillbitTbl.push(DrillBit.new("#16"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1,nil))
+			@@drillbitTbl.push(DrillBit.new("#17"    ,"Up"  ,5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1,nil))
+			@@drillbitTbl.push(DrillBit.new("#18"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1,nil))
+			@@drillbitTbl.push(DrillBit.new("#19"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1,nil))
+			@@drillbitTbl.push(DrillBit.new("#20"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1,nil))
+			@@drillbitTbl.push(DrillBit.new("#21"    ,"Down",5    ,"mm"  ,43.4,2.1  ,1.1 ,9.4  ,22.1,6.3,7.1,nil))
 			nil
 		end
 		
@@ -212,6 +341,47 @@ module GNTools
 					@newdrillbitTbl[row-1].from_Hash(value);
 					nil
 				}
+				@dialog.add_action_callback("load_profile") { |ctx, row|
+				  drill = @newdrillbitTbl[row - 1]
+				  sel = Sketchup.active_model.selection
+
+				  if sel.empty?
+					UI.messagebox("Select a group or edges to load a tool profile")
+					next
+				  end
+
+				  profile = drill.profile_from_geometry(sel.to_a)
+
+				  # Vérification type et valeur
+				  profile.each_with_index do |pt, i|
+				    puts "Point #{i}: x=#{pt[0]} (#{pt[0].class}), z=#{pt[1]} (#{pt[1].class})"
+				  end
+
+				  if profile.empty?
+					UI.messagebox("No valid profile geometry found")
+					next
+				  end
+
+				  drill.tool_profile = profile
+				  UI.messagebox("Tool profile loaded (#{profile.size} points)")
+				  nil
+				}
+
+				@dialog.add_action_callback("edit_profile") { |ctx, row|
+				  drill = @newdrillbitTbl[row - 1]
+
+				  if drill.tool_profile.nil? || drill.tool_profile.empty?
+					UI.messagebox("No tool profile defined")
+					next
+				  end
+
+				  drill.profile_to_group(
+					drill.tool_profile,
+					name: "ToolProfile - #{drill.name}"
+				  )
+				  nil
+				}
+				
 				@dialog.set_size(1200,700)
 				@dialog.center # New feature!
 				@dialog.show

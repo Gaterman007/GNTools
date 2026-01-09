@@ -279,6 +279,21 @@ module GNTools
 	    group.entities.erase_entities(to_delete) unless to_delete.empty?
       end
 	end
+
+	def loop_to_points(loop)
+	  # loop = Sketchup::Loop
+	  # retourne un array de positions Geom::Point3d dans l'ordre exact
+	  loop.vertices.map { |v| v.position.to_a }
+	end
+
+	def loop_to_edges(loop)
+	  loop.edges.map do |e|
+		{
+		  "start" => e.start.position.to_a,
+		  "end"   => e.end.position.to_a
+		}
+	  end
+	end
 	
 	def get_group_data(group)
 	  group_data = {}
@@ -333,8 +348,10 @@ module GNTools
 		  edges << { "start" => entity.start.position.to_a, "finish" => entity.end.position.to_a }
 		elsif entity.is_a?(Sketchup::Face)
 		  faces << {
-			"vertices" => entity.vertices.map { |v| v.position.to_a },
-			"normal"   => entity.normal.to_a
+		    "normal" => entity.normal.to_a,
+		    "outer_loop" => loop_to_points(entity.outer_loop),
+		    "inner_loops" => entity.loops.reject { |l| l == entity.outer_loop }
+                             .map { |l| loop_to_points(l) }
 		  }
 		elsif entity.is_a?(Sketchup::ComponentInstance)
 		  components << { "definition_name" => entity.definition.name }
@@ -358,53 +375,108 @@ module GNTools
     # ------------------------
     # Construction récursive
     # ------------------------
-    def build_group_entities(entities, group_data)
-	  group_data["edges"].each do |edge|
-	    entities.add_line(Geom::Point3d.new(edge["start"]),
-					Geom::Point3d.new(edge["finish"]))
+	def build_group_entities(entities, group_data)
+
+	  #-------------------------------------------------
+	  # 1. Edges simples
+	  #-------------------------------------------------
+	  if group_data["edges"]
+		group_data["edges"].each do |edge|
+		  p0 = Geom::Point3d.new(edge["start"])
+		  p1 = Geom::Point3d.new(edge["finish"])
+		  entities.add_line(p0, p1)
+		end
 	  end
 
-	  group_data["faces"].each do |face_data|
-	    pts = face_data["vertices"].map { |v| Geom::Point3d.new(v) }
+	  #-------------------------------------------------
+	  # 2. Faces avec trous
+	  #-------------------------------------------------
+	  if group_data["faces"]
+		group_data["faces"].each do |face_data|
 
-	    face = entities.add_face(pts)
-	    next unless face && face.valid?
+		  # --- outer loop
+		  outer_pts = face_data["outer_loop"].map do |v|
+			Geom::Point3d.new(v)
+		  end
 
-	    original_normal = Geom::Vector3d.new(face_data["normal"])
+		  face = entities.add_face(outer_pts)
+		  next unless face && face.valid?
 
-	    # Si la normale reconstruite est inversée → on retourne la face
-	    if face.normal.dot(original_normal) < 0
-		  face.reverse!
-	    end
+		  # --- orientation correcte
+		  original_normal = Geom::Vector3d.new(face_data["normal"])
+		  original_normal.normalize!
+		  face.reverse! if face.normal.dot(original_normal) < 0
+
+		  # --- inner loops (trous)
+		  face_data["inner_loops"].each do |loop|
+			hole_pts = loop.map { |v| Geom::Point3d.new(v) }
+
+			# créer les arêtes du trou
+			hole_edges = []
+			hole_pts.each_cons(2) do |a, b|
+			  hole_edges << entities.add_line(a, b)
+			end
+			hole_edges << entities.add_line(hole_pts.last, hole_pts.first)
+
+			# SketchUp détecte automatiquement le trou
+		  end
+		end
 	  end
 
-	  group_data["arcs"].each do |arc|
-	    center = Geom::Point3d.new(arc["center"])
-	    normal = Geom::Vector3d.new(arc["normal"])
-	    xaxis  = Geom::Vector3d.new(arc["xaxis"])
-	    entities.add_arc(center, xaxis, normal, arc["radius"],
-					   arc["start_angle"], arc["end_angle"])
+	  #-------------------------------------------------
+	  # 3. Arcs
+	  #-------------------------------------------------
+	  if group_data["arcs"]
+		group_data["arcs"].each do |arc|
+		  center = Geom::Point3d.new(arc["center"])
+		  normal = Geom::Vector3d.new(arc["normal"])
+		  xaxis  = Geom::Vector3d.new(arc["xaxis"])
+
+		  entities.add_arc(
+			center,
+			xaxis,
+			normal,
+			arc["radius"],
+			arc["start_angle"],
+			arc["end_angle"]
+		  )
+		end
 	  end
 
-	  unless group_data["curves"].empty?
-	    curve_points = []
-	    group_data["curves"].each do |curve|
+	  #-------------------------------------------------
+	  # 4. Curves
+	  #-------------------------------------------------
+	  if group_data["curves"] && !group_data["curves"].empty?
+		curve_points = []
+		group_data["curves"].each do |curve|
 		  curve_points << Geom::Point3d.new(curve["start"])
 		  curve_points << Geom::Point3d.new(curve["finish"])
-	    end
-	    entities.add_curve(curve_points)
+		end
+		entities.add_curve(curve_points)
 	  end
 
-	  group_data["groups"].each do |subgroup_data|
-	    sub_group = entities.add_group
-	    build_group_entities(sub_group.entities, subgroup_data)
+	  #-------------------------------------------------
+	  # 5. Sous-groupes
+	  #-------------------------------------------------
+	  if group_data["groups"]
+		group_data["groups"].each do |subgroup_data|
+		  sub_group = entities.add_group
+		  build_group_entities(sub_group.entities, subgroup_data)
+		end
 	  end
 
-	  group_data["components"].each do |comp|
-	    definition = Sketchup.active_model.definitions[comp["definition_name"]]
-	    entities.add_instance(definition, Geom::Transformation.new) if definition
+	  #-------------------------------------------------
+	  # 6. Composants
+	  #-------------------------------------------------
+	  if group_data["components"]
+		group_data["components"].each do |comp|
+		  definition = Sketchup.active_model.definitions[comp["definition_name"]]
+		  next unless definition
+		  entities.add_instance(definition, Geom::Transformation.new)
+		end
 	  end
-    end
+
+	end
 	  
     # -------------------------------------------------
     # Export

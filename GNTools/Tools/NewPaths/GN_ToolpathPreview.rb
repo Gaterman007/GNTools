@@ -1,45 +1,67 @@
+require_relative 'GN_ScriptEngine.rb'
+
 module GNTools
   module NewPaths
 
     ##
     # visualisation des Toolpath (SketchUp).
     #
-    class ToolpathPreview
+    class ToolpathPreview < BaseScriptEngine
 	  # Dessiner une collection (un json)
+      COMMANDS = {
+        "MOVE" => :MOVE,
+        "LINE" => :LINE,
+        "LINES" => :LINES,
+		"DRAW_CIRCLE"=> :DRAW_CIRCLE,
+        "DRAW_CROIX" => :DRAW_CROIX,
+        "DRAW_POINTS_WITH_LABEL" => :DRAW_POINTS_WITH_LABEL,
+		"DRAW_MATERIAL" => :DRAW_MATERIAL,
+		"DRAW_MATERIAL_WITH_TOOLPATH" => :DRAW_MATERIAL_WITH_TOOLPATH
+      }
+
+
 	  DEFAULT = {
 	    "Line" => {
-		  "Toolpaths"   => <<~PREV,
-			; --- Preview: Hole ---
-			MOVE {CurrentTp.points[0].pos[0]} {CurrentTp.points[0].pos[1]} {Material.safeHeight}
-			LINE {CurrentTp.points[0].pos[0]} {CurrentTp.points[0].pos[1]} {CurrentTp.points[0].pos[2]}
-			CYLINDER {CurrentTp.points[0].pos[0]} {CurrentTp.points[0].pos[1]} {CurrentTp.metadata.holesize.Value} {CurrentTp.metadata.depth.Value}
-		    {foreach p in CurrentTp.points}
-			  LINE {p.pos[0]} {p.pos[1]} {CurrentTp.metadata.depth.Value}
-		    {end}
-		    MOVE {points[-1].x} {points[-1].y} {Material.safeHeight}
+		  "Original"   => <<~PREV,
+			DRAW_CROIX({CurrentTp.points[0].pos[0]} {CurrentTp.points[0].pos[1]} {CurrentTp.points[0].pos[2]})
+			DRAW_CROIX({CurrentTp.points[1].pos[0]} {CurrentTp.points[1].pos[1]} {CurrentTp.points[1].pos[2]})
+			MOVE ({CurrentTp.points[0].pos[0]} {CurrentTp.points[0].pos[1]} {CurrentTp.points[0].pos[2]})
+			LINE ({CurrentTp.points[1].pos[0]} {CurrentTp.points[1].pos[1]} {CurrentTp.points[1].pos[2]})
+			DRAW_POINTS_WITH_LABEL({CurrentTp.points})
 		  PREV
-		  "Material"    => <<~PREV,
-		    DRAW_CROIX {CurrentTp.points[0]}
+		  "Actuel"    => <<~PREV,
+			DRAW_CROIX({CurrentTp.points[0].pos[0]} {CurrentTp.points[0].pos[1]} {CurrentTp.points[0].pos[2]})
+		  PREV
+		  "Chemin"    => <<~PREV,
+			MOVE ({CurrentTp.points[0].pos[0]} {CurrentTp.points[0].pos[1]} {Material.safeHeight})
+			LINE ({CurrentTp.points[0].pos[0]} {CurrentTp.points[0].pos[1]} {CurrentTp.points[0].pos[2]})
+			CYLINDER ({CurrentTp.points[0].pos[0]} {CurrentTp.points[0].pos[1]} {CurrentTp.metadata.holesize.Value} {CurrentTp.metadata.depth.Value})
+		    {foreach p in CurrentTp.points}
+			  LINE ({p.pos[0]} {p.pos[1]} {CurrentTp.metadata.depth.Value})
+		    {end}
+		    MOVE ({points[-1].x} {points[-1].y} {Material.safeHeight})
+		    DRAW_POLYLINE ({points})
 		  PREV
 		  "Simulation"  => <<~PREV,
-		    DRAW_FACE {CurrentTp.points[0]} {CurrentTp.metadata.depth.Value}
-		  PREV
-		  "Original"    => <<~PREV,
-		    DRAW_POLYLINE {points}
+		    DRAW_MATERIAL ({OriginalData})
+		    DRAW_FACE ({CurrentTp.points[0]} {CurrentTp.metadata.depth.Value})
 		  PREV
 	    },
 	    "Hole" => {
-		  "Toolpaths"   => <<~PREV,
-		    DRAW_CROIX {CurrentTp.points[0]} {CurrentTp.metadata.holesize.Value}
+		  "Original"   => <<~PREV,
+		    DRAW_CROIX ({CurrentTp.points[0].pos[0]} {CurrentTp.points[0].pos[1]} {CurrentTp.points[0].pos[2]})
+		    DRAW_CIRCLE ({CurrentTp.points[0]} {CurrentTp.metadata.holesize.Value})
 		  PREV
-		  "Material"    => <<~PREV,
-		    DRAW_CIRCLE {CurrentTp.points[0]} {CurrentTp.metadata.holesize.Value}
+		  "Actuel"    => <<~PREV,
+		    DRAW_CIRCLE ({CurrentTp.points[0]} {CurrentTp.metadata.holesize.Value})
+		  PREV
+		  "Chemin"    => <<~PREV,
+			DRAW_POINTS_WITH_LABEL({CurrentTp.points})
+		    DRAW_CYLINDER ({CurrentTp.points[0]} {CurrentTp.metadata.holesize.Value} {CurrentTp.metadata.depth.Value})
+		    DRAW_MATERIAL ({OriginalData})
 		  PREV
 		  "Simulation"  => <<~PREV,
-		    DRAW_CYLINDER {CurrentTp.points[0]} {CurrentTp.metadata.holesize.Value} {CurrentTp.metadata.depth.Value}
-		  PREV
-		  "Original"    => <<~PREV,
-		    DRAW_POINT {CurrentTp.points[0]}
+			DRAW_MATERIAL_WITH_TOOLPATH ({OriginalData} {CurrentTp})
 		  PREV
 	    }
 	  }
@@ -52,9 +74,368 @@ module GNTools
       end
 	  
       def initialize()
+		super()
 		@previews = load_all_previews
-		@global_vars = {}
       end
+
+      def parse_command_line(line)
+        return nil unless line =~ /\A(\w+)\s*\((.*)\)\z/
+
+        cmd_name = Regexp.last_match(1)
+        raw_args = Regexp.last_match(2)
+
+        cmd = COMMANDS[cmd_name]
+        return nil unless cmd
+
+        args = parse_arguments(raw_args)
+
+        [cmd, args]
+      end
+
+      def parse_arguments(arg_string)
+        return [] if arg_string.strip.empty?
+
+        arg_string.scan(/\{([^\}]+)\}/).map do |(expr)|
+          eval_in_schema(expr)
+        end
+      end
+
+ 	  # -------------------------------------------------
+	  # Évaluation des expressions {…} dans le script
+	  # -------------------------------------------------
+	  def eval_in_schema(expr)
+	    expr = expr.strip
+	    return nil if expr.empty?
+
+	    # 1 — Literal numérique
+	    return expr.to_f if expr.match?(/\A-?\d+(\.\d+)?\z/)
+
+	    # 2 — Vérifier les variables locales / globales
+	    if @vars.key?(expr)
+		  val = @vars[expr]
+		  return val
+	    end
+
+	    # 3 — Accès aux objets imbriqués via . et tableaux []
+	    if expr.include?(".") || expr.include?("[")
+          val = resolve_path(expr)
+		  return val
+	    end
+
+	    # 4 — Si rien trouvé, retourner vide
+	    ""
+	  end
+
+	  # -------------------------------------------------
+	  # Résolution des chemins imbriqués
+	  # Exemple :
+	  # CurrentTp.points[0].x
+	  # Material.metadata.depth.Value
+	  # -------------------------------------------------
+	  def resolve_path(path)
+	    parts = path.split(".")
+	    first = parts.shift
+
+ 	    # Chercher dans les vars
+		# Si c'est CurrentTp, on a dans vars deja CurrentTp
+	    obj = @vars[first]
+	    return "" unless obj
+	    parts.each do |part|
+		  # Accès tableau : points[0]
+		  if part =~ /(\w+)\[(\d+)\]/
+		    key = $1
+		    idx = $2.to_i
+		    if obj.is_a?(Hash)
+			  obj = obj[key]
+		    end
+		    if obj.is_a?(Array)
+			  obj = obj[idx]
+		    else
+			  return ""
+		    end
+		  else
+		    # Accès Hash ou objet
+		    if obj.is_a?(Hash)
+			  obj = obj[part]
+		    elsif obj.respond_to?(part)
+			  obj = obj.send(part)
+		    else
+			  return ""
+		    end
+		  end
+		  return "" if obj.nil?
+	    end
+
+	    obj
+	  end
+
+
+      def handle_instruction(inst)
+        parsed = parse_command_line(inst)
+	    return unless parsed
+
+		command, args = parsed
+	  
+        case command
+        when :MOVE      then cmd_move(args)
+        when :LINE      then cmd_line(args)
+        when :DRAW_CROIX then cmd_draw_croix(args)
+		when :DRAW_CIRCLE then cmd_draw_circle(args)
+        when :DRAW_POINTS_WITH_LABEL then cmd_draw_points_with_label(args)
+		when :DRAW_MATERIAL then cmd_draw_material(args)
+		when :DRAW_MATERIAL_WITH_TOOLPATH then cmd_draw_material_with_toolpath(args)
+		
+        end
+      end
+
+
+	  def flatten_args(obj, out = [])
+	   case obj
+	    when Array
+		  obj.each { |e| flatten_args(e, out) }
+	    else
+		  out << obj
+	    end
+	    out
+	  end
+
+	  def resolve_point(args)
+	    flat = flatten_args(args)
+
+	    # 1 — Geom::Point3d direct
+	    return flat.first if flat.first.is_a?(Geom::Point3d)
+
+	    # 2 — Trois nombres consécutifs
+	    if flat.size >= 3 && flat[0,3].all? { |v| v.is_a?(Numeric) }
+		  return Geom::Point3d.new(*flat[0,3])
+	    end
+
+	    # 3 — Tableau [x,y,z]
+	    v = flat.first
+	    if v.is_a?(Array) && v.size >= 3 && v[0,3].all? { |n| n.is_a?(Numeric) }
+		  return Geom::Point3d.new(*v[0,3])
+	    end
+
+		# 4 — Hash avec pos (string ou symbol)
+		if v.is_a?(Hash)
+		  pos = v[:pos] || v["pos"]
+		  if pos.is_a?(Array) && pos.size >= 3
+			return Geom::Point3d.new(*pos[0,3])
+		  end
+		end
+
+	    # 5 — Objet avec pos
+	    if v.respond_to?(:pos)
+		  return resolve_point([v.pos])
+	    end
+
+	    # 6 — Objet avec x,y,z
+	    if v.respond_to?(:x) && v.respond_to?(:y) && v.respond_to?(:z)
+		  return Geom::Point3d.new(v.x, v.y, v.z)
+	    end
+
+	    nil
+	  end
+
+	  def resolve_points(args)
+	    pts = []
+
+	    flatten_args(args).each do |v|
+		  pt = resolve_point([v])
+		  pts << pt if pt
+	    end
+
+	    pts
+	  end
+	  
+	  def resolve_numbers(args)
+	    flatten_args(args)
+		  .select { |v| v.is_a?(Numeric) }
+	  end
+
+	  def resolve_number(args)
+	    resolve_numbers(args).first
+	  end
+
+      # -----------------------------------
+      # Commandes
+      # -----------------------------------
+      def cmd_move(args)
+	    pt = resolve_point(args)
+		return unless pt
+        @last_pos = pt
+      end
+
+      def cmd_line(args)
+        p1 = @last_pos
+		pt = resolve_point(args)
+        p2 = pt
+        return unless p1 && p2
+        @view.draw(GL_LINES, [p1, p2]) if @view 
+        @last_pos = p2
+      end
+
+      def cmd_draw_croix(args)
+		pt = resolve_point(args)
+		return unless pt
+        size = 5.mm
+
+        a = Geom::Point3d.new(pt.x - size, pt.y, pt.z)
+        b = Geom::Point3d.new(pt.x + size, pt.y, pt.z)
+        c = Geom::Point3d.new(pt.x, pt.y - size, pt.z)
+        d = Geom::Point3d.new(pt.x, pt.y + size, pt.z)
+        @view.draw(GL_LINES, [a, b, c, d]) if @view
+      end
+
+	  def cmd_draw_circle(args)
+		# ici on a point3d et radius
+	    pt = resolve_point(args)
+	    radius = resolve_number(args)
+
+	    return unless pt && radius
+
+	    segments = 32
+	    pts = (0..segments).map do |i|
+		  angle = 2.0 * Math::PI * i / segments
+		  Geom::Point3d.new(
+		    pt.x + Math.cos(angle) * radius.mm,
+		    pt.y + Math.sin(angle) * radius.mm,
+		    pt.z
+		  )
+	    end
+
+	    @view.draw(GL_LINE_STRIP, pts) if @view  
+	  end
+
+      def cmd_draw_points_with_label(args)
+		pts = resolve_points(args)
+		return if pts.empty?
+
+        pts.each_with_index do |p, i|
+		  # conversion 3D → 2D
+		  screen_pt = @view.screen_coords(p)
+		  # label index (texte 2D ancré au point3d)
+		  @view.draw_text(screen_pt, i.to_s, size: 12, color: "white")
+        end
+      end
+
+	  def compute_normal(pts)
+	    normal = Geom::Vector3d.new(0, 0, 0)
+
+	    pts.each_with_index do |p0, i|
+		  p1 = pts[(i + 1) % pts.length]
+		  normal.x += (p0.y - p1.y) * (p0.z + p1.z)
+		  normal.y += (p0.z - p1.z) * (p0.x + p1.x)
+		  normal.z += (p0.x - p1.x) * (p0.y + p1.y)
+	    end
+
+	    normal.normalize!
+	    normal
+	  end
+
+	  def ensure_orientation(pts, expected_normal)
+		poly_normal = compute_normal(pts)
+		if poly_normal.dot(expected_normal) < 0
+		  pts.reverse
+		end
+		pts
+	  end
+
+	  def triangulate(pts)
+	    tris = []
+	    base = pts[0]
+
+	    (1..pts.length - 2).each do |i|
+		  tris << [base, pts[i], pts[i + 1]]
+	    end
+
+	    tris
+	  end
+
+	  def cmd_draw_material_with_toolpath(args)
+	    puts "draw_material_with_toolpath args"
+		puts "------ OriginalData --------"
+		puts JSON.pretty_generate(args[0])
+		puts "-------- Toolpath ----------"
+		puts JSON.pretty_generate(args[1])
+		puts "----------------------------"
+		# orignial data
+		oridata = args[0]
+		if oridata.is_a?(Array)
+			oridata = oridata[0]
+		end
+		current_toolpath = args[1]
+		cmd_draw_material(oridata)
+	  end
+
+	  def triangulate_with_holes(loops_pts)
+		outer = loops_pts
+		return [] unless outer && outer.size >= 3
+		tris = []
+		p0 = outer[0]
+		(1...(outer.size - 1)).each do |i|
+		  tris << [p0, outer[i], outer[i + 1]]
+		end
+		tris
+	  end
+
+	  def edges_to_points(edges)
+	    pts = []
+	    edges.each do |e|
+		  pts << Geom::Point3d.new(e["start"])
+	    end
+	    pts
+	  end
+
+	  def update_preview_bbox(points)
+	    bb = Geom::BoundingBox.new
+	    points.each { |pt| bb.add(pt) }
+	    @preview_bbox = bb
+	  end
+
+	  def cmd_draw_material(args)
+#		puts "------ Original data ---------"
+#		puts args
+#		puts "------------------------------"
+
+	    oridata = args.is_a?(Array) ? args[0] : args
+
+	    edge_pts = []
+	    if oridata["edges"]
+		  oridata["edges"].each do |e|
+		    p0 = Geom::Point3d.new(e["start"])
+		    p1 = Geom::Point3d.new(e["finish"])
+		    edge_pts << p0 << p1
+		  end
+	    end
+	    draw_pts = []
+	    draw_normals = []
+	    oridata["faces"].each do |face_data|
+		  normal = Geom::Vector3d.new(face_data["normal"])
+		  normal.normalize!
+
+		  # Triangulation avec holes
+		  # triangulate_with_holes doit retourner un array de triangles [[pt1,pt2,pt3], ...]
+		  # face_data["inner_loops"]
+		  # face_data["outer_loop"]
+		  triangles = triangulate_with_holes(face_data["outer_loop"])
+
+		  triangles.each do |tri|
+		    tri.each do |pt|
+			  draw_pts << pt
+			  draw_normals << normal
+		    end
+		  end
+	    end
+	    # Dessin OpenGL
+	    @view.drawing_color = "lightgrey" if @view
+	    @view.draw(GL_TRIANGLES, draw_pts, normals: draw_normals, depth: 2) if @view
+
+	    @view.drawing_color = Sketchup::Color.new(0, 0, 0) if @view
+	    @view.draw(GL_LINES, edge_pts, line_width: 1, depth: 2) if @view
+
+		update_preview_bbox(draw_pts + edge_pts)
+	  end
 
 	  def load_all_previews
 	    base = Marshal.load(Marshal.dump(DEFAULT)) # duplication profonde
@@ -153,310 +534,24 @@ module GNTools
 	    self.instance.previews.dig("Line", "Material")           # fallback global
 	  end
 	  
-	  def self.render(view, collection, type = "material",vars = nil)
-	  
-		puts "collection #{collection['Toolpaths']}"
-#		@previews
-	  	# Merge : global < local
-		@vars = @global_vars.dup
-		@vars.merge!(vars) if vars
-		if collection["Toolpaths"]
-		  collection["Toolpaths"].each do |name,toolpath|
-			@toolpath = toolpath
-			puts toolpath['type']
-			@view = view
-			@text = get_script(toolpath['type'], type).dup
-			next unless @text
-			process_foreach!
-			process_if!
-			process_vars!
-			process_cmd!
-		  end
-		end
-		case type
-	    when "Toolpaths"
-		  self.draw_toolpaths(view, collection["Toolpaths"])
-	    when "Material"
-		  self.draw_toolpaths(view, collection["Toolpaths"])
-		  self.draw_material_outline(view, collection["Material"])
-	    when "OriginalData"
-		  self.draw_original_geometry(view, collection["OriginalData"])
-	    when "Simulation"
-		  self.draw_original_geometry(view, collection["OriginalData"])
-		  self.draw_toolpaths(view, collection["Toolpaths"])
-	    end
-	  end
-
-	  def self.process_cmd!
-	    return unless @text
-	    return unless @view
-	    return unless @toolpath
-
-	    @text.each_line do |line|
-		  line.strip!
-		  next if line.empty?
-		  next if line.start_with?("#", ";")
-
-		  tokens = line.split(/\s+/)
-		  cmd = tokens.shift
-
-		  case cmd
-		  when "DRAW_CROIX"
-		    process_draw_croix(tokens)
-
-		  when "DRAW_OUTLINE"
-		    process_draw_outline(tokens)
-
-		  else
-		    puts "[Preview] commande inconnue : #{cmd}"
-		  end
-	    end	  
-	  end
-
-	  def self.process_if!
-	    @text.gsub!(/\{if (.+?)\}(.*?)\{end\}/m) do
-		  condition = $1.strip
-		  block = $2
-
-		  result = eval_condition(condition)
-		  result ? block : ""
-	    end
-	  end
-
-	  def self.eval_condition(cond)
-	    # Si c'est une comparaison : var > 0, x == y, etc.
-	    if cond =~ /(.+?)\s*(==|!=|>=|<=|>|<)\s*(.+)/
-		  left_expr  = $1.strip
-		  operator   = $2
-		  right_expr = $3.strip
-
-		  left_val  = eval_in_schema(left_expr)
-		  right_val = eval_in_schema(right_expr)
-
-		  # conversion numérique si possible
-		  left_val  = numeric_or_string(left_val)
-		  right_val = numeric_or_string(right_val)
-
-		  case operator
-		  when "==" then left_val == right_val
-		  when "!=" then left_val != right_val
-		  when ">"  then left_val >  right_val
-		  when "<"  then left_val <  right_val
-		  when ">=" then left_val >= right_val
-		  when "<=" then left_val <= right_val
-		  else false
-		  end
-
-	    else
-		  # Cas booléen simple : {if enabled}
-		  val = eval_in_schema(cond)
-		  boolize(val)
-	    end
-	  end
-
-	  def self.numeric_or_string(v)
-	    Float(v) rescue v
-	  end
-
-	  def self.boolize(v)
-	    return true if v == true || v.to_s.downcase == "true" || v.to_s == "1"
-	    return false
-	  end
-
-      # ============================================================
-      # Traitement {foreach}
-      # ============================================================
-      def self.process_foreach!
-        @text.gsub!(/\{foreach ([a-zA-Z0-9_]+) in ([a-zA-Z0-9_]+)\}(.*?)\{end\}/m) do
-          item_name = $1
-          array_name = $2
-          block = $3
-	
-		  if @toolpath
-			if array_name == "points"
-			  point_array = @toolpath["points"]
-			  point_array.map do |item|
-			    b = block.dup
-				b.gsub!(/\{#{item_name}\.x\}/, item.position.x.round(2).to_s)
-				b.gsub!(/\{#{item_name}\.y\}/, item.position.y.round(2).to_s)
-				b.gsub!(/\{#{item_name}\.z\}/, item.position.z.round(2).to_s)				
-				b
-			  end
-			else
-			  array = @toolpath["metadata"][array_name]
-			  raise "Missing array #{array_name}" unless array.is_a?(Array)
-
-			  array.map do |item|
-			    b = block.dup
-			    b.gsub!(/\{#{item_name}\}/, item.to_s)
-			    if item.respond_to?(:x)
-				  b.gsub!(/\{#{item_name}\.x\}/, item.x.round(2).to_s)
-				  b.gsub!(/\{#{item_name}\.y\}/, item.y.round(2).to_s)
-				  b.gsub!(/\{#{item_name}\.z\}/, item.z.round(2).to_s) if item.respond_to?(:z)
-			    end
-			    b
-			  end
-			end.join("\n")
-		  end
-        end
-      end
-
-      # ============================================================
-      # Traitement des variables simples {var}
-      # ============================================================
-      def self.process_vars!
-        @text.gsub!(/\{([a-zA-Z0-9_\.\[\]]+)\}/) do
-          eval_in_schema($1)
-        end
-      end
-
-
-      def self.eval_in_schema(expr)
-		return expr unless @toolpath
-
-	    # 0 — variables globales / locales
-	    if @vars && @vars.key?(expr)
-		  v = @vars[expr]
-		  return v.is_a?(Numeric) ? v.round(2).to_s : v.to_s
-	    end
-
-	    # 1 — Séparer base et attribut (ex : "points[0]" + "x")
-	    if expr.include?(".")
-		  base, attr = expr.split(".", 2)
-	    else
-		  base = expr
-		  attr = nil
-	    end
-
-	    # 2 — Détecter accès tableau : pts[0]
-	    if base =~ /(\w+)\[(\d+)\]/
-		  key   = $1
-		  index = $2.to_i
-		  # Cas spécial : points[]
-		  if key == "points"
-			pt = @toolpath["points"][index]["pos"]
-
-			if attr # points[0].x / .y / .z
-			  case attr
-			  when "x" then return pt.x.round(2).to_s
-			  when "y" then return pt.y.round(2).to_s
-			  when "z" then return pt.z.round(2).to_s
-			  else
-				raise "Invalid attribute #{attr} for points[]"
-			  end
-			else
-			  # points[0] sans . → full XYZ
-			  return pt.position_to_string
-			end
-		  end
-
-		  # Autres tableaux (ex : feeds[1], speeds[2]…)
-		  arr = @toolpath[key]
-
-		  value = arr.is_a?(Array) ? arr[index] : arr
-		  return attr ? extract_attr(value, attr) : value.to_s
-	    end
-
-		# 3 — Variable toolpath : feedrate, speed, tool, etc.
-		value = @toolpath["metadata"][base]
-		if value != nil
-			value = value["Value"]
-			if not value.is_a?(String)
-			  return value.round(2).to_s
-			end
-			return value.to_s
-		else
-			return ""
+	  def self.render(view, collection, type = "Original",vars = {})
+		return unless collection["Toolpaths"]
+		engine = self.instance
+		self.instance.global_vars = Marshal.load(Marshal.dump(collection.read()))
+		self.instance.instance_variable_set(:@view, view)
+		self.instance.instance_variable_set(:@vars, self.instance.global_vars.merge(vars))
+		
+#		puts "Global Variables"
+#		puts "---------------------"
+#		puts JSON.pretty_generate(self.instance.global_vars)
+#		puts "---------------------"
+		collection["Toolpaths"].each do |key, toolpath|
+		  script_text = get_script(toolpath['type'],type)
+		  self.instance.compile(script_text, self.instance.global_vars["Toolpaths"][key])
 		end
 	  end
 
-	  def self.process_draw_croix(args)
-	    # DRAW_CROIX points mark_size
-	    points_key = args[0]
-	    mark_size  = args[1]&.to_f || 5.mm
-
-	    points = self.resolve_points(points_key)
-	    return if points.empty?
-
-	    color = Sketchup::Color.new(255, 80, 80)
-
-	    self.class.draw_croix(@view, points, mark_size, color)
-	  end
-
-	  def self.process_draw_outline(args)
-	    # DRAW_OUTLINE points
-	    points_key = args[0]
-
-	    points = self.resolve_points(points_key)
-	    return if points.empty?
-
-	    @view.drawing_color = Sketchup::Color.new(200, 200, 255)
-	    @view.line_width = 2
-	    @view.draw(GL_LINE_LOOP, points)
-	  end
-
-	  def self.resolve_points(key)
-	    case key
-	    when "points"
-		  self.class.build_points_from_toolpath(@toolpath)
-	    else
-		  puts "[Preview] points inconnus : #{key}"
-		  []
-	    end
-	  end
-
-	  def self.draw_toolpaths(view, toolpaths)
-		return unless toolpaths
-		return if toolpaths.empty?
-	    # Paramètres visuels
-	    default_color = Sketchup::Color.new(100, 80, 255)  # bleu clair
-	    selected_color = Sketchup::Color.new(255, 160, 0)  # orange
-	    point_color = Sketchup::Color.new(255, 80, 80)     # rouge pour points
-	    line_width = 2
-	    sel_line_width = 4
-	    point_mark_size = 5.mm
-	    # Si tu as un mécanisme pour connaitre la selection active côté JS/Ruby,
-	    # expose la clé/keys sélectionnées dans collection.active_keys (optionnel).
-	    active_keys = (toolpaths.respond_to?(:active_keys) && toolpaths.active_keys) ? toolpaths.active_keys : []
-	    # Itérer les toolpaths (assume collection.toolpaths is an Array or Hash)
-	    toolpaths.each_with_index do |(key, tp), idx|
-		  begin
-			if tp["visible"]
-				tp_points = build_points_from_toolpath(tp)
-				next if tp_points.nil? || tp_points.empty?
-				
-				# config visuelle selon sélection
-				is_selected = active_keys.include?(key) || active_keys.include?(tp.object_id.to_s)
-				view.line_width = is_selected ? sel_line_width : line_width
-				view.drawing_color = is_selected ? selected_color : default_color
-
-				# Choix du mode de dessin selon le type
-				type = (tp.respond_to?(:type) && tp.type) || tp['type'] || tp[:type] || "Unknown"
-				case type.to_s
-				when /ClosedShape|Pocket|Closed/i
-				  # boucle fermée
-				  view.draw(GL_LINE_LOOP, tp_points)
-				when /OpenShape|Line|Arc|Engrave|Profile|Route/i
-				  # trait ouvert (ordonné)
-				  view.draw(GL_LINE_STRIP, tp_points)
-				when /DrillPattern|Hole/i
-				  # pour les holes, dessiner une petite croix par point
-				  draw_croix(view, tp_points, point_mark_size, point_color)
-				else
-				  # fallback : polyligne
-				  view.draw(GL_LINE_STRIP, tp_points)
-				end
-
-				# dessiner les points en petite croix et numéroter
-				draw_points_with_labels(view, tp_points, point_mark_size, point_color)
-		    end
-		  rescue => e
-		    puts "[ToolPathDialog#draw] erreur en dessinant #{key}: #{e.message}"
-		  end
-	    end	  
-	  end
-
-	  def self.draw_material_outline(view, material_hash)
+	  def draw_material_outline(view, material_hash)
 	    return unless material_hash
 
 	    edges = material_hash["edges"] || []
@@ -467,9 +562,8 @@ module GNTools
 	    end
 	  end
 
-	  def self.draw_original_geometry(view, original_data)
+	  def draw_original_geometry(view, original_data)
 	    return unless original_data
-	    # on peut réutiliser build_points_from_toolpath pour arcs/curves/faces simplifiées
 	    if original_data["edges"]
 		  view.drawing_color = Sketchup::Color.new(180,180,180)
 		  pts = []
@@ -487,64 +581,7 @@ module GNTools
 
 	  # --- helpers privés ---
 
-	  # Convertit la structure points (attendue: tp.points => array de { pos: [x,y,z] } ou simples arrays)
-	  def self.build_points_from_toolpath(tp)
-	    pts = []
-	    # Plusieurs formats possibles supportés :
-	    # - tp.points => [{ "pos": [x,y,z], "attrs": {...} }, ...]
-	    # - tp['points'] => arrays
-	    # - tp.point_data => [[x,y,z], ...]
-		
-	    if tp["points"]
-	 	  tp["points"].each do |p|
-		    if p.is_a?(Hash) || p.respond_to?(:[] )
-			  pos = p["pos"]
-			  pts << Geom::Point3d.new(*pos) if pos
-		    elsif p.is_a?(Array)
-			  pts << Geom::Point3d.new(*p)
-			else
-			  puts "un point inconnu"
-		    end
-		  end
-	    elsif tp.respond_to?(:point_data) && tp.point_data
-		  tp.point_data.each do |p|
-		    pts << Geom::Point3d.new(*p)
-		  end
-	    elsif tp.is_a?(Hash) && tp['points']
-		  tp['points'].each do |p|
-		    if p.is_a?(Hash) && (p['pos'] || p[:pos])
-			  pos = p['pos'] || p[:pos]
-			  pts << Geom::Point3d.new(*pos)
-		    elsif p.is_a?(Array)
-			  pts << Geom::Point3d.new(*p)
-		    end
-		  end
-	    else
-		  # essayer de trouver d'autres champs communs
-		  if tp.respond_to?(:to_a)
-		    begin
-			  tp.to_a.each { |p| pts << Geom::Point3d.new(*p) rescue nil }
-		    rescue
-		    end
-		  end
-	    end
-
-	    pts
-	  end
-
-	  def self.draw_croix(view, points, mark_size, color)
-	    view.drawing_color = color
-	    points.each do |pt|
-		  # dessiner une petite croix centrée sur pt
-		  a = Geom::Point3d.new(pt.x - mark_size, pt.y, pt.z)
-		  b = Geom::Point3d.new(pt.x + mark_size, pt.y, pt.z)
-		  c = Geom::Point3d.new(pt.x, pt.y - mark_size, pt.z)
-		  d = Geom::Point3d.new(pt.x, pt.y + mark_size, pt.z)
-		  view.draw(GL_LINES, [a, b, c, d])
-	    end
-	  end
-
-	  def self.draw_points_with_labels(view, points, mark_size, color)
+	  def draw_points_with_labels(view, points, mark_size, color)
 	    view.drawing_color = color
 	    points.each_with_index do |pt, i|
 		  # petite croix

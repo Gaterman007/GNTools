@@ -1,287 +1,142 @@
 module GNTools
   module NewPaths
 
-    class ScriptEngine
+    class BaseScriptEngine
 
       attr_accessor :global_vars
-      attr_reader   :toolpath, :vars, :text
+      attr_reader   :current_tp
 
-      # -------------------------------------------------
-      # Init
-      # -------------------------------------------------
       def initialize
         @global_vars = {}
-        reset
-      end
-
-      def reset
-        @toolpath = nil
-        @vars     = {}
-        @text     = nil
       end
 
       # -------------------------------------------------
-      # Public API
+      # API principale
       # -------------------------------------------------
-      #
-      # run(script_text, toolpath, local_vars = {})
-      #  - script_text : String DSL
-      #  - toolpath    : Hash
-      #  - local_vars  : Hash (override globals)
-      #
-      def run(script_text, toolpath, local_vars = {})
-        reset
+	  def compile(script, current_tp)
+	    @current_tp = current_tp
+		@vars = @global_vars.merge({"CurrentTp" => @current_tp})
+	    lines = script.lines
+	    compile_block(lines)
+	  end
 
-        return nil unless script_text
-        return nil unless toolpath
-		puts "toolpath id #{toolpath}"
-        @toolpath = @global_vars["Toolpaths"][toolpath] 
-        @vars     = @global_vars.merge(local_vars)
-        @text     = script_text.dup
-		puts "toolpath #{@global_vars["Toolpaths"][toolpath]}"
-		puts "script text #{@text}"
-		puts "vars #{@vars}"
-        process_foreach!
-        process_if!
-        process_vars!
-
-        @text
+      # -------------------------------------------------
+      # Scope initial
+      # -------------------------------------------------
+      def base_scope
+        {
+          "CurrentTp" => @current_tp,
+          "Material"  => @global_vars["Material"]
+        }
       end
 
       # -------------------------------------------------
-      # FOREACH
+      # Compilation bloc
       # -------------------------------------------------
-      #
-      # {foreach p in points}
-      #   LINE {p.x} {p.y}
-      # {end}
-      #
-      def process_foreach!
-        loop do
-          changed = false
+	  def compile_block(lines)
+		instructions = []
+		i = 0
+		while i < lines.size
+		  line = lines[i].strip
+		  i += 1
+		  next if line.empty?
+		  checkline = line.sub(/[;#].*$/, '').strip
+		  if checkline =~ /\{foreach\s+(\w+)\s+in\s+(.+?)\}/
+			var_name = $1
+			source_expr = $2
+			block, i = extract_block_from(lines, i)
+			compile_foreach(var_name, source_expr, block)
+		  elsif checkline =~ /\{if\s+(.+?)\}/
+			condition = $1
+			block, i = extract_block_from(lines, i)
+			compile_if(condition, block)
+		  else
+			handle_instruction(line)   # <-- au lieu de instructions << ...
+		  end
+		end
+	  end
 
-          @text.gsub!(
-            /\{foreach\s+(\w+)\s+in\s+(\w+)\}(.*?)\{end\}/m
-          ) do
-            var_name   = Regexp.last_match(1)
-            source_key = Regexp.last_match(2)
-            block      = Regexp.last_match(3)
+	  # Méthode par défaut
+	  def handle_instruction(inst)
+		# juste retourner l'Instruction par défaut si besoin
+		inst
+	  end
 
-            collection = resolve_source(source_key)
-            next "" unless collection.is_a?(Array)
+	  def compile_foreach(var_name, source_expr, block_lines)
+	    collection = eval_expr(source_expr)
+	    return [] unless collection.is_a?(Array)
 
-            result = collection.map do |item|
-              sub = block.dup
-              inject_object_vars!(sub, var_name, item)
-              sub
-            end.join
+	    collection.flat_map do |item|
+		  with_var(var_name, item) do
+		    compile_block(block_lines)
+		  end
+	    end
+	  end
 
-            changed = true
-            result
+	  def compile_if(condition, block_lines)
+	    return [] unless eval_condition(condition)
+	    compile_block(block_lines)
+	  end
+
+      def eval_token(token)
+        if token =~ /\{(.+?)\}/
+          eval_expr($1)
+        else
+          token.to_f rescue token
+        end
+      end
+
+      def eval_expr(expr)
+        parts = expr.split(".")
+        obj = @vars[parts.shift]
+
+        parts.each do |p|
+          if p =~ /(\w+)\[(\-?\d+)\]/
+            obj = obj[$1][$2.to_i]
+          elsif obj.is_a?(Hash)
+            obj = obj[p]
+          else
+            obj = obj.send(p)
           end
-
-          break unless changed
         end
+
+        obj
+      rescue
+        nil
       end
 
-      # -------------------------------------------------
-      # IF
-      # -------------------------------------------------
-      #
-      # {if depth < 0}
-      #   ...
-      # {end}
-      #
-      def process_if!
-        loop do
-          changed = false
-
-          @text.gsub!(
-            /\{if\s+(.+?)\}(.*?)\{end\}/m
-          ) do
-            condition = Regexp.last_match(1)
-            block     = Regexp.last_match(2)
-
-            res = eval_condition(condition) ? block : ""
-            changed = true
-            res
-          end
-
-          break unless changed
-        end
+      def with_var(name, value)
+        old = @vars[name]
+        @vars[name] = value
+        res = yield
+        @vars[name] = old
+        res
       end
 
-      # -------------------------------------------------
-      # VARS
-      # -------------------------------------------------
-      #
-      # MOVE {x} {y}
-      #
-      def process_vars!
-        @text.gsub!(/\{([a-zA-Z0-9_\.\[\]]+)\}/) do
-          eval_in_schema(Regexp.last_match(1))
-        end
+      def extract_block(text)
+        text[/\{.*?\}(.*?)\{end\}/m, 1]
       end
+	  
+	  def extract_block_from(lines, start_index)
+	    depth = 1
+	    block = []
 
-      # -------------------------------------------------
-      # Evaluation helpers
-      # -------------------------------------------------
-	  def eval_condition(expr)
-	    if expr =~ /(.+?)\s*(==|!=|>=|<=|>|<)\s*(.+)/
-		  a = eval_in_schema($1)
-		  b = eval_in_schema($3)
-		  a = a.to_f rescue a
-		  b = b.to_f rescue b
+	    i = start_index
+	    while i < lines.size
+		  line = lines[i]
 
-		  case $2
-		  when "==" then a == b
-		  when "!=" then a != b
-		  when ">"  then a >  b
-		  when "<"  then a <  b
-		  when ">=" then a >= b
-		  when "<=" then a <= b
-		  end
-	    else
-		  boolize(eval_in_schema(expr))
+		  depth += 1 if line =~ /\{(foreach|if)\b/
+		  depth -= 1 if line =~ /\{end\}/
+
+		  break if depth == 0
+
+		  block << line
+		  i += 1
 	    end
-	  rescue
-	    false
+
+	    [block, i + 1]
 	  end
-
-	  # -------------------------------------------------
-	  # Évaluation des expressions {…} dans le script
-	  # -------------------------------------------------
-	  def eval_in_schema(expr)
-	    puts "expr = #{expr}"
-	    expr = expr.strip
-	    return "" if expr.empty?
-
-	    # 1 — Literal numérique
-	    return expr.to_f if expr.match?(/\A-?\d+(\.\d+)?\z/)
-
-	    # 2 — Vérifier les variables locales / globales
-	    if @vars.key?(expr)
-		  val = @vars[expr]
-		  return format_value(val)
-	    end
-
-	    # 3 — Accès aux objets imbriqués via . et tableaux []
-	    if expr.include?(".") || expr.include?("[")
-		  val = resolve_path(expr)
-		  return format_value(val)
-	    end
-
-	    # 4 — Si rien trouvé, retourner vide
-	    ""
-	  end
-
-	  # -------------------------------------------------
-	  # Résolution des chemins imbriqués
-	  # Exemple :
-	  # CurrentTp.points[0].x
-	  # Material.metadata.depth.Value
-	  # -------------------------------------------------
-	  def resolve_path(path)
-	    parts = path.split(".")
-	    first = parts.shift
-
-	    puts "first = #{first}"
-	    puts "parts = #{parts}"
-
-	    # Chercher dans les vars ou toolpath
-		# Si c'est CurrentTp, on prend directement @toolpath
-	    obj =
-		  if first == "CurrentTp"
-		    @toolpath
-		  else
-		    @vars[first]
-		  end
-	    return "" unless obj
-
-	    parts.each do |part|
-		  # Accès tableau : points[0]
-		  if part =~ /(\w+)\[(\d+)\]/
-		    key = $1
-		    idx = $2.to_i
-			puts "key = #{key}"
-			puts "idx = #{idx}"
-		    if obj.is_a?(Hash)
-			  obj = obj[key]
-		    end
-		    if obj.is_a?(Array)
-			  obj = obj[idx]
-		    else
-			  return ""
-		    end
-		  else
-		    # Accès Hash ou objet
-		    if obj.is_a?(Hash)
-			  obj = obj[part]
-		    elsif obj.respond_to?(part)
-			  obj = obj.send(part)
-		    else
-			  return ""
-		    end
-		  end
-		  return "" if obj.nil?
-	    end
-
-	    obj
-	  end
-
-	  # -------------------------------------------------
-	  # Formatage final de la valeur pour le script
-	  # -------------------------------------------------
-	  def format_value(val)
-	    case val
-	    when Numeric
-		  val.round(4).to_s
-	    when Array
-		  val.join(",")
-	    else
-		  val.to_s
-	    end
-	  end
-
-      def resolve_source(key)
-        return @vars[key]     if @vars.key?(key)
-        return @toolpath[key] if @toolpath.key?(key)
-        []
-      end
-
-	  def inject_object_vars!(text, var_name, object)
-	    text.gsub!(/\{#{var_name}\.([^\}]+)\}/) do
-		  prop = Regexp.last_match(1)
-		  if object.is_a?(Hash) && object.key?("pos")
-		    case prop
-		    when "x" then object["pos"][0]
-		    when "y" then object["pos"][1]
-		    when "z" then object["pos"][2]
-		    else ""
-		    end
-		  elsif object.respond_to?(prop)
-		    object.send(prop)
-		  elsif object.is_a?(Hash)
-		    object[prop]
-		  else
-		    ""
-		  end
-	    end
-	  end
-
-      # -------------------------------------------------
-      # Utils
-      # -------------------------------------------------
-      def boolize(v)
-        return false if v.nil?
-        return v if v == true || v == false
-        return v != 0 if v.is_a?(Numeric)
-        return v unless v.is_a?(String)
-
-        !(%w[false 0 no off].include?(v.downcase))
-      end
-
-    end
+	end
 
   end
 end
