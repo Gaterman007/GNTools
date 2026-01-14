@@ -10,16 +10,20 @@ module GNTools
 	  def initialize
 		super(OVERLAY_ID, OVERLAY_NAME)
         @hash_collection = nil
+		@solid      = nil
+		@dirty 		= false
 		@renderType = "Original"
       end
 	  
 	  def set_collection(col)
         @hash_collection = col
+		@dirty = true
         Sketchup.active_model.active_view.invalidate
       end
 
 	  def set_render_type(renderType)
 		@renderType = renderType
+		@dirty = true
 	  end
 
 
@@ -50,9 +54,24 @@ module GNTools
 #			view.draw2d(GL_QUADS, rectangle)
 			view.draw_text(point, "No collection", size: 12, bold: true, color: 'white')
 		else
+		  rebuild_solid! if @dirty
+		  return unless @solid
+		  if @renderType == "Simulation"
+			@solid.draw(view)
+		  else
 			NewPaths::ToolpathPreview.render(view, @hash_collection,@renderType)
+		  end
 		end
       end
+	  
+	  def rebuild_solid!
+	    return unless @hash_collection
+	    @solid = GNTools::Geometry::Solid.from_hash(@hash_collection["OriginalData"])
+		@solid.triangles
+		@solid.invalidate!
+	    @dirty = false
+	  end
+	  
 	end
 
 	# ============================================================

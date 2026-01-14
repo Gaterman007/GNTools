@@ -281,9 +281,13 @@ module GNTools
 	end
 
 	def loop_to_points(loop)
-	  # loop = Sketchup::Loop
-	  # retourne un array de positions Geom::Point3d dans l'ordre exact
-	  loop.vertices.map { |v| v.position.to_a }
+	  loop.edgeuses.map do |eu|
+		if eu.reversed?
+		  eu.edge.end.position.to_a
+		else
+		  eu.edge.start.position.to_a
+		end
+	  end
 	end
 
 	def loop_to_edges(loop)
@@ -293,6 +297,22 @@ module GNTools
 		  "end"   => e.end.position.to_a
 		}
 	  end
+	end
+
+	def ensure_loop_orientation(points, normal, want_ccw)
+	  ax, ay, az = normal.to_a.map(&:abs)
+	  area = 0.0
+
+	  if ax >= ay && ax >= az
+		points.each_cons(2) { |p1, p2| area += (p2.y - p1.y) * (p2.z + p1.z) }
+	  elsif ay >= az
+		points.each_cons(2) { |p1, p2| area += (p2.x - p1.x) * (p2.z + p1.z) }
+	  else
+		points.each_cons(2) { |p1, p2| area += (p2.x - p1.x) * (p2.y + p1.y) }
+	  end
+
+	  ccw = area >= 0
+	  ccw == want_ccw ? points : points.reverse
 	end
 	
 	def get_group_data(group)
@@ -350,8 +370,9 @@ module GNTools
 		  faces << {
 		    "normal" => entity.normal.to_a,
 		    "outer_loop" => loop_to_points(entity.outer_loop),
-		    "inner_loops" => entity.loops.reject { |l| l == entity.outer_loop }
-                             .map { |l| loop_to_points(l) }
+		    "inner_loops" => entity.loops
+			  .reject(&:outer?)
+			  .map { |l| loop_to_points(l) }
 		  }
 		elsif entity.is_a?(Sketchup::ComponentInstance)
 		  components << { "definition_name" => entity.definition.name }
@@ -376,7 +397,6 @@ module GNTools
     # Construction récursive
     # ------------------------
 	def build_group_entities(entities, group_data)
-
 	  #-------------------------------------------------
 	  # 1. Edges simples
 	  #-------------------------------------------------
@@ -393,12 +413,8 @@ module GNTools
 	  #-------------------------------------------------
 	  if group_data["faces"]
 		group_data["faces"].each do |face_data|
-
 		  # --- outer loop
-		  outer_pts = face_data["outer_loop"].map do |v|
-			Geom::Point3d.new(v)
-		  end
-
+		  outer_pts = face_data["outer_loop"].map { |v| Geom::Point3d.new(v) }
 		  face = entities.add_face(outer_pts)
 		  next unless face && face.valid?
 
@@ -411,14 +427,16 @@ module GNTools
 		  face_data["inner_loops"].each do |loop|
 			hole_pts = loop.map { |v| Geom::Point3d.new(v) }
 
-			# créer les arêtes du trou
-			hole_edges = []
-			hole_pts.each_cons(2) do |a, b|
-			  hole_edges << entities.add_line(a, b)
+			# Créer une face temporaire pour le trou
+			hole_face = entities.add_face(hole_pts)
+			if hole_face && hole_face.valid?
+			  # Supprimer la face pour que le trou soit détecté
+			  hole_face.erase!
+			else
+			  # Si add_face échoue, créer les arêtes manuellement
+			  hole_pts.each_cons(2) { |a, b| entities.add_line(a, b) }
+			  entities.add_line(hole_pts.last, hole_pts.first)
 			end
-			hole_edges << entities.add_line(hole_pts.last, hole_pts.first)
-
-			# SketchUp détecte automatiquement le trou
 		  end
 		end
 	  end
@@ -431,15 +449,7 @@ module GNTools
 		  center = Geom::Point3d.new(arc["center"])
 		  normal = Geom::Vector3d.new(arc["normal"])
 		  xaxis  = Geom::Vector3d.new(arc["xaxis"])
-
-		  entities.add_arc(
-			center,
-			xaxis,
-			normal,
-			arc["radius"],
-			arc["start_angle"],
-			arc["end_angle"]
-		  )
+		  entities.add_arc(center, xaxis, normal, arc["radius"], arc["start_angle"], arc["end_angle"])
 		end
 	  end
 
@@ -475,9 +485,8 @@ module GNTools
 		  entities.add_instance(definition, Geom::Transformation.new)
 		end
 	  end
-
 	end
-	  
+ 
     # -------------------------------------------------
     # Export
     # -------------------------------------------------

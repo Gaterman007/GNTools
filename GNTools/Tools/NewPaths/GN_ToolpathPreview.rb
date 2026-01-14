@@ -535,19 +535,23 @@ module GNTools
 	  end
 	  
 	  def self.render(view, collection, type = "Original",vars = {})
-		return unless collection["Toolpaths"]
 		engine = self.instance
 		self.instance.global_vars = Marshal.load(Marshal.dump(collection.read()))
 		self.instance.instance_variable_set(:@view, view)
 		self.instance.instance_variable_set(:@vars, self.instance.global_vars.merge(vars))
-		
-#		puts "Global Variables"
-#		puts "---------------------"
-#		puts JSON.pretty_generate(self.instance.global_vars)
-#		puts "---------------------"
-		collection["Toolpaths"].each do |key, toolpath|
-		  script_text = get_script(toolpath['type'],type)
-		  self.instance.compile(script_text, self.instance.global_vars["Toolpaths"][key])
+		if type == "Simulation"
+#		  puts "Global Variables"
+#		  puts "------------------------------------------"
+#		  puts JSON.pretty_generate(self.instance.global_vars)
+#		  puts "------------------------------------------"
+		  solid = GNTools::Geometry::Solid.from_hash(self.instance.global_vars["OriginalData"])
+		  solid.draw(view)
+		else
+		  return unless collection["Toolpaths"]
+		  collection["Toolpaths"].each do |key, toolpath|
+		    script_text = get_script(toolpath['type'],type)
+		    self.instance.compile(script_text, self.instance.global_vars["Toolpaths"][key])
+		  end
 		end
 	  end
 

@@ -1,12 +1,39 @@
+require_relative "GN_Face.rb"
+
 module GNTools
+
+  EPSILON = 1e-6
   module Geometry
+  
 	class Point
 	  attr_reader :x, :y, :z
 
 	  def initialize(arr)
 		@x, @y, @z = arr.map(&:to_f)
 	  end
+	  
+	  # Point - Point => Vector
+	  def -(p)
+		Vector.new([
+		  x - p.x,
+		  y - p.y,
+		  z - p.z
+		])
+	  end
 
+	  # Point + Vector => Point
+	  def +(v)
+		Point.new([
+		  x + v.x,
+		  y + v.y,
+		  z + v.z
+		])
+	  end
+
+	  def to_vector
+		Vector.new([x, y, z])
+	  end
+	  
 	  def to_a
 		[x, y, z]
 	  end
@@ -17,13 +44,45 @@ module GNTools
 	end
 
 	class Vector < Point
+	  # Vector + Vector
+	  def +(v)
+		Vector.new([x + v.x, y + v.y, z + v.z])
+	  end
+
+	  # Vector - Vector
+	  def -(v)
+		Vector.new([x - v.x, y - v.y, z - v.z])
+	  end
+
+	  # Vector * scalar
+	  def *(s)
+		Vector.new([x * s, y * s, z * s])
+	  end
+	  def /(s)
+		raise ZeroDivisionError if s.zero?
+		Vector.new([x / s, y / s, z / s])
+	  end
+  
+	  def cross(v)
+		Vector.new([
+		  y * v.z - z * v.y,
+		  z * v.x - x * v.z,
+		  x * v.y - y * v.x
+		])
+	  end
+
 	  def dot(v)
-		x*v.x + y*v.y + z*v.z
+		x * v.x + y * v.y + z * v.z
+	  end
+
+	  def length
+		Math.sqrt(x*x + y*y + z*z)
 	  end
 
 	  def normalize
-		l = Math.sqrt(dot(self))
-		Vector.new([x/l, y/l, z/l]) if l > 0
+		l = length
+		return Vector.new([0,0,0]) if l.zero?
+		Vector.new([x/l, y/l, z/l])
 	  end
 	end
 
@@ -50,18 +109,60 @@ module GNTools
 	  attr_reader :vertices
 
 	  def initialize(vertices)
-		@vertices = vertices
+		raise "Loop requires at least 3 vertices" if vertices.size < 3
+		@vertices = vertices.dup
 	  end
 
 	  def edges
 		vertices.each_cons(2).map { |a,b| Edge.new(a,b) } +
 		  [Edge.new(vertices.last, vertices.first)]
 	  end
+	  
+	  def signed_area(normal)
+	    area = 0.0
+	    origin = vertices.first
 
-	  def closed?
-		vertices.first.to_a == vertices.last.to_a
+	    vertices.each_cons(2) do |a, b|
+		  va = a - origin
+		  vb = b - origin
+		  area += va.cross(vb).dot(normal)
+	    end
+
+	    a = vertices.last - origin
+	    b = vertices.first - origin
+	    area += a.cross(b).dot(normal)
+
+	    area * 0.5
 	  end
 
+	  def reverse!
+	    @vertices.reverse!
+	    self
+	  end
+
+	  def normal
+	    n = Geom::Vector3d.new(0,0,0)
+
+	    vertices.each_with_index do |v, i|
+		  w = vertices[(i + 1) % vertices.size]
+		  n.x += (v.y - w.y) * (v.z + w.z)
+		  n.y += (v.z - w.z) * (v.x + w.x)
+		  n.z += (v.x - w.x) * (v.y + w.y)
+	    end
+
+	    n.normalize
+	  end
+
+	  def centroid
+	    acc = Vector.new([0, 0, 0])
+
+	    vertices.each do |v|
+		  acc += v.to_vector
+	    end
+
+	    acc / vertices.size
+	  end
+	  
 	  def to_a
 		vertices.map(&:to_a)
 	  end
@@ -71,49 +172,34 @@ module GNTools
       end
 	end
 
-    class Face
-      attr_reader :normal, :loops
+	class BBox
+	  attr_reader :min, :max
 
-      def initialize(normal:, loops:)
-        @normal = Vector.new(normal)
-        @loops  = loops
-      end
+	  def self.from_points(pts)
+		xs = pts.map(&:x)
+		ys = pts.map(&:y)
+		zs = pts.map(&:z)
 
-      def outer_loop
-        loops.first
-      end
-
-      def inner_loops
-        loops[1..] || []
-      end
-
-	  def vertices
-		outer_loop.vertices
+		new(
+		  Point.new([xs.min, ys.min, zs.min]),
+		  Point.new([xs.max, ys.max, zs.max])
+		)
 	  end
 
-	  def all_vertices
-		loops.flat_map(&:vertices)
+	  def initialize(min, max)
+		@min = min
+		@max = max
 	  end
 
-	  def edges
-		outer_loop.edges
+	  def intersects?(other)
+		!( other.max.x < min.x || other.min.x > max.x ||
+		   other.max.y < min.y || other.min.y > max.y ||
+		   other.max.z < min.z || other.min.z > max.z )
 	  end
-
-      def all_edges
-        loops.flat_map(&:edges)
-      end
-
-      def to_hash
-        {
-          "normal" => normal.to_a,
-          "outer_loop" => outer_loop.to_a,
-          "inner_loops" => inner_loops.map(&:to_a)
-        }
-      end
-
-      def to_s
-        "Face(loops=#{loops.size}, normal=#{normal})"
-      end
+	  
+	  def to_s
+		"BBox(min=#{min}, max=#{max})"
+	  end
     end
 
     class Solid
@@ -123,16 +209,19 @@ module GNTools
         @faces = faces
         @edges = edges || derive_edges
         @bbox  = compute_bbox
+		@triangles_cache = nil
+		@dirty = true
+#	    debug_dump
       end
 
 	  def self.from_hash(hash)
 	    faces = hash["faces"].map do |f|
-		  loops = []
-		  loops << Loop.new(f["outer_loop"].map { |v| Point.new(v) })
+		  outerloop = Loop.new(f["outer_loop"].map { |v| Point.new(v) })
+		  innerloops = []
 		  f["inner_loops"].each do |l|
-		    loops << Loop.new(l.map { |v| Point.new(v) })
+		    innerloops << Loop.new(l.map { |v| Point.new(v) })
 		  end
-		  Face.new(normal: f["normal"], loops: loops)
+		  Face.new(outer_loop: outerloop, inner_loops: innerloops, normal: f["normal"])
 	    end
 	    new(faces: faces)
 	  end
@@ -142,6 +231,69 @@ module GNTools
           "faces" => faces.map(&:to_hash)
         }
       end
+
+	  def invalidate!
+	    @dirty = true
+	  end
+
+	  def triangulate!
+	    @triangles_cache = []
+	    faces.each do |face|
+		  face.triangles.each do |tri|
+		    @triangles_cache << {
+			  pts: tri,
+			  normal: face.normal
+		  }
+		  end
+	    end
+
+	    @dirty = false
+	  end
+
+	  def triangles
+	    triangulate! if @dirty || @triangles_cache.nil?
+	    @triangles_cache
+	  end
+
+	  def triangulate_outer_loop(vertices)
+	    return [] unless vertices && vertices.size >= 3
+
+	    tris = []
+	    p0 = vertices[0]
+
+	    (1...(vertices.size - 1)).each do |i|
+		  tris << [p0, vertices[i], vertices[i + 1]]
+	    end
+
+	    tris
+	  end
+
+	  def draw(view)
+	    return unless view
+
+	    tri_pts     = []
+	    tri_normals = []
+	    edge_pts    = []
+
+	    triangles.each do |t|
+		  pts    = t[:pts]
+		  normal = t[:normal]
+
+		  t[:pts].each do |p|
+		    tri_pts << Geom::Point3d.new(p.x, p.y, p.z)
+		    tri_normals << normal
+		  end
+	    end
+
+	    edges.each do |e|
+		  edge_pts << Geom::Point3d.new(e.a.x, e.a.y, e.a.z)
+		  edge_pts << Geom::Point3d.new(e.b.x, e.b.y, e.b.z)
+	    end
+		view.drawing_color = "lightgrey"
+	    view.draw(GL_TRIANGLES, tri_pts, normals: tri_normals, depth: 2) unless tri_pts.empty?
+		view.drawing_color = "black"
+	    view.draw(GL_LINES, edge_pts, line_width: 1, depth: 2) unless edge_pts.empty?
+	  end
 
 	  def to_group(name: "Solid Preview")
 	    model = Sketchup.active_model
@@ -255,6 +407,7 @@ module GNTools
 	    @faces = new_faces
 	    @edges = derive_edges
 	    @bbox  = compute_bbox
+		invalidate!
 
 	    [moved_edges_map,edge_map] # on pourrait les retourner pour tests
 	  end
@@ -288,36 +441,27 @@ module GNTools
 	  def to_s
         "Solid(faces=#{faces.size}, edges=#{edges.size}, bbox=#{bbox})"
       end
-    end
-	
-	class BBox
-	  attr_reader :min, :max
+	  
+	  def debug_dump
 
-	  def self.from_points(pts)
-		xs = pts.map(&:x)
-		ys = pts.map(&:y)
-		zs = pts.map(&:z)
+		puts "Solid:"
+		puts "  faces: #{@faces.size}"
 
-		new(
-		  Point.new([xs.min, ys.min, zs.min]),
-		  Point.new([xs.max, ys.max, zs.max])
-		)
-	  end
-
-	  def initialize(min, max)
-		@min = min
-		@max = max
-	  end
-
-	  def intersects?(other)
-		!( other.max.x < min.x || other.min.x > max.x ||
-		   other.max.y < min.y || other.min.y > max.y ||
-		   other.max.z < min.z || other.min.z > max.z )
+		@faces.each_with_index do |f, i|
+		  if f.inner_loops and f.inner_loops.size > 0
+			  puts "  Face #{i}:"
+			  puts "    normal: #{f.normal.to_s}"
+			  puts "    outer_loop pts: #{f.outer_loop.vertices.size}"
+			  puts "       				#{f.outer_loop.vertices}"
+			  puts "    inner_loops: #{f.inner_loops.size}" if f.inner_loops
+			  f.inner_loops.each {|innerloop|
+				puts "       				#{innerloop.vertices}"
+			  }
+		  end
+		end
 	  end
 	  
-	  def to_s
-		"BBox(min=#{min}, max=#{max})"
-	  end
     end
+	
   end
 end
