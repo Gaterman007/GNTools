@@ -41,6 +41,14 @@ module GNTools
 		]
 	  end
 
+	  def getExtents
+	    if @solid
+	      @solid.getExtents 
+		else
+		  Geom::BoundingBox.new
+		end
+	  end
+
       def draw(view)
 		if @hash_collection == nil
 			text = "No collection"
@@ -126,6 +134,10 @@ module GNTools
 
 	  def self.set_render_type(renderType)
 		@@instance.model_overlay.set_render_type(renderType)
+	  end
+
+	  def self.getExtents
+		@@instance.model_overlay.getExtents
 	  end
 
 	  # Activer/désactiver overlay

@@ -34,6 +34,10 @@ module GNTools
 		Vector.new([x, y, z])
 	  end
 	  
+	  def to_Point3d
+		Geom::Point3d.new([x, y, z])
+	  end
+	  
 	  def to_a
 		[x, y, z]
 	  end
@@ -412,6 +416,15 @@ module GNTools
 	    [moved_edges_map,edge_map] # on pourrait les retourner pour tests
 	  end
 
+	  def getExtents
+		pts = faces.flat_map(&:all_vertices)
+		extent = Geom::BoundingBox.new
+	    pts.each { |point| 
+			extent.add(point.to_Point3d)
+		}
+		extent		
+	  end
+
       private
 
 	  def derive_edges
@@ -437,7 +450,7 @@ module GNTools
 	    pts = faces.flat_map(&:all_vertices)
 	    BBox.from_points(pts)
 	  end
-	  
+
 	  def to_s
         "Solid(faces=#{faces.size}, edges=#{edges.size}, bbox=#{bbox})"
       end

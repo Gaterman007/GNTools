@@ -811,7 +811,8 @@ module GNTools
 	  end
 
 	  def getExtents
-	    return nil unless @preview_bbox
+		extent = OverlayManager.getExtents
+		extent
 	  end
 
       # lightweight helpers for adding geometry/collection
