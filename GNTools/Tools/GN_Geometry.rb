@@ -2,7 +2,6 @@ require_relative "GN_Face.rb"
 
 module GNTools
 
-  EPSILON = 1e-6
   module Geometry
   
 	class Point
@@ -215,7 +214,6 @@ module GNTools
         @bbox  = compute_bbox
 		@triangles_cache = nil
 		@dirty = true
-#	    debug_dump
       end
 
 	  def self.from_hash(hash)
