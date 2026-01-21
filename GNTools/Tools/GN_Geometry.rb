@@ -240,7 +240,8 @@ module GNTools
 
 	  def triangulate!
 	    @triangles_cache = []
-	    faces.each do |face|
+#		puts "triangluate faces"
+		faces.each do |face|
 		  face.triangles.each do |tri|
 		    @triangles_cache << {
 			  pts: tri,

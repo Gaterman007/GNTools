@@ -1,136 +1,176 @@
 module GNTools
   EPSILON = 1e-6
+
+  # =========================================================
+  # Géométrie 2D bas niveau
+  # =========================================================
+  module Geom2D
+    EPS = GNTools::EPSILON
+
+    def self.area2(a,b,c)
+	  (b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0])
+    end
+
+    def self.ccw?(a,b,c)
+	  area2(a,b,c) > EPS
+    end
+
+    def self.cw?(a,b,c)
+	  area2(a,b,c) < -EPS
+    end
+
+    def self.collinear?(a,b,c)
+	  area2(a,b,c).abs < EPS
+    end
+
+    def self.share_endpoint?(a,b,c,d)
+	  a==c || a==d || b==c || b==d
+    end
+
+    def self.segments_intersect_strict?(a,b,c,d)
+      return false if share_endpoint?(a,b,c,d)
+
+      o1 = area2(a,b,c)
+      o2 = area2(a,b,d)
+      o3 = area2(c,d,a)
+      o4 = area2(c,d,b)
+
+      o1 * o2 < -EPS && o3 * o4 < -EPS
+    end
+
+    # Distance au carré entre deux points [x,y]
+    def self.distance2(a,b)
+	  dx = a[0] - b[0]
+	  dy = a[1] - b[1]
+  	  dx*dx + dy*dy
+    end
+
+    # Distance euclidienne classique
+    def self.distance(a,b)
+	  Math.sqrt(distance2(a,b))
+    end
+    
+    def self.point_in_polygon?(pt, poly)
+      x, y = pt
+      inside = false
+
+      n = poly.length
+      return false if n < 3
+
+      j = n - 1
+      (0...n).each do |i|
+        xi, yi = poly[i]
+        xj, yj = poly[j]
+
+        intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi + 0.0) + xi)
+
+        inside = !inside if intersect
+        j = i
+      end
+
+      inside
+    end  
+  end
+
+  # =========================================================
+  # Triangle utilitaire
+  # =========================================================
+  class Triangle2D
+    def self.edges(tri)
+	  [[tri[0],tri[1]],[tri[1],tri[2]],[tri[2],tri[0]]]
+    end
+
+    def self.contains_point?(tri, p, strict: false)
+      a,b,c = tri
+
+      w1 = Geom2D.area2(a,b,p)
+      w2 = Geom2D.area2(b,c,p)
+      w3 = Geom2D.area2(c,a,p)
+
+      if strict
+        w1 > Geom2D::EPS && w2 > Geom2D::EPS && w3 > Geom2D::EPS
+      else
+        (w1 >= -Geom2D::EPS &&
+         w2 >= -Geom2D::EPS &&
+         w3 >= -Geom2D::EPS) ||
+        (w1 <= Geom2D::EPS &&
+         w2 <= Geom2D::EPS &&
+         w3 <= Geom2D::EPS)
+      end
+    end
+
+    def self.intersects_segment?(tri, p, q)
+	  return true if contains_point?(tri, p, strict: true)
+	  return true if contains_point?(tri, q, strict: true)
+
+	  edges(tri).any? do |a,b|
+	    Geom2D.segments_intersect_strict?(p,q,a,b)
+	  end
+    end
+		
+  end
+
+  module Polygon2D
+    extend self
+
+    # -----------------------------
+    # Structure
+    # -----------------------------
+
+    def edges(loop)
+	  loop.each_cons(2).map { |a,b| [a,b] } +
+	    [[loop.last, loop.first]]
+    end
+
+    def area(loop)
+	  loop.each_with_index.sum do |p,i|
+	    q = loop[(i+1) % loop.size]
+	    (p[0]*q[1] - q[0]*p[1])
+	  end * 0.5
+    end
+
+    def ensure_ccw(loop)
+	  area(loop) < 0 ? loop.reverse : loop
+    end
+
+    # -----------------------------
+    # Nettoyage
+    # -----------------------------
+
+    def cleanup_degenerate_vertices!(loop)
+	  i = 0
+	  while i < loop.size && loop.size > 3
+	    a = loop[(i-1) % loop.size]
+	    b = loop[i]
+	    c = loop[(i+1) % loop.size]
+
+	    if a == b || b == c || Geom2D.collinear?(a,b,c)
+		  loop.delete_at(i)
+	    else
+		  i += 1
+	    end
+	  end
+    end
+
+    # -----------------------------
+    # Tests topologiques
+    # -----------------------------
+
+    def diagonal_intersects_loop?(p0, p1, loop)
+	  edges(loop).any? do |a,b|
+	    next false if [a,b].include?(p0) || [a,b].include?(p1)
+	    Geom2D.segments_intersect_strict?(p0,p1,a,b)
+	  end
+    end
+  end
+
+
   module Tessellator
 
-    # =========================================================
-    # Géométrie 2D bas niveau
-    # =========================================================
-    module Geom2D
-      EPS = GNTools::EPSILON
-
-      def self.area2(a,b,c)
-        (b[0]-a[0])*(c[1]-a[1]) -
-        (b[1]-a[1])*(c[0]-a[0])
-      end
-
-      def self.ccw?(a,b,c)
-        area2(a,b,c) > EPS
-      end
-
-      def self.cw?(a,b,c)
-        area2(a,b,c) < -EPS
-      end
-
-      def self.collinear?(a,b,c)
-        area2(a,b,c).abs < EPS
-      end
-
-      def self.share_endpoint?(a,b,c,d)
-        a==c || a==d || b==c || b==d
-      end
-
-      def self.segments_intersect_strict?(a,b,c,d)
-        return false if share_endpoint?(a,b,c,d)
-        return false if collinear?(a,b,c) && collinear?(a,b,d)
-
-        ccw?(a,c,d) != ccw?(b,c,d) &&
-        ccw?(a,b,c) != ccw?(a,b,d)
-      end
-    end
-
-    # =========================================================
-    # Triangle utilitaire
-    # =========================================================
-    class Triangle2D
-      def self.edges(tri)
-        [[tri[0],tri[1]],[tri[1],tri[2]],[tri[2],tri[0]]]
-      end
-
-      def self.contains_point?(tri, p, strict: false)
-        a,b,c = tri
-        w1 = Geom2D.area2(p,a,b)
-        w2 = Geom2D.area2(p,b,c)
-        w3 = Geom2D.area2(p,c,a)
-
-        if strict
-          w1 > Geom2D::EPS &&
-          w2 > Geom2D::EPS &&
-          w3 > Geom2D::EPS
-        else
-          has_pos = w1 > 0 || w2 > 0 || w3 > 0
-          has_neg = w1 < 0 || w2 < 0 || w3 < 0
-          !(has_pos && has_neg)
-        end
-      end
-
-      def self.intersects_segment?(tri, p, q)
-        return true if contains_point?(tri, p, strict: true)
-        return true if contains_point?(tri, q, strict: true)
-
-        edges(tri).any? do |a,b|
-          Geom2D.segments_intersect_strict?(p,q,a,b)
-        end
-      end
-            
-    end
-
-    # =========================================================
-    # Outils polygone
-    # =========================================================
-    def self.polygon_edges(loop)
-      loop.each_cons(2).map { |a,b| [a,b] } +
-      [[loop.last, loop.first]]
-    end
-    
-    def self.distance2(a,b)
-      dx = a[0]-b[0]; dy = a[1]-b[1]; dx*dx + dy*dy
-    end
-    
-    def self.polygon_area(loop)
-      loop.each_with_index.sum do |p,i|
-        q = loop[(i+1)%loop.size]
-        (p[0]*q[1] - q[0]*p[1])
-      end * 0.5
-    end
-
-    def self.ensure_ccw(loop)
-      polygon_area(loop) < 0 ? loop.reverse : loop
-    end
-
-    def self.cleanup_degenerate_vertices!(verts)
-      i = 0
-      while i < verts.size && verts.size > 3
-        a = verts[(i-1)%verts.size]
-        b = verts[i]
-        c = verts[(i+1)%verts.size]
-
-        if a == b || b == c || Geom2D.collinear?(a,b,c)
-          verts.delete_at(i)
-        else
-          i += 1
-        end
-      end
-    end
 
     # =========================================================
     # Test intersection triangle / triangle
-    # =========================================================
-    def self.triangle_intersect?(a,b)
-      a.any? { |pt| Triangle2D.contains_point?(b, pt, strict: true) } ||
-      b.any? { |pt| Triangle2D.contains_point?(a, pt, strict: true) } ||
-      Triangle2D.edges(a).any? { |e|
-        Triangle2D.edges(b).any? { |f|
-          Geom2D.segments_intersect_strict?(e[0],e[1],f[0],f[1])
-        }
-      }
-    end
-
-	def self.segment_crosses_hole?(p, q, hole_tris)
-	  hole_tris.any? do |tri|
-		Triangle2D.intersects_segment?(tri, p, q)
-	  end
-	end
-    
+    # =========================================================   
     def self.triangle_intrudes?(ear, hole_tri)
       # sommet de l'ear strictement dans le trou
       return true if ear.any? { |p|
@@ -145,12 +185,27 @@ module GNTools
       }
     end
 
+    def self.debug_draw_loop(group, loop, step)
+
+      g = group.entities.add_group
+      g.name = "earcut_step_#{step}"
+
+      z = step * 0.05
+      pts = loop.map { |p| Geom::Point3d.new(p[0], p[1], z) }
+
+      pts.each_cons(2) { |a,b| g.entities.add_line(a,b) }
+      g.entities.add_line(pts.last, pts.first)
+    end
+
     # =========================================================
     # Ear clipping générique (avec trous)
     # =========================================================
-    def self.ear_cut(verts, ccw: true, forbidden_tris: [])
+    def self.ear_cut(verts, ccw: true)
       verts = verts.dup
       triangles = []
+#      earcut_group = Sketchup.active_model.active_entities.add_group 
+      step = 0
+#      debug_draw_loop(earcut_group,verts, step)
 
       while verts.size >= 3
         ear_found = false
@@ -159,27 +214,70 @@ module GNTools
           p0 = verts[i-1]
           p2 = verts[(i+1)%verts.size]
 
+          # convexité locale
           ok_orient = ccw ?
             Geom2D.ccw?(p0,p1,p2) :
             Geom2D.cw?(p0,p1,p2)
           next unless ok_orient
 
           tri = [p0,p1,p2]
-
+          
+          # aucun autre sommet strictement à l'intérieur
           next if verts.any? { |pt|
             !tri.include?(pt) &&
             Triangle2D.contains_point?(tri, pt)
           }
-
-          next if forbidden_tris.any? { |t|
-            triangle_intrudes?(tri, t)
-          }
+          
+          # la diagonale ne coupe aucune arête existante
+          next if Polygon2D.diagonal_intersects_loop?(p0, p2, verts)
 
           triangles << tri
           verts.delete_at(i)
-          cleanup_degenerate_vertices!(verts)
+          Polygon2D.cleanup_degenerate_vertices!(verts)
+#          step += 1
+#          debug_draw_loop(earcut_group,verts, step)
+
           ear_found = true
           break
+        end
+
+        if !ear_found
+          earcut_group = Sketchup.active_model.active_entities.add_group 
+          step = 0
+          debug_draw_loop(earcut_group,verts, step)
+          
+          verts.each_with_index do |p1,i|
+            p0 = verts[i-1]
+            p2 = verts[(i+1)%verts.size]
+
+            puts "---- Ear test #{i}"
+            puts " point p0 #{p0}"
+            puts " point p1 #{p1}"
+            puts " point p2 #{p2}"
+            
+            pt0 = Geom::Point3d.new(p0[0], p0[1], 0.0)
+            pt1 = Geom::Point3d.new(p1[0], p1[1], 0.0)
+            pt2 = Geom::Point3d.new(p2[0], p2[1], 0.0)
+            g = earcut_group.entities.add_group
+            g.name = "earcut_triangle_test_#{step}"
+            g.entities.add_line(pt0,pt1)
+            g.entities.add_line(pt1,pt2)
+            g.entities.add_line(pt2,pt0)
+            
+          end
+          
+          verts.each_with_index do |p1,i|
+            p0 = verts[i-1]
+            p2 = verts[(i+1)%verts.size]
+
+            puts "---- Ear test #{i}"
+            puts "convex: #{Geom2D.ccw?(p0,p1,p2)}"
+            puts "inside: #{verts.any? { |pt| ![p0,p1,p2].include?(pt) &&
+              Triangle2D.contains_point?( [p0,p1,p2], pt, strict: true) }}"
+            puts "diag intersect: #{Polygon2D.diagonal_intersects_loop?(p0,p2,verts)}"
+          end
+
+          
         end
 
         break unless ear_found
@@ -189,88 +287,145 @@ module GNTools
       triangles
     end
 
-    def self.bridge_holes(outer, holes)
-      loop = outer.dup
-
-      # 1️⃣ Pré-calcul : trianguler chaque trou pour tester les intersections
-      hole_triangles = {}
-      holes.each do |hole|
-        hole_triangles[hole] = ear_cut(hole, ccw: false)
-      end
-
-      holes.each do |hole|
-        bridge_found = false
-
-        # Essayer tous les points du trou
-        hole.each_with_index do |h, hole_index|
-          loop_edges = polygon_edges(loop)
-
-          # Essayer tous les points du loop
-          candidates = loop.each_with_index.select do |p, i|
-            # Pas d'intersection avec le loop courant
-            next false if loop_edges.any? { |a,b|
-              ![a,b].include?(p) && Geom2D.segments_intersect_strict?(h,p,a,b)
-            }
-
-            # Pas d'intersection avec les autres trous
-            next false if holes.any? do |other_hole|
-              next false if other_hole == hole
-              segment_crosses_hole?(h, p, hole_triangles[other_hole])
-            end
-            
-            # Pas d'intersection avec son propre trou (sauf aux extrémités)
-            hole_edges = polygon_edges(hole)
-            next false if hole_edges.any? { |a,b|
-              ![h].include?(a) && ![h].include?(b) && Geom2D.segments_intersect_strict?(h,p,a,b)
-            }
-
-            true
-          end
-
-          if candidates.any?
-            # Choisir le point le plus proche
-            outer_index = candidates.min_by { |p,i| distance2(h,p) }[1]
-
-            # Reconstruire le trou dans le bon ordre
-            hole_path = []
-#            hole.size.times do |i|
-#              hole_path << hole[(hole_index - i) % hole.size]  # ⬅️ sens inversé
-#            end
-            
-            hole.size.times { |i| hole_path << hole[(hole_index + i) % hole.size] }
-#            hole_path << hole_path.first  # fermer le trou
-
-#            loop = loop[0..outer_index] + hole_path + [hole_path.first] + loop[outer_index..-1]
-
-
-            # Insérer le bridge dans le loop
-            hole_path << hole_path.first  # fermer le trou
-            loop = loop[0..outer_index] + hole_path + loop[outer_index..-1]
-
-            bridge_found = true
-            break
-          end
-        end
-      
-        # Si aucun bridge valide n'a été trouvé, lever une exception
-        raise "❌ aucun bridge valide trouvé pour ce trou" unless bridge_found
-      end
-
-      loop
-    end
-
     # =========================================================
     # API principale
     # =========================================================
     def self.tessellate(outer, holes=[])
-      outer = ensure_ccw(outer)
+	
+      outer = Polygon2D.ensure_ccw(outer)
 
-      hole_tris = holes.flat_map do |h|
-        ear_cut(h, ccw: false)
+	  result_loops = split_polygon_with_holes_multi(outer, holes)
+	  
+	  triangles = []
+	  result_loops.each do |loop|
+		loop = Polygon2D.ensure_ccw(loop)
+		triangles.concat(ear_cut(loop, ccw: true))
+	  end
+	  
+	  triangles
+    end
+ 
+	def self.valid_bridge?(hp, lp, loop, other_loops)
+	  # Contour courant
+	  Polygon2D.edges(loop).each do |a,b|
+		next if a == hp || a == lp || b == hp || b == lp
+		return false if Geom2D.segments_intersect_strict?(hp, lp, a, b)
+	  end
+
+	  # Autres loops (trous / loops restantes)
+	  other_loops.each do |ol|
+		Polygon2D.edges(ol).each do |a,b|
+		  next if a == hp || a == lp || b == hp || b == lp
+		  return false if Geom2D.segments_intersect_strict?(hp, lp, a, b)
+		end
+	  end
+
+	  true
+	end
+
+	def self.find_two_bridges(loop, hole, other_loops)
+	  candidates = []
+
+	  # 1️ Tous les bridges valides
+	  hole.each do |hp|
+		loop.each do |lp|
+		  if valid_bridge?(hp, lp, loop, other_loops)
+			candidates << [hp, lp]
+		  end
+		end
+	  end
+
+	  return nil if candidates.size < 2
+
+	  best_pair = nil
+	  best_score = -Float::INFINITY
+
+	  # 2️ Sélection de la meilleure paire
+	  candidates.each_with_index do |b1, i|
+		hp1, lp1 = b1
+
+		candidates[(i+1)..-1].each do |b2|
+		  hp2, lp2 = b2
+
+		  # ❌ mêmes sommets
+		  next if hp1 == hp2
+		  next if lp1 == lp2
+
+		  # ❌ bridges qui se croisent
+		  next if Geom2D.segments_intersect_strict?(hp1, lp1, hp2, lp2)
+
+		  # 3️ Critère : distance maximale sur le trou
+		  score = GNTools::Geom2D.distance2(hp1, hp2)
+
+		  if score > best_score
+			best_score = score
+            best_pair = [
+              { hole: hp1, loop: lp1 },
+              { hole: hp2, loop: lp2 }
+            ]
+#			best_pair = [b1, b2]
+		  end
+		end
+	  end
+
+	  best_pair
+	end
+
+	def self.slice_cycle(arr, i0, i1)
+	  if i0 <= i1
+		arr[i0..i1]
+	  else
+		arr[i0..-1] + arr[0..i1]
+	  end
+	end
+
+    def self.hole_inside_loop?(hole, loop)
+      hole.all? { |pt| GNTools::Geom2D.point_in_polygon?(pt, loop) }
+    end
+
+    def self.split_polygon_with_holes_multi(outer, holes)
+      loops = [outer.dup]
+
+      holes.each do |hole|
+        split_done = false
+
+        loops.each_with_index do |loop, idx|
+          next unless hole_inside_loop?(hole, loop)
+
+          bridges = find_two_bridges(loop, hole, holes)
+          raise "Impossible de trouver 2 bridges" unless bridges && bridges.size == 2
+
+          b1, b2 = bridges
+          h1, l1 = b1[:hole], b1[:loop]
+          h2, l2 = b2[:hole], b2[:loop]
+
+          li1 = loop.index(l1)
+          li2 = loop.index(l2)
+          hi1 = hole.index(h1)
+          hi2 = hole.index(h2)
+
+          raise "Index nil" if [li1,li2,hi1,hi2].any?(&:nil?)
+
+          hole_path_1  = slice_cycle(hole, hi2, hi1)
+          hole_path_2  = slice_cycle(hole, hi1, hi2)
+          outer_path_1 = slice_cycle(loop, li1, li2)
+          outer_path_2 = slice_cycle(loop, li2, li1)
+
+          loop_a = outer_path_1 + hole_path_1
+          loop_b = outer_path_2 + hole_path_2
+
+          loops.delete_at(idx)
+          loops << loop_a
+          loops << loop_b
+
+          split_done = true
+          break
+        end
+
+        raise "Trou non contenu dans aucune loop" unless split_done
       end
 
-      merged = bridge_holes(outer, holes)
-      ear_cut(merged, ccw: true, forbidden_tris: hole_tris)
+      loops
     end
 
   end
@@ -439,18 +594,21 @@ module GNTools
 #		data[:holes].each_with_index do |h,i|
 #		  puts "hole #{i} area 2d = #{signed_area_2d(h)}"
 #		end
-#      puts "outer_loop = ["
-#      data[:outer].each { |p| puts "  #{p}," }
-#      puts "]"
 
-#      puts "holes = ["
-#      data[:holes].each do |hole|
-#        puts "  ["
-#        hole.each { |p| puts "    #{p}," }
-#        puts "  ],"
-#      end
-#      puts "]"
-
+	  if false
+	  if data[:holes].size > 0
+        puts "outer_loop = ["
+        data[:outer].each { |p| puts "  #{p}," }
+        puts "]"
+        puts "holes = ["
+        data[:holes].each do |hole|
+          puts "  ["
+          hole.each { |p| puts "    #{p}," }
+          puts "  ],"
+        end
+        puts "]"
+	  end
+      end
 	    tris_2d = Tessellator.tessellate(data[:outer], data[:holes])
 
 	    tris_2d.map do |tri|
